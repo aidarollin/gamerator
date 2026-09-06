@@ -2,6 +2,12 @@
 
 import { WORLD, type ArcadeSpec } from "@/lib/arcade/schema";
 import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
+import {
+  coinOffsets as flyerCoinOffsets,
+  coinPos as flyerCoinPos,
+  obstacleX as flyerObstacleX,
+  COIN_REACH,
+} from "@/lib/arcade/collect";
 import { makeRng } from "@/lib/game/random";
 import { CHARACTERS } from "./characters";
 import { spawnBurst, stepParticles, type Particle } from "./paint";
@@ -38,19 +44,33 @@ export const flyerFactory: EngineFactory = (h, spec) => {
    * Collectibles, adopted from Flying Sushi.
    *
    * Without them the flight path has nothing to aim at - you survive, you do
-   * not play. They sit offset from the gap centre so taking one costs a little
-   * safety, which is the whole point. Deterministic from a seed, like
-   * everything else, and OPTIONAL: they never gate progress, so the
-   * playability simulation does not need to know about them.
+   * not play. They sit offset from the flight line so taking one costs a little
+   * safety, which is the whole point. Deterministic, and OPTIONAL: they never
+   * gate progress, so the playability simulation does not need to know.
+   *
+   * The GEOMETRY lives in lib/arcade/collect.ts rather than here, for the same
+   * reason gapCentres does: a rule trapped in a closure cannot be measured, and
+   * this one was silently wrong for a whole session because of it. No coin was
+   * collectable and nothing said so - a coin nobody takes looks exactly like a
+   * coin nobody wanted.
    */
-  const coinRng = rngFor(0xc0);
-  const coinOffsets = Array.from({ length: 400 }, () => (coinRng() * 2 - 1) * 0.34);
+  const coinOffsets = flyerCoinOffsets(400);
   const taken = new Set<number>();
 
   // The physics in force RIGHT NOW, from the same function the validator
   // simulates. If the renderer ramped any other way the playability check would
   // be verifying a game nobody plays.
   const at = () => flyerAt(r, passed);
+
+  // Declared HERE, above the return, and that placement is load-bearing. These
+  // replaced two hoisted `function` declarations that sat below it, which was
+  // fine for functions and fatal for consts: `return` runs first, the consts
+  // are never evaluated, and every draw threw on the temporal dead zone. The
+  // canvas rendered sky and hills and then stopped, the bird never appeared,
+  // and `npm run check` was green throughout - TypeScript does not track
+  // use-before-init across a closure, and no test renders.
+  const obstacleX = (n: number) => flyerObstacleX(r, n);
+  const coinPos = (n: number) => flyerCoinPos(r, centres, coinOffsets, n);
 
   const die = () => {
     if (dead) return;
@@ -92,10 +112,11 @@ export const flyerFactory: EngineFactory = (h, spec) => {
         if (i <= 0 || taken.has(i)) continue;
         const c = coinPos(i);
         const cx = SIM.birdX + c.x - dist;
-        if (Math.abs(cx - SIM.birdX) < 20 && Math.abs(c.y - y) < 22) {
+        if (Math.hypot(c.x - dist, c.y - y) < COIN_REACH) {
           taken.add(i);
           pop = 1;
           spawnBurst(parts, cx, c.y, 7);
+          h.sfx("coin");
           h.addScore(spec.scoring.pointsPerObstacle);
         }
       }
@@ -153,25 +174,6 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       if (h.phase() === "playing") p.score(palette, String(h.score()), W / 2, 76, 50, pop);
     },
   };
-
-  /** Distance from the start to obstacle `n`, accumulating the ramped spacing. */
-  function obstacleX(n: number) {
-    let d = 0;
-    for (let i = 1; i <= n; i++) d += flyerAt(r, i - 1).gapSpacing;
-    return d;
-  }
-
-  /** A coin sits between two obstacles, offset from the gap centre. */
-  function coinPos(n: number) {
-    const here = obstacleX(n);
-    const next = here + flyerAt(r, n).gapSpacing;
-    const centre = centres[n % centres.length];
-    const half = flyerAt(r, n).gapHeight / 2;
-    return {
-      x: (here + next) / 2,
-      y: centre + coinOffsets[n % coinOffsets.length] * half,
-    };
-  }
 };
 
 /* ----------------------------------------------------------- brick-breaker */
@@ -185,7 +187,24 @@ export const brickFactory: EngineFactory = (h, spec) => {
 
   let bricks: { x: number; y: number; alive: boolean }[] = [];
   let px = W / 2, targetX = W / 2, bx = W / 2, by = PAD_Y - 40, bvx = 0, bvy = 0;
-  let launched = false, parts: Particle[] = [], pop = 0;
+  let launched = false, parts: Particle[] = [], pop = 0, t = 0;
+
+  /**
+   * Some bricks drop a coin when they break.
+   *
+   * A coin lying on a Breakout board would be unreachable - nothing on this
+   * screen moves except the ball and the paddle - so the collectible has to
+   * fall. That turns out to be the better idea anyway: catching a drop pulls
+   * the paddle out from under the ball, so a bonus is paid for in safety
+   * rather than in patience. Missing one costs nothing, which is what keeps it
+   * optional and keeps the playability check honest.
+   *
+   * Which bricks drop is seeded, so the same spec always plays the same way.
+   */
+  const dropRng = rngFor(0xd1);
+  const dropPlan = Array.from({ length: 200 }, () => dropRng());
+  const DROP_SPEED = 145;
+  let drops: { x: number; y: number }[] = [];
 
   const layout = () => {
     bricks = [];
@@ -200,7 +219,7 @@ export const brickFactory: EngineFactory = (h, spec) => {
   };
 
   return {
-    reset() { layout(); px = W / 2; targetX = W / 2; serve(); parts = []; },
+    reset() { layout(); px = W / 2; targetX = W / 2; serve(); parts = []; drops = []; },
     input(kind, where) {
       if (kind !== "press") return;
       // A press with no pointer position is the keyboard. It must still launch,
@@ -210,6 +229,7 @@ export const brickFactory: EngineFactory = (h, spec) => {
       launched = true;
     },
     step(dt) {
+      t += dt;
       pop = Math.max(0, pop - dt * 4);
       parts = stepParticles(parts, dt);
       // The paddle chases the finger at a bounded speed - it does not teleport,
@@ -232,15 +252,32 @@ export const brickFactory: EngineFactory = (h, spec) => {
         bvx = Math.cos(ang) * r.ballSpeed; bvy = Math.sin(ang) * r.ballSpeed;
       }
 
-      for (const b of bricks) {
+      for (let bi = 0; bi < bricks.length; bi++) {
+        const b = bricks[bi];
         if (!b.alive) continue;
         if (bx > b.x - BALL && bx < b.x + bw + BALL && by > b.y - BALL && by < b.y + brickH + BALL) {
           b.alive = false; bvy = -bvy; pop = 1;
           spawnBurst(parts, bx, by, 6);
           h.addScore(spec.scoring.pointsPerObstacle);
+          if (dropPlan[bi % dropPlan.length] < 0.16)
+            drops.push({ x: b.x + bw / 2, y: b.y + brickH });
           break;
         }
       }
+
+      for (const d of drops) d.y += DROP_SPEED * dt;
+      drops = drops.filter((d) => {
+        const caught =
+          d.y >= PAD_Y - 8 && d.y <= PAD_Y + PAD_H + 8 &&
+          Math.abs(d.x - px) < r.paddleWidth / 2 + 10;
+        if (caught) {
+          spawnBurst(parts, d.x, d.y, 9);
+          h.sfx("coin");
+          h.addScore(spec.scoring.pointsPerObstacle * 2);
+        }
+        return !caught && d.y < H + 20;
+      });
+
       if (bricks.every((b) => !b.alive)) { layout(); serve(); h.shake(0.4); }
       if (by > H + 30) { h.shake(1); spawnBurst(parts, bx, H - 10); h.loseLife(); serve(); }
     },
@@ -248,6 +285,7 @@ export const brickFactory: EngineFactory = (h, spec) => {
       const { paint: p, palette, ctx } = h;
       p.sky(palette, W, H, spec.theme.background === "night");
       for (const b of bricks) if (b.alive) p.block(palette, b.x, b.y, bw, brickH, 6);
+      for (const d of drops) p.coin(palette, d.x, d.y, 18, Math.abs(Math.cos(t * 4 + d.x)) * 0.8 + 0.2);
       p.burst(palette, parts);
       p.block(palette, px - r.paddleWidth / 2, PAD_Y, r.paddleWidth, PAD_H, 7);
       ctx.fillStyle = palette.ink;
@@ -271,6 +309,28 @@ export const snakeFactory: EngineFactory = (h, spec) => {
   let snake = [{ x: 4, y: 4 }], dir = { x: 1, y: 0 }, next = { x: 1, y: 0 };
   let food = { x: 8, y: 8 }, acc = 0, eaten = 0, rng = makeRng(1337), pop = 0;
 
+  /**
+   * A timed bonus, the way Nokia's snake did it.
+   *
+   * The food IS the collectible here, so a second permanent one would just be
+   * more food. What snake actually lacks is a reason to take a RISK: the safe
+   * play is a slow spiral, and it works. A bonus that is worth triple, sits
+   * somewhere awkward, and EXPIRES is what makes cutting across your own body
+   * worth considering.
+   *
+   * It does not grow the snake and does not count toward foodTarget - so it
+   * cannot shorten the run, and the playability check still describes the game
+   * being played.
+   */
+  const BONUS_EVERY = 4;
+  const bonusLife = () =>
+    Math.min(12, Math.max(4, (2 * (r.gridCols + r.gridRows)) / (r.startSpeed + r.speedUp * eaten)));
+  let bonusMax = 6;
+  let bonus: { x: number; y: number; left: number } | null = null;
+
+  const free = (x: number, y: number) =>
+    !snake.some((s) => s.x === x && s.y === y) && !(food.x === x && food.y === y);
+
   const placeFood = () => {
     for (let i = 0; i < 400; i++) {
       const f = { x: Math.floor(rng() * r.gridCols), y: Math.floor(rng() * r.gridRows) };
@@ -278,11 +338,21 @@ export const snakeFactory: EngineFactory = (h, spec) => {
     }
   };
 
+  const placeBonus = () => {
+    for (let i = 0; i < 400; i++) {
+      const x = Math.floor(rng() * r.gridCols), y = Math.floor(rng() * r.gridRows);
+      if (free(x, y)) {
+        bonusMax = bonusLife();
+        return (bonus = { x, y, left: bonusMax });
+      }
+    }
+  };
+
   return {
     reset() {
       snake = [{ x: 3, y: 3 }, { x: 2, y: 3 }];
       dir = { x: 1, y: 0 }; next = { x: 1, y: 0 };
-      eaten = 0; acc = 0; rng = makeRng(1337); placeFood();
+      eaten = 0; acc = 0; bonus = null; rng = makeRng(1337); placeFood();
     },
     input(kind, where) {
       if (kind !== "press" || !where) return;
@@ -298,6 +368,13 @@ export const snakeFactory: EngineFactory = (h, spec) => {
     },
     step(dt) {
       pop = Math.max(0, pop - dt * 4);
+      // The bonus expires in REAL time, not in moves, so it must tick before
+      // the early return below - otherwise a slow snake would get a longer
+      // window than a fast one for the same six seconds on the clock.
+      if (bonus) {
+        bonus.left -= dt;
+        if (bonus.left <= 0) bonus = null;
+      }
       const speed = r.startSpeed + r.speedUp * eaten;
       acc += dt;
       if (acc < 1 / speed) return;
@@ -313,9 +390,17 @@ export const snakeFactory: EngineFactory = (h, spec) => {
         h.shake(1); h.loseLife(); this.reset(); return;
       }
       snake.unshift(head);
+      // Checked separately from the food, and deliberately does not touch the
+      // grow / pop branch below: a bonus is points, never length.
+      if (bonus && head.x === bonus.x && head.y === bonus.y) {
+        bonus = null; pop = 1;
+        h.sfx("coin");
+        h.addScore(spec.scoring.pointsPerObstacle * 3);
+      }
       if (head.x === food.x && head.y === food.y) {
         eaten++; pop = 1; placeFood();
         h.addScore(spec.scoring.pointsPerObstacle);
+        if (eaten % BONUS_EVERY === 0 && !bonus) placeBonus();
         if (eaten >= r.foodTarget) h.finish();
       } else snake.pop();
     },
@@ -327,6 +412,14 @@ export const snakeFactory: EngineFactory = (h, spec) => {
       ctx.beginPath();
       ctx.arc(ox + food.x * cell + cell / 2, oy + food.y * cell + cell / 2, cell * 0.32, 0, Math.PI * 2);
       ctx.fill();
+      if (bonus)
+        p.sparkle(
+          palette,
+          ox + bonus.x * cell + cell / 2,
+          oy + bonus.y * cell + cell / 2,
+          cell * 0.9,
+          1 - bonus.left / bonusMax,
+        );
       snake.forEach((s, i) => {
         const inset = i === 0 ? 1 : 2.5;
         p.block(palette, ox + s.x * cell + inset, oy + s.y * cell + inset, cell - inset * 2, cell - inset * 2, 5);
@@ -349,8 +442,34 @@ export const runnerFactory: EngineFactory = (h, spec) => {
   let y = floor - RH, vy = 0, dist = 0, onGround = true, dead = false;
   let parts: Particle[] = [], pop = 0, t = 0;
 
+  /**
+   * Coins between obstacles, adopted from the flyer for the same reason: with
+   * nothing to aim at you survive rather than play.
+   *
+   * Roughly half sit at running height and cost nothing. The rest sit inside
+   * the jump arc, so taking one means leaving the ground - which is also where
+   * the obstacles are, so a coin buys points with risk rather than with
+   * patience. The arc is derived from the SAME numbers the playability check
+   * uses, so a reachable-looking coin is a reachable coin.
+   *
+   * Deterministic, and OPTIONAL: they never gate progress, so the simulation
+   * does not need to know they exist.
+   */
+  const coinRng = rngFor(0xc1);
+  const coinPlan = Array.from({ length: 400 }, () => coinRng());
+  const taken = new Set<number>();
+  const apex = (r.jumpVelocity * r.jumpVelocity) / (2 * r.gravity);
+  const hasCoin = (i: number) => coinPlan[i % coinPlan.length] < 0.8;
+  const coinAt = (i: number) => ({
+    x: (i + 1) * r.spacing + r.spacing / 2,
+    y: coinPlan[i % coinPlan.length] < 0.45 ? floor - RH / 2 : floor - RH / 2 - apex * 0.55,
+  });
+
   return {
-    reset() { y = floor - RH; vy = 0; dist = 0; onGround = true; dead = false; parts = []; },
+    reset() {
+      y = floor - RH; vy = 0; dist = 0; onGround = true; dead = false;
+      parts = []; taken.clear();
+    },
     input(kind) {
       if (kind === "press" && onGround && !dead && h.phase() === "playing") {
         vy = r.jumpVelocity; onGround = false; h.sfx("flap");
@@ -372,6 +491,23 @@ export const runnerFactory: EngineFactory = (h, spec) => {
       if (dist - i * r.spacing < r.scrollSpeed * dt && i > 0) {
         pop = 1; h.addScore(spec.scoring.pointsPerObstacle);
       }
+
+      // From i - 1, not i. Obstacle `i` is a full spacing AHEAD of the player
+      // - `i` is derived from dist, and obstacle i sits at (i + 1) * spacing -
+      // so the coin the player is currently passing through belongs to the
+      // obstacle BEFORE it. Starting at i meant the coins were drawn ahead and
+      // never collected: the loop and the player were never in the same place.
+      for (let k = i - 1; k <= i + 2; k++) {
+        if (k < 0 || taken.has(k) || !hasCoin(k)) continue;
+        const c = coinAt(k);
+        const cx = RX + c.x - dist;
+        if (Math.abs(cx - RX) < 20 && Math.abs(c.y - (y + RH / 2)) < 24) {
+          taken.add(k); pop = 1;
+          spawnBurst(parts, cx, c.y, 7);
+          h.sfx("coin");
+          h.addScore(spec.scoring.pointsPerObstacle);
+        }
+      }
     },
     draw() {
       const { paint: p, palette } = h;
@@ -380,6 +516,14 @@ export const runnerFactory: EngineFactory = (h, spec) => {
       p.hills(palette, W, floor, dist);
       p.bushes(palette, W, floor, dist);
       const first = Math.floor(dist / r.spacing);
+      // Coins behind the obstacles, so an obstacle edge never hides one.
+      for (let k = first - 1; k <= first + 4; k++) {
+        if (k < 0 || taken.has(k) || !hasCoin(k)) continue;
+        const c = coinAt(k);
+        const cx = RX + c.x - dist;
+        if (cx < -30 || cx > W + 30) continue;
+        p.coin(palette, cx, c.y, 22, Math.abs(Math.cos(t * 3 + k)) * 0.8 + 0.2);
+      }
       for (let i = first; i <= first + 4; i++) {
         const x = RX + (i + 1) * r.spacing - dist;
         if (x < -60 || x > W + 60) continue;
@@ -405,7 +549,7 @@ export const platformerFactory: EngineFactory = (h, spec) => {
   type Plat = { x: number; y: number; w: number };
   let plats: Plat[] = [], coins: { x: number; y: number; got: boolean }[] = [];
   let x = 40, y = 0, vx = 0, vy = 0, onGround = false, camX = 0, dead = false;
-  let parts: Particle[] = [], pop = 0, goal = 0, hold = 0;
+  let parts: Particle[] = [], pop = 0, goal = 0, hold = 0, t = 0;
 
   const build = () => {
     const rng = makeRng(9001);
@@ -443,6 +587,7 @@ export const platformerFactory: EngineFactory = (h, spec) => {
       } else hold = where.x < W / 2 ? -1 : 1;
     },
     step(dt) {
+      t += dt;
       pop = Math.max(0, pop - dt * 4);
       parts = stepParticles(parts, dt);
       if (dead) return;
@@ -458,6 +603,7 @@ export const platformerFactory: EngineFactory = (h, spec) => {
       for (const c of coins) {
         if (!c.got && Math.abs(c.x - x) < 24 && Math.abs(c.y - y) < 28) {
           c.got = true; pop = 1; spawnBurst(parts, c.x, c.y, 8);
+          h.sfx("coin");
           h.addScore(spec.scoring.pointsPerObstacle);
         }
       }
@@ -481,8 +627,7 @@ export const platformerFactory: EngineFactory = (h, spec) => {
       for (const pl of plats) p.block(palette, pl.x, pl.y, pl.w, PH, 6);
       for (const c of coins) {
         if (c.got) continue;
-        ctx.fillStyle = palette.gold;
-        ctx.beginPath(); ctx.arc(c.x, c.y, 9, 0, Math.PI * 2); ctx.fill();
+        p.coin(palette, c.x, c.y, 20, Math.abs(Math.cos(t * 3 + c.x * 0.05)) * 0.8 + 0.2);
       }
       // The goal flag.
       p.block(palette, goal - 20, H - 240, 8, 160, 3);

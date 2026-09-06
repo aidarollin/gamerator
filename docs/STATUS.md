@@ -941,3 +941,98 @@ real conditions measures its own setup.**
   touched.
 - Collectibles are still flyer-only; no round timer; no power-ups; the runner
   and snake still have flat physics.
+
+---
+
+## 2026-09-06 (later) — Collectibles in every engine, and four ways I measured wrong
+
+Model still off. Item 2 on the adopt list.
+
+### What each engine got
+
+The flyer and the platformer already had coins. The other three now have one
+each, and in each case the genre decided the shape rather than the other way
+round:
+
+- **endless-runner** — coins between obstacles. Roughly half sit at running
+  height and cost nothing; the rest sit inside the jump arc, derived from the
+  same numbers the playability check uses, so a coin that looks reachable is.
+- **brick-breaker** — some bricks DROP a coin. A coin lying on a Breakout board
+  would be unreachable, so it has to fall — and that is the better idea anyway:
+  catching one pulls the paddle out from under the ball, so the bonus is paid
+  for in safety rather than patience.
+- **snake** — a timed bonus, the way Nokia's did it. The food is already the
+  collectible, so a second permanent one would just be more food; what snake
+  lacks is a reason to take a RISK. It is worth triple, sits somewhere awkward,
+  and expires. Its lifetime is two board crossings at the current speed, not a
+  flat six seconds — six seconds means something different on every board.
+
+All of them stay OPTIONAL: they never gate progress, so the playability
+simulation still describes the game being played.
+
+### The flyer's coins were on the wrong line
+
+They were pinned to `centres[n]` — the gap just LEFT. By the time you reach the
+midpoint you are climbing toward gap n + 1, which drift can put a long way from
+gap n, so the coin was at a height nobody is at any more. Horizontally it is
+halfway between two gaps, so vertically it belongs halfway too.
+
+Measured against a perfect player over 20 obstacles: **hard went 5 → 8**, valid
+10 → 11, easy 13 → 13.
+
+### The geometry moved out of the closure
+
+`lib/arcade/collect.ts`, with `collect.test.ts`. The reason is the same one
+behind `gapCentres`: **a rule trapped in a closure cannot be measured.** From
+outside, the only way to ask "was a coin ever collected?" is to play and watch —
+and because a collectible is optional, a missed one looks exactly like a player
+who did not want it. A broken one ships in silence.
+
+The regression test rebuilds the old placement and asserts it fails, so the
+check demonstrably fires rather than merely passing.
+
+### Four measurement failures, all of which produced confident wrong numbers
+
+This is the part worth keeping.
+
+1. **The instrument shared a signal with the subject.** Coin pickups were
+   counted by their 988 Hz chirp — unique, fine. Points were counted at 440 Hz,
+   which is ALSO a note in the background music. Every "points: 20" was counting
+   the soundtrack. Same family as the `output_config.format` probe: the test
+   has to be checked against reality before its output is.
+2. **A scripted pilot is not a player.** Tapping the flyer on a fixed interval
+   settles the bird into one altitude band. If that band misses the coin line it
+   misses every coin, forever, and reports a clean zero.
+3. **The ball detector found the mascot.** Locating the brick-breaker ball as
+   "lowest dark pixel" found PBot's visor — same ink, drawn lower. The paddle
+   chased the corner for a whole run while I read the zero as a game bug.
+4. **Chasing gold chased the sparks.** Burst particles are gold and fall, same
+   as a dropped coin.
+
+### And one real bug the screenshots caught
+
+Extracting the geometry replaced two hoisted `function` declarations — which sat
+BELOW the factory's `return`, legally — with `const` arrows in the same place.
+`return` runs first, so they were never evaluated and every call hit the temporal
+dead zone. **The flyer rendered sky, clouds and hills and then stopped:** no
+pipes, no ground, no bird, no score, and no error anyone would see.
+
+`npm run check` was green the whole time. TypeScript does not track
+use-before-init across a closure, and nothing in the suite renders a canvas. It
+took looking at a picture.
+
+### Verified
+
+| Engine | How | Result |
+| --- | --- | --- |
+| endless-runner | 988 Hz pickups, unique to a coin | 6 collected |
+| snake | canvas pixels: two gold objects = bonus present | on screen at exactly food 4; 5 collected |
+| brick-breaker | followed the ball, chased drops | drops spawn, fall, 1 caught |
+| endless-flyer | after the TDZ fix | 8 coins, 10 points |
+| flyer geometry | unit test, real perfect-play agent | 8-13 of 20, fails on the old placement |
+
+**Not done**
+
+- The platformer's generated level still leaves a large empty middle and runs
+  platforms off the right edge. Unchanged, and now the most visible flaw.
+- No round timer, no power-ups. The runner and snake still have flat physics.

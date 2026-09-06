@@ -20,7 +20,11 @@ export type ArcadeOutcome =
   | { status: "no-engine"; requested: string; nearest: string }
   | { status: "error"; code: string; message: string };
 
-const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+// Rounded, because float arithmetic leaks values like 90.80000000000001 into
+// the exported JSON that a Pandai engineer reads. Physics do not need the
+// precision and a spec is a document people look at.
+const clamp = (n: number, lo: number, hi: number) =>
+  Math.round(Math.min(hi, Math.max(lo, n)) * 10) / 10;
 
 type Tone = {
   /** -1 easy, 0 normal, 1 hard. */
@@ -54,13 +58,39 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
     case "endless-flyer": {
       const tight = /tight|narrow|sempit/.test(p) ? 1 : 0;
       const floaty = /floaty|light|slow fall/.test(p) ? 1 : 0;
+
+      // How much the run escalates. A request that says nothing still ramps a
+      // little, because a flat run repeats; asking for a build makes it steep,
+      // and asking for steady makes it nearly flat.
+      const builds = /build|escalat|ramp|get.*harder|tense|intense|makin/.test(p);
+      const steady = /steady|constant|same|flat|consistent/.test(p);
+      const climb = steady ? 0.25 : builds ? 1.6 : 1;
+
+      const startSpeed = clamp(145 + s * 70, 60, 400);
+      const startGap = clamp(180 - s * 30 - tight * 15, 80, 300);
+      const startSpacing = clamp(285 - s * 45, 140, 600);
+      const startDrift = clamp(55 + s * 25, 0, 240);
+
       return {
         gravity: clamp(1500 + s * 500 - floaty * 400, 400, 3000),
         flapVelocity: clamp(-420 - s * 50 + floaty * 60, -800, -150),
-        scrollSpeed: clamp(150 + s * 90, 60, 400),
-        gapHeight: clamp(165 - s * 35 - tight * 20, 80, 300),
-        gapSpacing: clamp(265 - s * 45, 140, 600),
-        gapDrift: clamp(70 + s * 30, 0, 240),
+        scrollSpeed: {
+          start: startSpeed,
+          end: clamp(startSpeed + 75 * climb, 60, 400),
+        },
+        gapHeight: {
+          start: startGap,
+          end: clamp(startGap - 38 * climb, 80, 300),
+        },
+        gapSpacing: {
+          start: startSpacing,
+          end: clamp(startSpacing - 55 * climb, 140, 600),
+        },
+        gapDrift: {
+          start: startDrift,
+          end: clamp(startDrift + 38 * climb, 0, 240),
+        },
+        rampOverObstacles: steady ? 30 : builds ? 12 : 16,
         lives: tone.lives,
       };
     }

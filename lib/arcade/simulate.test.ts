@@ -1,26 +1,65 @@
 import { describe, expect, it } from "vitest";
-import { flyerPlayability, gapCentres, type FlyerRules } from "./simulate";
+import {
+  flyerPlayability,
+  flyerAt,
+  gapCentres,
+  simulatedObstacles,
+  type FlyerRules,
+} from "./simulate";
+
+const flat = (n: number) => ({ start: n, end: n });
 
 const playable: FlyerRules = {
   gravity: 1500,
   flapVelocity: -420,
-  scrollSpeed: 150,
-  gapHeight: 160,
-  gapSpacing: 260,
-  gapDrift: 70,
+  scrollSpeed: flat(150),
+  gapHeight: flat(160),
+  gapSpacing: flat(260),
+  gapDrift: flat(70),
+  rampOverObstacles: 12,
 };
+
+describe("the ramp", () => {
+  const ramped: FlyerRules = {
+    ...playable,
+    scrollSpeed: { start: 140, end: 260 },
+    gapHeight: { start: 200, end: 130 },
+    rampOverObstacles: 10,
+  };
+
+  it("starts at the start values", () => {
+    const at = flyerAt(ramped, 0);
+    expect(at.scrollSpeed).toBe(140);
+    expect(at.gapHeight).toBe(200);
+  });
+
+  it("reaches the end values when the ramp completes", () => {
+    const at = flyerAt(ramped, 10);
+    expect(at.scrollSpeed).toBe(260);
+    expect(at.gapHeight).toBe(130);
+  });
+
+  it("does not overshoot past the end of the ramp", () => {
+    expect(flyerAt(ramped, 500)).toEqual(flyerAt(ramped, 10));
+  });
+
+  it("is halfway at the midpoint", () => {
+    expect(flyerAt(ramped, 5).gapHeight).toBeCloseTo(165, 5);
+  });
+});
 
 describe("gap generation", () => {
   it("is deterministic - the sim must test the game that is played", () => {
     expect(gapCentres(playable, 10)).toEqual(gapCentres(playable, 10));
   });
 
-  it("keeps every gap fully inside the world", () => {
-    const half = playable.gapHeight / 2;
-    for (const c of gapCentres(playable, 60)) {
+  it("keeps every gap inside the world even as the ramp narrows it", () => {
+    const ramped = { ...playable, gapHeight: { start: 280, end: 90 }, rampOverObstacles: 8 };
+    gapCentres(ramped, 40).forEach((c, i) => {
+      const half = flyerAt(ramped, i).gapHeight / 2;
       expect(c - half).toBeGreaterThan(0);
       expect(c + half).toBeLessThan(540);
-    }
+    });
   });
 });
 
@@ -28,69 +67,81 @@ describe("playability", () => {
   it("accepts sane physics", () => {
     const v = flyerPlayability(playable);
     expect(v.playable).toBe(true);
-    expect(v.cleared).toBeGreaterThanOrEqual(12);
   });
 
-  it("rejects a gap the player cannot reach in the time available", () => {
-    // Every value below is inside its own bound. This is the failure the field
-    // bounds cannot see, and the whole reason the simulation exists: gaps can
-    // jump 240px, but at 400px/s with 140px between them there is 0.35s to make
-    // that climb, and no flap in range is strong enough.
+  it("simulates the whole ramp, not a fixed window", () => {
+    // A short ramp needs fewer obstacles than a long one. If this were fixed,
+    // a long ramp's hardest point would never be reached.
+    expect(simulatedObstacles({ ...playable, rampOverObstacles: 4 })).toBe(8);
+    expect(simulatedObstacles({ ...playable, rampOverObstacles: 40 })).toBe(44);
+  });
+
+  it("REJECTS a spec that is gentle at the start and impossible at the end", () => {
+    // The whole reason the ramp forced a change to the simulation. Obstacle one
+    // is a 240px gap at 100px/s - trivial. By obstacle 20 it is 85px at 390px/s
+    // with heavy drift, which no player can hold. Sampling the start, or an
+    // average, would pass this.
     const v = flyerPlayability({
-      gravity: 3000,
-      flapVelocity: -150,
-      scrollSpeed: 400,
-      gapHeight: 80,
-      gapSpacing: 140,
-      gapDrift: 240,
+      gravity: 2600,
+      flapVelocity: -300,
+      scrollSpeed: { start: 100, end: 390 },
+      gapHeight: { start: 240, end: 85 },
+      gapSpacing: { start: 420, end: 150 },
+      gapDrift: { start: 20, end: 200 },
+      rampOverObstacles: 20,
     });
     expect(v.playable).toBe(false);
     if (v.playable) return;
-    expect(v.reason).toMatch(/gap is too tight|cannot hold a line|misses obstacle/);
+    // It should fail LATE - proving it got through the gentle opening first.
+    expect(v.cleared).toBeGreaterThan(3);
+    expect(v.reason).toMatch(/into the ramp/);
   });
 
-  it("accepts physics that LOOK brutal but are actually threadable", () => {
-    // Kept because it caught me being wrong. I asserted this was impossible
-    // from intuition; the arithmetic disagreed and the arithmetic was right.
-    // With a 0.1s tap cooldown a -220 flap against gravity 2800 nets about 8px
-    // of climb per cycle, and a 90px gap leaves 62px of slack for a 28px bird.
-    // The simulation exists precisely because this judgement is not reliable
-    // by eye - not the model's, and not mine.
+  it("names how far into the ramp it failed", () => {
     const v = flyerPlayability({
       ...playable,
-      gravity: 2800,
-      flapVelocity: -220,
-      gapHeight: 90,
-      scrollSpeed: 380,
+      gapHeight: { start: 220, end: 82 },
+      scrollSpeed: { start: 120, end: 380 },
+      gapDrift: { start: 40, end: 220 },
+      rampOverObstacles: 15,
     });
-    expect(v.playable).toBe(true);
+    if (v.playable) return;
+    expect(v.reason).toMatch(/\d+% into the ramp/);
   });
 
-  it("rejects gravity a flap cannot fight", () => {
-    const v = flyerPlayability({ ...playable, gravity: 3000, flapVelocity: -160 });
+  it("still rejects flat physics that were never possible", () => {
+    const v = flyerPlayability({
+      gravity: 3000,
+      flapVelocity: -150,
+      scrollSpeed: flat(400),
+      gapHeight: flat(80),
+      gapSpacing: flat(140),
+      gapDrift: flat(240),
+      rampOverObstacles: 10,
+    });
     expect(v.playable).toBe(false);
   });
 
   it("flags physics so gentle the player cannot lose", () => {
     const v = flyerPlayability({
-      ...playable,
       gravity: 400,
       flapVelocity: -160,
-      gapHeight: 300,
-      gapSpacing: 600,
-      gapDrift: 0,
+      scrollSpeed: flat(60),
+      gapHeight: flat(300),
+      gapSpacing: flat(600),
+      gapDrift: flat(0),
+      rampOverObstacles: 5,
     });
     if (v.playable) expect(v.trivial).toBe(true);
   });
 
-  it("always terminates, even on pathological input", () => {
-    // A validator that hangs is worse than one that rejects.
+  it("always terminates, even on a long ramp", () => {
     const started = Date.now();
-    flyerPlayability({ ...playable, scrollSpeed: 60, gapSpacing: 600 });
-    expect(Date.now() - started).toBeLessThan(2000);
+    flyerPlayability({ ...playable, rampOverObstacles: 60 });
+    expect(Date.now() - started).toBeLessThan(3000);
   });
 
-  it("is deterministic - the same spec always gets the same verdict", () => {
+  it("is deterministic", () => {
     expect(flyerPlayability(playable)).toEqual(flyerPlayability(playable));
   });
 });

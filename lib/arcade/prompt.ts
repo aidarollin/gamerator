@@ -11,13 +11,23 @@ export const ARCADE_SENTINEL =
 
 const ENGINE_SPECS = `
 endless-flyer  (Flappy Bird)
-  gravity        400..3000    px/s^2 downward
-  flapVelocity   -800..-150   px/s, negative is up, applied on tap
-  scrollSpeed    60..400      px/s the world moves
-  gapHeight      80..300      px vertical opening
-  gapSpacing     140..600     px between gap centres
-  gapDrift       0..240       px a gap may move from the last one
+  gravity        400..3000    px/s^2 downward           CONSTANT
+  flapVelocity   -800..-150   px/s, negative is up      CONSTANT
+  scrollSpeed    60..400      px/s the world moves      RANGE {start,end}
+  gapHeight      80..300      px vertical opening       RANGE {start,end}
+  gapSpacing     140..600     px between gap centres    RANGE {start,end}
+  gapDrift       0..240       px a gap may move         RANGE {start,end}
+  rampOverObstacles  1..60    obstacles until the range reaches its end
   lives          1..5
+
+  A RANGE field is an object: {"start": 180, "end": 145}. The value moves
+  linearly from start to end over rampOverObstacles obstacles, then holds.
+  This is how a run BUILDS. A flat run - start equal to end - repeats, and
+  repeating is the most common reason a game is boring. Unless the request
+  asks for something steady, make the run escalate: speed up, narrow the gap,
+  shorten the spacing, widen the drift. gravity and flapVelocity stay constant
+  because they are the feel of the character, and a hero whose weight changes
+  mid-run reads as a bug rather than as escalation.
 
 endless-runner  (jump obstacles on the ground)
   gravity        800..4000
@@ -66,8 +76,10 @@ HARD RULES
    the game, so getting this right is the whole job:
 
    - endless-flyer: a tap must lift the player enough to cross gapHeight before
-     the next gap arrives. Very high gravity with a weak flap is impossible.
-     Very low gravity with huge gaps is a screensaver.
+     the next gap arrives - AT THE END OF THE RAMP, not just at the start. A
+     run that opens gently and ends impossible is rejected. Very high gravity
+     with a weak flap is impossible; very low gravity with huge gaps is a
+     screensaver.
    - endless-runner: a jump must peak ABOVE obstacleHeight, and must land
      before the next obstacle arrives (airTime vs spacing/scrollSpeed).
    - brick-breaker: the paddle must be able to cross most of the board while

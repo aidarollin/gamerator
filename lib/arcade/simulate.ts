@@ -1,28 +1,33 @@
 import { makeRng } from "@/lib/game/random";
+import { lerp, rampT, type Range } from "./ramp";
 
 /**
  * Headless playability simulation.
  *
  * A perfect-play agent is run over the opening obstacles using the same physics
- * the renderer uses. If it cannot survive, the spec is impossible and the
- * validator rejects it with a reason the repair turn can act on.
+ * and the same level generator the renderer uses. If it cannot survive, the
+ * spec is impossible and the validator rejects it with a reason the repair turn
+ * can act on.
  *
  * This is only possible because the engine is ours and the spec is data. You
  * cannot ask "is this playable?" of generated code without running it and
  * watching, and a model cannot answer it about its own output - it has no idea
  * whether gravity 2800 with a -220 flap can clear a 95px gap. Arithmetic does.
  *
- * Pure and deterministic: no canvas, no timers, no randomness beyond a fixed
- * seed. It runs in milliseconds inside `safeParse`.
+ * Since physics now RAMP, the simulation must reach the hardest point of the
+ * ramp rather than sampling an average: a spec whose opening is gentle and
+ * whose end is impossible would otherwise validate and then break in play. It
+ * runs the whole ramp plus a margin, which is why the obstacle count is derived
+ * from the spec instead of fixed.
  */
 
 export const SIM = {
-  /** Physics step. Smaller than a frame so the verdict does not depend on FPS. */
   dt: 1 / 120,
-  /** Obstacles the agent must clear to count as playable. */
-  obstacles: 12,
-  /** Fixed seed - the same spec must always get the same verdict. */
   seed: 0x5eed,
+  /** Obstacles simulated beyond the end of the ramp. */
+  marginObstacles: 4,
+  /** Ceiling on simulated obstacles, so a long ramp cannot stall validation. */
+  maxObstacles: 60,
   /**
    * Seconds between taps the agent is allowed.
    *
@@ -30,8 +35,6 @@ export const SIM = {
    * second - which is effectively a jetpack: it can hover against any gravity,
    * so almost no spec is ever rejected and the whole check is theatre. The
    * first version of this file had exactly that bug, and the tests caught it.
-   *
-   * 0.1s is ten taps a second, which is generous for a human thumb.
    */
   flapCooldown: 0.1,
   worldHeight: 540,
@@ -43,15 +46,32 @@ export const SIM = {
 export type FlyerRules = {
   gravity: number;
   flapVelocity: number;
-  scrollSpeed: number;
-  gapHeight: number;
-  gapSpacing: number;
-  gapDrift: number;
+  scrollSpeed: Range;
+  gapHeight: Range;
+  gapSpacing: Range;
+  gapDrift: Range;
+  rampOverObstacles: number;
 };
 
 export type Verdict =
   | { playable: true; trivial: boolean; cleared: number }
   | { playable: false; trivial: false; cleared: number; reason: string };
+
+/** Enough obstacles to have covered the whole ramp, plus a margin. */
+export function simulatedObstacles(rules: FlyerRules): number {
+  return Math.min(SIM.maxObstacles, rules.rampOverObstacles + SIM.marginObstacles);
+}
+
+/** The physics in force at a given obstacle. Shared with the renderer. */
+export function flyerAt(rules: FlyerRules, obstacleIndex: number) {
+  const t = rampT(obstacleIndex, rules.rampOverObstacles);
+  return {
+    scrollSpeed: lerp(rules.scrollSpeed, t),
+    gapHeight: lerp(rules.gapHeight, t),
+    gapSpacing: lerp(rules.gapSpacing, t),
+    gapDrift: lerp(rules.gapDrift, t),
+  };
+}
 
 /**
  * Gap centres. The renderer generates its level exactly this way from the same
@@ -60,14 +80,15 @@ export type Verdict =
  */
 export function gapCentres(rules: FlyerRules, count: number, seed = SIM.seed) {
   const rng = makeRng(seed);
-  const half = rules.gapHeight / 2;
-  const margin = 12;
-  const min = half + margin;
-  const max = SIM.worldHeight - half - margin;
   const centres: number[] = [];
   let prev = SIM.worldHeight / 2;
   for (let i = 0; i < count; i++) {
-    const drift = (rng() * 2 - 1) * rules.gapDrift;
+    const at = flyerAt(rules, i);
+    const half = at.gapHeight / 2;
+    const margin = 12;
+    const min = half + margin;
+    const max = SIM.worldHeight - half - margin;
+    const drift = (rng() * 2 - 1) * at.gapDrift;
     prev = Math.min(max, Math.max(min, prev + drift));
     centres.push(prev);
   }
@@ -75,7 +96,8 @@ export function gapCentres(rules: FlyerRules, count: number, seed = SIM.seed) {
 }
 
 export function flyerPlayability(rules: FlyerRules): Verdict {
-  const centres = gapCentres(rules, SIM.obstacles + 1);
+  const target = simulatedObstacles(rules);
+  const centres = gapCentres(rules, target + 1);
 
   let y = SIM.worldHeight / 2;
   let vy = 0;
@@ -86,12 +108,14 @@ export function flyerPlayability(rules: FlyerRules): Verdict {
   let sinceFlap: number = SIM.flapCooldown;
   let minClearance = Number.POSITIVE_INFINITY;
 
-  // A generous ceiling: enough time for every obstacle at this scroll speed,
-  // plus slack. Without it a pathological spec could spin here forever, and a
-  // validator that hangs is worse than one that rejects.
-  const maxTime = ((SIM.obstacles + 2) * rules.gapSpacing) / rules.scrollSpeed + 5;
+  // A generous ceiling based on the slowest the world ever scrolls. Without it
+  // a pathological spec could spin here forever, and a validator that hangs is
+  // worse than one that rejects.
+  const slowest = Math.min(rules.scrollSpeed.start, rules.scrollSpeed.end);
+  const widest = Math.max(rules.gapSpacing.start, rules.gapSpacing.end);
+  const maxTime = ((target + 2) * widest) / slowest + 5;
 
-  while (cleared < SIM.obstacles) {
+  while (cleared < target) {
     elapsed += SIM.dt;
     if (elapsed > maxTime) {
       return {
@@ -102,19 +126,19 @@ export function flyerPlayability(rules: FlyerRules): Verdict {
       };
     }
 
-    const nextIndex = Math.min(cleared, centres.length - 1);
-    const target = centres[nextIndex];
+    const at = flyerAt(rules, cleared);
+    const targetY = centres[Math.min(cleared, centres.length - 1)];
 
     // The controller. A naive "flap whenever below centre" agent overshoots by
     // a full flap impulse and punches through the top of a tight gap - it
-    // reported missing by exactly the impulse size, which is what gave the bug
+    // reported missing by exactly the impulse size, which is what gave that bug
     // away. A real player anticipates, so this one does too: it only flaps when
     // the resulting apex still lands inside the gap, and flaps regardless when
     // the alternative is falling out of the bottom or hitting the floor.
     sinceFlap += SIM.dt;
-    const half = rules.gapHeight / 2;
-    const gapTop = target - half + SIM.birdRadius;
-    const gapBottom = target + half - SIM.birdRadius;
+    const half = at.gapHeight / 2;
+    const gapTop = targetY - half + SIM.birdRadius;
+    const gapBottom = targetY + half - SIM.birdRadius;
     const climb = (rules.flapVelocity * rules.flapVelocity) / (2 * rules.gravity);
     const climbLeft = vy < 0 ? (vy * vy) / (2 * rules.gravity) : 0;
 
@@ -124,7 +148,7 @@ export function flyerPlayability(rules: FlyerRules): Verdict {
 
     if (
       sinceFlap >= SIM.flapCooldown &&
-      (mustFlap || (y - climbLeft > target && !wouldOvershoot))
+      (mustFlap || (y - climbLeft > targetY && !wouldOvershoot))
     ) {
       vy = rules.flapVelocity;
       sinceFlap = 0;
@@ -133,7 +157,7 @@ export function flyerPlayability(rules: FlyerRules): Verdict {
 
     vy += rules.gravity * SIM.dt;
     y += vy * SIM.dt;
-    x += rules.scrollSpeed * SIM.dt;
+    x += at.scrollSpeed * SIM.dt;
 
     if (y - SIM.birdRadius <= 0 || y + SIM.birdRadius >= SIM.worldHeight) {
       return {
@@ -144,21 +168,22 @@ export function flyerPlayability(rules: FlyerRules): Verdict {
       };
     }
 
-    if (x >= rules.gapSpacing) {
-      x -= rules.gapSpacing;
-      const top = target - half;
-      const bottom = target + half;
+    if (x >= at.gapSpacing) {
+      x -= at.gapSpacing;
+      const top = targetY - half;
+      const bottom = targetY + half;
       minClearance = Math.min(
         minClearance,
         Math.min(y - SIM.birdRadius - top, bottom - (y + SIM.birdRadius)),
       );
       if (y - SIM.birdRadius < top || y + SIM.birdRadius > bottom) {
-        const off = Math.round(Math.abs(y - target));
+        const off = Math.round(Math.abs(y - targetY));
+        const pct = Math.round(rampT(cleared, rules.rampOverObstacles) * 100);
         return {
           playable: false,
           trivial: false,
           cleared,
-          reason: `a perfect player misses obstacle ${cleared + 1} by ${off}px - a ${Math.round(rules.gapHeight)}px gap is too tight for these physics at ${Math.round(rules.scrollSpeed)}px/s`,
+          reason: `a perfect player misses obstacle ${cleared + 1} by ${off}px - ${pct}% into the ramp the gap is ${Math.round(at.gapHeight)}px at ${Math.round(at.scrollSpeed)}px/s, too tight for these physics`,
         };
       }
       cleared++;
@@ -167,8 +192,10 @@ export function flyerPlayability(rules: FlyerRules): Verdict {
 
   // Trivial two ways: the agent barely had to act, or it never came close to an
   // edge. Either means the player cannot lose, and a game you cannot lose is a
-  // screensaver.
-  const lazy = flaps < SIM.obstacles * 0.5;
-  const roomy = minClearance > rules.gapHeight * 0.3;
+  // screensaver. Measured against the tightest gap the ramp ever reaches, since
+  // that is where a ramped spec is supposed to be hardest.
+  const tightest = Math.min(rules.gapHeight.start, rules.gapHeight.end);
+  const lazy = flaps < target * 0.5;
+  const roomy = minClearance > tightest * 0.3;
   return { playable: true, trivial: lazy || roomy, cleared };
 }

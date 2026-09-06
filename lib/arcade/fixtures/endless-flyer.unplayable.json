@@ -17,12 +17,25 @@
     "targetScore": 20
   },
   "rules": {
-    "gravity": 3000,
-    "flapVelocity": -150,
-    "scrollSpeed": 400,
-    "gapHeight": 80,
-    "gapSpacing": 140,
-    "gapDrift": 240,
+    "gravity": 2600,
+    "flapVelocity": -300,
+    "scrollSpeed": {
+      "start": 100,
+      "end": 390
+    },
+    "gapHeight": {
+      "start": 240,
+      "end": 85
+    },
+    "gapSpacing": {
+      "start": 420,
+      "end": 150
+    },
+    "gapDrift": {
+      "start": 20,
+      "end": 200
+    },
+    "rampOverObstacles": 20,
     "lives": 1
   }
 }

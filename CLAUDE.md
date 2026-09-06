@@ -27,6 +27,7 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/engines.ts` | Playability checks for the other four engines |
 | `lib/arcade/ramp.ts` | Ranged physics — `{start, end}` over obstacles |
 | `lib/arcade/collect.ts` | Collectible geometry, **outside the closure so it can be tested** |
+| `lib/arcade/level.ts` | Platformer levels, built reachable **by construction** |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. **Wired but unreachable** — see below |
 | `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
@@ -102,6 +103,11 @@ flyer into one altitude band; if that band misses the coin line it misses
 like a coin nobody wanted, so a broken collectible ships silently. That is why
 the geometry moved out of the closure into `lib/arcade/collect.ts` — a rule
 trapped in a closure cannot be measured, only played and watched.
+
+**A check on one axis is not a check.** `platformerVerdict` compared a running
+jump against the horizontal gap and passed levels that climbed 150px against a
+144px jump. Whenever a rule constrains one dimension, ask what the other one is
+doing — `reachAtRise` in `lib/arcade/level.ts` is the honest version.
 
 **A playability check must be able to fire.** brick-breaker's shipped as dead
 code — the fastest legal ball against the slowest legal paddle still passed, so

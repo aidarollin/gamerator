@@ -2,6 +2,7 @@
 
 import { WORLD, type ArcadeSpec } from "@/lib/arcade/schema";
 import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
+import { buildLevel, LEVEL, type Plat } from "@/lib/arcade/level";
 import {
   coinOffsets as flyerCoinOffsets,
   coinPos as flyerCoinPos,
@@ -545,29 +546,22 @@ export const runnerFactory: EngineFactory = (h, spec) => {
 export const platformerFactory: EngineFactory = (h, spec) => {
   if (spec.engine !== "platformer") throw new Error("wrong engine");
   const r = spec.rules;
-  const PH = 18, PW = 34;
-  type Plat = { x: number; y: number; w: number };
+  const PH = LEVEL.thickness, PW = 34;
   let plats: Plat[] = [], coins: { x: number; y: number; got: boolean }[] = [];
   let x = 40, y = 0, vx = 0, vy = 0, onGround = false, camX = 0, dead = false;
   let parts: Particle[] = [], pop = 0, goal = 0, hold = 0, t = 0;
 
+  /**
+   * The level comes from lib/arcade/level.ts, which sizes every gap against
+   * what a jump reaches AT THAT RISE. The version that lived here picked
+   * heights independently - up to 150px apart against a 144px jump - so some
+   * seeds were simply impossible, and nothing said so.
+   */
   const build = () => {
-    const rng = makeRng(9001);
-    plats = []; coins = [];
-    let cx = 0;
-    for (let i = 0; i < r.platforms; i++) {
-      const w = 90 + rng() * 90;
-      const gap = i === 0 ? 0 : 40 + rng() * (r.maxGap - 40);
-      cx += gap + (i === 0 ? 0 : 0);
-      const py = H - 120 - rng() * 150;
-      plats.push({ x: cx, y: py, w });
-      cx += w;
-    }
-    goal = cx;
-    for (let i = 0; i < r.coins; i++) {
-      const p = plats[1 + Math.floor(rng() * (plats.length - 1))];
-      coins.push({ x: p.x + p.w / 2, y: p.y - 34, got: false });
-    }
+    const level = buildLevel(r);
+    plats = level.plats;
+    coins = level.coins.map((c) => ({ ...c, got: false }));
+    goal = level.goal;
     x = plats[0].x + 20; y = plats[0].y - PH * 2; vx = 0; vy = 0; camX = 0;
   };
 
@@ -618,22 +612,34 @@ export const platformerFactory: EngineFactory = (h, spec) => {
       const { ctx, paint: p, palette } = h;
       p.sky(palette, W, H, spec.theme.background === "night");
       p.clouds(palette, W, H, camX);
-      // Scenery and a floor, so the level does not float in empty space.
-      p.hills(palette, W, H - 26, camX);
-      p.bushes(palette, W, H - 14, camX);
-      p.ground(palette, W, H - 26, 26, camX);
+      // Distant scenery only. There used to be a solid-looking ground strip
+      // across the bottom that the player fell straight through to their death
+      // - the level said "floor" and meant "pit", which is the least fair thing
+      // a platformer can do. Now the platforms themselves are the terrain and
+      // the gaps between them are visibly empty.
+      p.hills(palette, W, H - 96, camX);
       ctx.save();
       ctx.translate(-camX, 0);
-      for (const pl of plats) p.block(palette, pl.x, pl.y, pl.w, PH, 6);
+      // Each platform carries a pillar down out of frame, so a gap reads as a
+      // hole in the ground rather than as a floating brick.
+      for (const pl of plats) {
+        p.block(palette, pl.x + 5, pl.y + PH - 4, pl.w - 10, H - pl.y, 4);
+        p.block(palette, pl.x, pl.y, pl.w, PH, 6);
+      }
       for (const c of coins) {
         if (c.got) continue;
         p.coin(palette, c.x, c.y, 20, Math.abs(Math.cos(t * 3 + c.x * 0.05)) * 0.8 + 0.2);
       }
-      // The goal flag.
-      p.block(palette, goal - 20, H - 240, 8, 160, 3);
+      // The goal flag, standing ON the last platform rather than floating at a
+      // fixed height near it.
+      const last = plats[plats.length - 1];
+      const poleTop = last.y - 150;
+      p.block(palette, last.x + last.w - 26, poleTop, 8, 150, 3);
       ctx.fillStyle = palette.gold;
       ctx.beginPath();
-      ctx.moveTo(goal - 12, H - 238); ctx.lineTo(goal + 30, H - 224); ctx.lineTo(goal - 12, H - 210);
+      ctx.moveTo(last.x + last.w - 18, poleTop + 4);
+      ctx.lineTo(last.x + last.w + 24, poleTop + 20);
+      ctx.lineTo(last.x + last.w - 18, poleTop + 36);
       ctx.closePath(); ctx.fill();
       p.burst(palette, parts);
       ctx.restore();

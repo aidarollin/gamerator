@@ -288,7 +288,19 @@ export function GameFrame({
         pending.current.push({ kind: "press", where: map[e.code] });
       }
     };
-    const up = () => pending.current.push({ kind: "release" });
+    /**
+     * Only a MOVEMENT key releases.
+     *
+     * This used to fire on every keyup, including the jump. The platformer
+     * reads `release` as "stop walking", so on a keyboard every jump also
+     * stopped you dead - you could run, or you could jump, never both, and the
+     * character simply never left the first platform. The other four engines
+     * ignore `release` entirely, which is why it went unnoticed for so long.
+     */
+    const up = (e: KeyboardEvent) => {
+      if (["ArrowLeft", "ArrowRight", "ArrowDown"].includes(e.code))
+        pending.current.push({ kind: "release" });
+    };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => {

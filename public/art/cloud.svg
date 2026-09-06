@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 56" width="120" height="56">
+  <!-- Soft cumulus. Drawn white and tinted at runtime so it works on any
+       palette and in day or night. -->
+  <g fill="#ffffff">
+    <ellipse cx="34" cy="36" rx="30" ry="19"/>
+    <ellipse cx="62" cy="26" rx="26" ry="22"/>
+    <ellipse cx="88" cy="37" rx="26" ry="17"/>
+    <rect x="20" y="34" width="82" height="20" rx="10"/>
+  </g>
+</svg>

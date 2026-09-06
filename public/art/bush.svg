@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 48" width="96" height="48">
+  <!-- Near parallax silhouette, sits on the ground line. -->
+  <g fill="#ffffff">
+    <ellipse cx="26" cy="34" rx="24" ry="16"/>
+    <ellipse cx="52" cy="26" rx="22" ry="20"/>
+    <ellipse cx="74" cy="35" rx="20" ry="14"/>
+    <rect x="6" y="32" width="84" height="16" rx="8"/>
+  </g>
+</svg>

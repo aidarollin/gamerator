@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" width="240" height="120">
+  <!-- Far parallax silhouette. One shape, tinted; the notch keeps a row of
+       them from reading as a single repeated blob. -->
+  <path fill="#ffffff" d="M0 120 L0 78 Q34 34 68 60 Q92 78 112 44 Q140 4 172 46 Q198 80 240 62 L240 120 Z"/>
+</svg>

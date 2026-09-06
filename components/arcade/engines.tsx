@@ -5,6 +5,7 @@ import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
 import { makeRng } from "@/lib/game/random";
 import { CHARACTERS } from "./characters";
 import { spawnBurst, stepParticles, type Particle } from "./paint";
+import { makeRng as rngFor } from "@/lib/game/random";
 import type { Engine, EngineFactory, EngineHost } from "./GameFrame";
 
 /**
@@ -33,6 +34,19 @@ export const flyerFactory: EngineFactory = (h, spec) => {
   let passed = 0, tilt = 0;
   let parts: Particle[] = [];
 
+  /**
+   * Collectibles, adopted from Flying Sushi.
+   *
+   * Without them the flight path has nothing to aim at - you survive, you do
+   * not play. They sit offset from the gap centre so taking one costs a little
+   * safety, which is the whole point. Deterministic from a seed, like
+   * everything else, and OPTIONAL: they never gate progress, so the
+   * playability simulation does not need to know about them.
+   */
+  const coinRng = rngFor(0xc0);
+  const coinOffsets = Array.from({ length: 400 }, () => (coinRng() * 2 - 1) * 0.34);
+  const taken = new Set<number>();
+
   // The physics in force RIGHT NOW, from the same function the validator
   // simulates. If the renderer ramped any other way the playability check would
   // be verifying a game nobody plays.
@@ -50,7 +64,7 @@ export const flyerFactory: EngineFactory = (h, spec) => {
   };
 
   return {
-    reset() { y = H / 2; vy = 0; dist = 0; passed = 0; dead = false; parts = []; },
+    reset() { y = H / 2; vy = 0; dist = 0; passed = 0; dead = false; parts = []; taken.clear(); },
     input(kind) {
       if (kind === "press" && !dead && h.phase() === "playing") {
         vy = r.flapVelocity;
@@ -72,6 +86,19 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       if (y - art.radius <= 0) { y = art.radius; vy = 0; }
       if (y + art.radius >= floor) { y = floor - art.radius; die(); return; }
 
+      // Collect any coin the player is overlapping.
+      for (let i = passed; i <= passed + 3; i++) {
+        if (i <= 0 || taken.has(i)) continue;
+        const c = coinPos(i);
+        const cx = SIM.birdX + c.x - dist;
+        if (Math.abs(cx - SIM.birdX) < 20 && Math.abs(c.y - y) < 22) {
+          taken.add(i);
+          pop = 1;
+          spawnBurst(parts, cx, c.y, 7);
+          h.addScore(spec.scoring.pointsPerObstacle);
+        }
+      }
+
       // Obstacles are spaced by the ramp, so their x positions are a running
       // sum rather than index * spacing.
       const nextX = obstacleX(passed + 1);
@@ -85,9 +112,22 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       }
     },
     draw() {
-      const { paint: p, palette } = h;
-      p.sky(palette, W, H);
+      const { ctx, paint: p, palette } = h;
+      const night = spec.theme.background === "night";
+      p.sky(palette, W, H, night);
       p.clouds(palette, W, H, dist);
+      p.hills(palette, W, floor, dist);
+      p.bushes(palette, W, floor, dist);
+
+      // Coins are drawn behind the pipes so a pipe edge never hides one.
+      for (let i = passed; i <= passed + 5; i++) {
+        if (i <= 0 || taken.has(i)) continue;
+        const c = coinPos(i);
+        const cx = SIM.birdX + c.x - dist;
+        if (cx < -30 || cx > W + 30) continue;
+        p.coin(palette, cx, c.y, 22, Math.abs(Math.cos(t * 3 + i)) * 0.8 + 0.2);
+      }
+
       for (let i = passed; i <= passed + 5; i++) {
         if (i <= 0) continue;
         const c = centres[i % centres.length];
@@ -102,6 +142,7 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       }
       p.ground(palette, W, floor, GROUND, dist);
       p.burst(palette, parts);
+      void ctx;
       drawCharacter(h, spec, SIM.birdX, y, {
         tilt: tilt + (dead ? t * 2 : 0),
         bob: h.phase() === "ready" ? Math.sin(t * 3) * 6 : 0,
@@ -117,6 +158,18 @@ export const flyerFactory: EngineFactory = (h, spec) => {
     let d = 0;
     for (let i = 1; i <= n; i++) d += flyerAt(r, i - 1).gapSpacing;
     return d;
+  }
+
+  /** A coin sits between two obstacles, offset from the gap centre. */
+  function coinPos(n: number) {
+    const here = obstacleX(n);
+    const next = here + flyerAt(r, n).gapSpacing;
+    const centre = centres[n % centres.length];
+    const half = flyerAt(r, n).gapHeight / 2;
+    return {
+      x: (here + next) / 2,
+      y: centre + coinOffsets[n % coinOffsets.length] * half,
+    };
   }
 };
 
@@ -148,7 +201,12 @@ export const brickFactory: EngineFactory = (h, spec) => {
   return {
     reset() { layout(); px = W / 2; targetX = W / 2; serve(); parts = []; },
     input(kind, where) {
-      if (kind === "press" && where) { targetX = where.x; launched = true; }
+      if (kind !== "press") return;
+      // A press with no pointer position is the keyboard. It must still launch,
+      // or the game is unplayable without a mouse - which is how it shipped,
+      // and only a screenshot showing a stuck score of 0 revealed it.
+      if (where) targetX = where.x;
+      launched = true;
     },
     step(dt) {
       pop = Math.max(0, pop - dt * 4);
@@ -187,7 +245,7 @@ export const brickFactory: EngineFactory = (h, spec) => {
     },
     draw() {
       const { paint: p, palette, ctx } = h;
-      p.sky(palette, W, H);
+      p.sky(palette, W, H, spec.theme.background === "night");
       for (const b of bricks) if (b.alive) p.block(palette, b.x, b.y, bw, brickH, 6);
       p.burst(palette, parts);
       p.block(palette, px - r.paddleWidth / 2, PAD_Y, r.paddleWidth, PAD_H, 7);
@@ -321,8 +379,10 @@ export const runnerFactory: EngineFactory = (h, spec) => {
     },
     draw() {
       const { paint: p, palette } = h;
-      p.sky(palette, W, H);
+      p.sky(palette, W, H, spec.theme.background === "night");
       p.clouds(palette, W, H, dist);
+      p.hills(palette, W, floor, dist);
+      p.bushes(palette, W, floor, dist);
       const first = Math.floor(dist / r.spacing);
       for (let i = first; i <= first + 4; i++) {
         const x = RX + (i + 1) * r.spacing - dist;
@@ -375,7 +435,11 @@ export const platformerFactory: EngineFactory = (h, spec) => {
     reset() { build(); dead = false; parts = []; },
     input(kind, where) {
       if (kind === "release") { hold = 0; return; }
-      if (!where) return;
+      // Keyboard press with no position = jump, the primary action.
+      if (!where) {
+        if (onGround) { vy = r.jumpVelocity; onGround = false; }
+        return;
+      }
       // Left half walks left, right half walks right, top third jumps. One
       // thumb, no virtual d-pad to miss.
       if (where.y < H * 0.34) {
@@ -410,8 +474,12 @@ export const platformerFactory: EngineFactory = (h, spec) => {
     },
     draw() {
       const { ctx, paint: p, palette } = h;
-      p.sky(palette, W, H);
+      p.sky(palette, W, H, spec.theme.background === "night");
       p.clouds(palette, W, H, camX);
+      // Scenery and a floor, so the level does not float in empty space.
+      p.hills(palette, W, H - 26, camX);
+      p.bushes(palette, W, H - 14, camX);
+      p.ground(palette, W, H - 26, 26, camX);
       ctx.save();
       ctx.translate(-camX, 0);
       for (const pl of plats) p.block(palette, pl.x, pl.y, pl.w, PH, 6);
@@ -452,7 +520,22 @@ function drawCharacter(
   if (o.tilt) ctx.rotate(o.tilt);
   if (o.squash) ctx.scale(1 / o.squash, o.squash);
   if (img && img.complete && img.naturalWidth > 0) {
-    ctx.drawImage(img, -size / 2, -size / 2, size, size);
+    if (art.circular) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      ctx.restore();
+      // A rim so the clipped disc reads as a badge rather than a crop.
+      ctx.strokeStyle = palette.white;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, size / 2 - 1, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+    }
   } else {
     ctx.fillStyle = palette.white;
     ctx.strokeStyle = palette.deep;

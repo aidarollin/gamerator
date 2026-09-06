@@ -1,0 +1,36 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Peribahasa Flight",
+    "description": "Terbang melalui maksud yang betul.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "b-melayu",
+    "skin": "pbot",
+    "background": "sky"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 1500,
+    "flapVelocity": -430,
+    "scrollSpeed": 160,
+    "gapHeight": 165,
+    "gapSpacing": 270,
+    "gapDrift": 70,
+    "lives": 3
+  },
+  "contentTwist": {
+    "prompt": "Terbang melalui maksud 'Ringan tulang'.",
+    "correct": "Rajin bekerja",
+    "distractors": [
+      "Sangat kurus",
+      "Suka tidur"
+    ]
+  }
+}

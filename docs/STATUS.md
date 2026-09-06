@@ -428,3 +428,80 @@ conventions; no messages to be sent) unchanged. 4 closed.
 
 **Next:** Phase 5 (authoring UI) so the flow is usable, or a live run of Phase
 4's exit criterion when there is appetite to spend a few cents.
+
+---
+
+## 2026-09-06 — Pivot: arcade games, and the first engine
+
+Zul: *"I want a game generator that generates games like Flappy Bird or Mario
+World or Mortal Kombat but with Pandai Theme, not necessarily about the content
+in pandai."*
+
+**The premise was wrong and it was my assumption.** From "game generator" I
+inferred curriculum quiz games and wrote it into PROJECT.md, the five templates
+and fifteen fixtures. Zul never said it. Recorded rather than quietly replaced,
+because the learning code only makes sense with this note attached.
+
+**Decided** — arcade games with a Pandai skin; audience is **students inside
+Pandai**; engines rather than generated code; learning content an optional
+twist. Full re-scope entry in SCOPE.md, catalog design in the new ENGINES.md.
+
+**What survived the pivot: about 70%.** Deploy pipeline, gates, the 366-token DS
+layer, the primitives, and the whole generation pipeline (provider seam, stub,
+validate-repair, SSE, audit) are all engine-agnostic. What was replaced is the
+template catalog and its renderers.
+
+**Built — `endless-flyer`, the one actually asked for**
+
+- `lib/arcade/schema.ts` — ArcadeSpec 2.0. Palette is a DS subject or accent
+  key, so the model still cannot express a colour.
+- `lib/arcade/simulate.ts` — **the playability simulation**, the important new
+  idea. A perfect-play agent is run headlessly over twelve obstacles; a spec it
+  cannot survive is rejected with a reason the repair turn can use.
+- `components/arcade/EndlessFlyer.tsx` — canvas engine, fixed-timestep physics,
+  DS colours read from the live stylesheet.
+- 8 fixtures including two new categories the learning specs never needed:
+  **unplayable** and **trivial**.
+- `/play/arcade`.
+
+**Verified on the deployed site** — all 8 fixtures: five playable, three
+rejected, each with a reason that explains itself:
+
+> *a perfect player misses obstacle 2 by 114px - a 80px gap is too tight for
+> these physics at 400px/s*
+
+79 tests, `npm run check` exit 0.
+
+**Three times the tests caught me being wrong, in one session**
+
+1. **The simulated agent was a jetpack.** It could flap every physics step —
+   120 times a second — so it hovered against any gravity and almost nothing was
+   ever rejected. The check was theatre. Fixed with a 0.1s tap cooldown.
+2. **My test expectation was wrong, not the code.** I asserted gravity 2800 with
+   a -220 flap through a 90px gap was impossible. The arithmetic said otherwise
+   and the arithmetic was right. That case is now a named test, kept because it
+   is the argument for the simulation: this judgement is not reliable by eye —
+   not the model's, and not mine.
+3. **The agent overshot by exactly one flap impulse.** A naive "flap when below
+   centre" controller punches through the top of a tight gap. The 48px miss it
+   reported *was* the impulse size, which is what gave it away. The agent now
+   declines to flap when the resulting apex would leave the gap.
+
+**Two gate false positives found and fixed**, both by narrowing what is skipped
+rather than what is matched: `check:ds` read the HTML entity `&#9201;` as a
+colour, and `check:tokens` flagged `var(--x)` written as prose in a comment.
+Both still catch real failures — re-verified against planted ones.
+
+**Not done**
+
+- Four engines still unbuilt: `brick-breaker`, `snake`, `endless-runner`,
+  `platformer`. The last needs sprite art that does not exist.
+- The generation pipeline still produces *learning* specs. Pointing it at
+  ArcadeSpec is the next piece of real work, and the no-engine outcome needs
+  wiring into it.
+- No authoring UI. Still Phase 5.
+- The Pandai mascot PNG and `pbot.riv` are not used yet — the bird is drawn from
+  DS tokens, which is why the engine shipped without waiting on art.
+
+**Next:** point the generator at ArcadeSpec so a typed sentence produces a
+flyer, then add `brick-breaker` and `snake` (no art needed).

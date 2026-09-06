@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Out of range",
+    "description": "gravity is above the allowed maximum.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "primary",
+    "skin": "abstract",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 9000,
+    "flapVelocity": -400,
+    "scrollSpeed": 150,
+    "gapHeight": 160,
+    "gapSpacing": 260,
+    "gapDrift": 70,
+    "lives": 3
+  }
+}

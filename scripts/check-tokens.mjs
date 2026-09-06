@@ -112,6 +112,11 @@ for (const dir of ["app", "components", "lib"]) {
     if (SKIP.has(rel)) continue;
     const text = readFileSync(file, "utf8");
     text.split("\n").forEach((line, i) => {
+      // Prose mentioning a var() reference is not a reference. Comment lines are
+      // skipped rather than the pattern being narrowed, because narrowing would
+      // start letting real dangling tokens through - the same trade as the
+      // entity handling in check-ds.mjs.
+      if (/^\s*(\*|\/\/|\/\*)/.test(line)) return;
       for (const m of line.matchAll(/var\(\s*(--[a-z0-9-]+)/gi)) {
         const v = m[1];
         // A template interpolation - `var(--status-${key}-default)` - is not a

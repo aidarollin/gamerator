@@ -1,0 +1,79 @@
+/* Arcade shell. Colour comes only from DS tokens; the canvas reads the same
+ * tokens at runtime because canvas needs real values, not var() references. */
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-xs);
+  align-items: center;
+  width: 100%;
+}
+
+.hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 360px;
+  padding: 0 var(--spacing-component-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.score {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-default-heading);
+  line-height: 1;
+}
+
+.lives { color: var(--status-lives-default); font-size: 16px; letter-spacing: 2px; }
+.best { font-size: 12px; color: var(--text-default-caption); }
+
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 360 / 540;
+  border-radius: var(--radius-3xl);
+  overflow: hidden;
+  border: var(--border-width-xs) solid var(--border-general-default);
+  background: var(--surface-general-default);
+  touch-action: manipulation;
+}
+
+.canvas { display: block; width: 100%; height: 100%; }
+
+.tapZone {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-component-2xs);
+  border: 0;
+  cursor: pointer;
+  background: var(--surface-general-default-alpha);
+  color: var(--text-default-heading);
+  text-align: center;
+  padding: var(--spacing-component-md);
+}
+
+.overlayTitle { font-size: 20px; font-weight: 700; }
+.overlayHint { font-size: 13px; color: var(--text-default-body); }
+
+.twist {
+  max-width: 360px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-default-body);
+  text-align: center;
+}

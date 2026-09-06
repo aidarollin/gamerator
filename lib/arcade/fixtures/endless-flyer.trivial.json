@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Screensaver",
+    "description": "So easy there is no game in it.",
+    "language": "en",
+    "difficulty": "easy"
+  },
+  "theme": {
+    "palette": "kafa",
+    "skin": "panda",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 400,
+    "flapVelocity": -160,
+    "scrollSpeed": 60,
+    "gapHeight": 300,
+    "gapSpacing": 600,
+    "gapDrift": 0,
+    "lives": 5
+  }
+}

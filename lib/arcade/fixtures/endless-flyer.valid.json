@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "PBot Terbang",
+    "description": "Terbangkan PBot melalui celah buluh.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "b-melayu",
+    "skin": "pbot",
+    "background": "sky"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 25
+  },
+  "rules": {
+    "gravity": 1500,
+    "flapVelocity": -420,
+    "scrollSpeed": 150,
+    "gapHeight": 160,
+    "gapSpacing": 260,
+    "gapDrift": 70,
+    "lives": 3
+  }
+}

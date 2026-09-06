@@ -93,10 +93,17 @@ Two values in `pandai.question.uiux/resources/css/pandai/tokens.css` disagree
 with the live DS. **Recorded, not acted on** — that file belongs to another repo
 and another branch, and this project is not the right place to change it.
 
-| Token | tokens.css says | Live DS says |
+| Token | The other repo says | Live DS says |
 | --- | --- | --- |
 | `Surface/secondary/default-subtle-hover` | `#d1f7d1` (comment: "Lime.200") | `#baf3b9` (Lime/**300**) |
 | Corner radius `4xl` | `24` | `54` — the live `3xl` is 24 |
+| Card radius | `--corner-radius-corner-xl` = **16** ("cards") | `Primary Card - 1.5` binds **`Radius/3xl` = 24** |
+
+The third one was found on 2026-09-06 while reading the Button and Card nodes
+for the primitives, and it is the most consequential: their `DESIGN-SYSTEM.md`
+radius table says cards are 16, and every card in the live DS is 24. A card
+built to that table is visibly squarer than the design system it claims to
+follow.
 
 Neither is dramatic on its own. Both are exactly what vendoring a stylesheet by
 hand produces over time, and both are the argument for generating this layer

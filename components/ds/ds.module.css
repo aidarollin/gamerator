@@ -1,0 +1,247 @@
+/* Pandai DS 1.5 primitives.
+ *
+ * Every value here is a token from app/ds/tokens.css. Nothing is hand-picked -
+ * the geometry below was read off the real Figma nodes on 2026-09-06 and each
+ * rule names the node it came from. If a value here disagrees with the DS, the
+ * DS wins: re-read the node, do not adjust the number.
+ *
+ * Accent theming works through a --ramp-* group set inline by the component
+ * (see rampStyle in tokens.ts). That is what lets one component render in any
+ * of the 19 subject identities without a class per subject.
+ */
+
+/* ---------------------------------------------------------------- Card
+ * Figma: "Primary Card - 1.5", Type=Primary Card
+ *   radius Radius/3xl (24) . padding Spacing/component/md (16, all four sides)
+ *   gap Spacing/component/sm (12) . stroke Border Width/xs (1)
+ *   fill Surface/secondary/default-subtle . stroke Border/default
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-sm);
+  padding: var(--spacing-component-md);
+  border-radius: var(--radius-3xl);
+  border: var(--border-width-xs) solid var(--border-default);
+  background: var(--surface-secondary-default-subtle);
+}
+
+/* The accented card is OURS, not a DS node: games need to wear their subject's
+ * identity. It keeps the DS card's geometry exactly and swaps only the two
+ * colours, so it cannot drift in shape.
+ */
+.cardAccent {
+  border-color: var(--ramp-default);
+  background: var(--ramp-subtle);
+}
+
+/* Figma: "Quiz Card - 1.5", Type=Subjects - radius Radius/2xl (18),
+ * fill Surface/general/default-tertiary, stroke bound to the subject. */
+.cardSubject {
+  border-radius: var(--radius-2xl);
+  background: var(--surface-general-default-tertiary);
+  border-color: var(--ramp-default);
+  gap: var(--spacing-component-xs);
+}
+
+/* Cards sit 16 apart - the same number as their padding. One rule covers both
+ * questions a layout asks. See docs/DESIGN-SYSTEM-SYNC.md. */
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-md);
+}
+
+/* ---------------------------------------------------------------- Button
+ * Figma: "Button - 1.5", Type=Student, Size=L (198 variants in the set)
+ *   height 40 . padding 8 / 12 (Spacing/component/xs / sm)
+ *   radius Radius/full (60) . stroke Border Width/xs . font-size 14
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-component-xs);
+  min-height: 40px;
+  padding: var(--spacing-component-xs) var(--spacing-component-sm);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  background: none;
+}
+
+.button:focus-visible {
+  outline: var(--border-width-s) solid var(--border-primary-focus);
+  outline-offset: var(--border-width-s);
+}
+
+/* Size=M and Size=S are separate variants in the set; only the L geometry was
+ * read, so these two scale padding and keep every colour identical rather than
+ * inventing values. Re-read the nodes before treating them as DS-exact. */
+.buttonM { min-height: 32px; font-size: 14px; }
+.buttonS { min-height: 24px; padding: var(--spacing-component-3xs) var(--spacing-component-xs); font-size: 12px; }
+
+/* Variants=Primary, State=Default */
+.btnPrimary {
+  background: var(--surface-primary-default);
+  border-color: var(--border-primary-focus);
+  color: var(--text-on-color-heading);
+}
+
+/* Variants=Secondary, State=Default */
+.btnSecondary {
+  background: var(--surface-general-default-secondary);
+  border-color: var(--border-primary-default);
+  color: var(--text-primary-default);
+}
+
+/* Variants=Tertiary, State=Default - no fill, no stroke in the DS node */
+.btnTertiary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-primary-default);
+}
+
+/* All three variants share ONE hover treatment in the DS. That is not an
+ * oversight in this file - Primary, Secondary and Tertiary all resolve to
+ * Surface/secondary/default + Border/secondary/focus + Text/secondary/focus on
+ * State=Hover. Verified across all three variant nodes. */
+.button:hover:not(:disabled) {
+  background: var(--surface-secondary-default);
+  border-color: var(--border-secondary-focus);
+  color: var(--text-secondary-focus);
+}
+
+/* State=Pressed */
+.button:active:not(:disabled) {
+  background: var(--surface-primary-focus);
+  border-color: var(--border-primary-default);
+  color: var(--text-on-color-heading);
+}
+
+/* State=Disabled */
+.button:disabled {
+  background: var(--surface-disabled-primary);
+  border-color: var(--border-disabled-primary);
+  color: var(--text-disabled-default);
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- Chip
+ * Figma: "Tag - 1.5", Size=S
+ *   height 24 . padding 4 / 8 . gap Spacing/component/3xs (2)
+ *   radius Radius/full . stroke Border Width/xs
+ *   Default  fill Surface/general/default-secondary  stroke Border/primary/default
+ *   Hover    fill Surface/secondary/default          stroke Border/secondary/focus
+ *   Pressed  fill Surface/primary/focus              stroke Border/primary/default-hover
+ *   Active   fill Surface/primary/default            stroke Border/primary/focus
+ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-3xs);
+  min-height: 24px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-primary-default);
+  background: var(--surface-general-default-secondary);
+  color: var(--text-default-body);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chipActive {
+  background: var(--surface-primary-default);
+  border-color: var(--border-primary-focus);
+  color: var(--text-on-color-heading);
+}
+
+/* Accent-themed chip - ours, DS geometry kept exactly. */
+.chipAccent {
+  background: var(--ramp-subtle);
+  border-color: var(--ramp-default);
+  color: var(--text-default-heading);
+}
+
+/* ---------------------------------------------------------- ProgressBar
+ * Figma: "Progress Bar - 1.5"
+ *   Size S / M / L -> height 4 / 8 / 16 . radius Radius/pill (999)
+ *   track fill Surface/disabled/primary
+ */
+.progress {
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--surface-disabled-primary);
+  overflow: hidden;
+}
+
+.progressS { height: 4px; }
+.progressM { height: 8px; }
+.progressL { height: 16px; }
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--ramp-default);
+  transition: width 200ms ease-out;
+}
+
+/* ---------------------------------------------------------------- Timer
+ * NOT a DS component - the DS has no Timer node. Composed from DS parts: the
+ * Tag pill geometry plus Status tokens, which is why every value below is
+ * borrowed rather than measured. If a Timer is ever added to the DS, re-read it
+ * and replace this block.
+ */
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-2xs);
+  min-height: 32px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-sm);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-informative-default);
+  background: var(--surface-informative-default-subtle);
+  color: var(--text-informative-default);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Under 20% remaining. Uses the warning ramp, and is paired with a text label
+ * in the component so the state is never carried by colour alone (NFR8). */
+.timerUrgent {
+  border-color: var(--border-warning-default);
+  background: var(--surface-warning-default-subtle);
+  color: var(--text-warning-default);
+}
+
+.timerExpired {
+  border-color: var(--border-disabled-primary);
+  background: var(--surface-disabled-primary);
+  color: var(--text-disabled-default);
+}
+
+/* ---------------------------------------------------------- Status pills
+ * Figma: Semantic/Status - score, streak, lives, coins, ruby.
+ * The DS already ships game-status colours; renderers use these rather than
+ * reaching for Surface/success because it happens to be green.
+ */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-2xs);
+  min-height: 24px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  border-radius: var(--radius-full);
+  background: var(--status-bg);
+  color: var(--status-on);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}

@@ -97,6 +97,14 @@ render with them.
 `grep -rE '#[0-9a-fA-F]{3,8}' components/` finds nothing outside the generated
 token file.
 
+**Done 2026-09-06.** 366 tokens vendored; `Card`, `Button`, `Chip`,
+`ProgressBar`, `Timer`, `StatusPill` built from geometry read off the real Figma
+nodes; `/ds` renders all 19 subjects and all 10 accent families. The grep became
+two scripts in `npm run check` — `check:ds` (no colour value outside the
+generated layer) and `check:tokens` (every `var(--…)` resolves). Both were
+tested against planted failures. Three drifts against the other repo's vendored
+CSS recorded in [DESIGN-SYSTEM-SYNC.md](DESIGN-SYSTEM-SYNC.md); none acted on.
+
 ---
 
 ## Phase 3 — Schema, fixtures, renderer — no AI

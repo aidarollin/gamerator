@@ -67,11 +67,14 @@ for (const dir of SCAN_DIRS) {
     if (ALLOW.has(rel)) continue;
     const text = readFileSync(file, "utf8");
     text.split("\n").forEach((line, i) => {
-      // A URL fragment or a git sha is not a colour.
-      if (/^\s*(\/\/|\*|#)/.test(line) && !line.includes("#")) return;
+      // HTML numeric entities are not colours, though their digits are valid
+      // hex - `&#9201;` (stopwatch) reads as #9201 to a naive scan. Strip them
+      // before matching rather than narrowing the colour pattern, which would
+      // start letting real values through.
+      const scanned = line.replace(/&#x?[0-9a-fA-F]+;/g, "");
       for (const re of PATTERNS) {
         re.lastIndex = 0;
-        const m = re.exec(line);
+        const m = re.exec(scanned);
         if (m) {
           findings.push(
             `${rel.split(sep).join("/")}:${i + 1}  ${m[0]}  ${line.trim().slice(0, 80)}`,

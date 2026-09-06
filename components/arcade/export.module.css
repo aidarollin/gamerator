@@ -1,0 +1,75 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-xs);
+  width: 100%;
+  max-width: 560px;
+  padding: var(--spacing-component-md);
+  border-radius: var(--radius-3xl);
+  border: var(--border-width-xs) solid var(--border-default);
+  background: var(--surface-secondary-default-subtle);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-component-xs);
+}
+
+.title { font-size: 15px; font-weight: 600; color: var(--text-default-heading); }
+
+.tabs { display: flex; gap: var(--spacing-component-3xs); }
+
+.tab, .tabOn {
+  min-height: 30px;
+  padding: 0 var(--spacing-component-sm);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-primary-default);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab { background: var(--surface-general-default); color: var(--text-primary-default); }
+.tabOn { background: var(--surface-primary-default); color: var(--text-on-color-heading); border-color: var(--border-primary-focus); }
+
+.hint { font-size: 12px; line-height: 1.5; color: var(--text-default-body); margin: 0; }
+
+.code {
+  margin: 0;
+  padding: var(--spacing-component-sm);
+  border-radius: var(--radius-2xl);
+  background: var(--surface-general-default);
+  border: var(--border-width-xs) solid var(--border-general-default);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-default-heading);
+  overflow-x: auto;
+  max-height: 260px;
+  overflow-y: auto;
+  white-space: pre;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: var(--spacing-component-xs); }
+
+.btn {
+  min-height: 36px;
+  padding: 0 var(--spacing-component-md);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-primary-default);
+  background: var(--surface-general-default);
+  color: var(--text-primary-default);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.btn:hover { background: var(--surface-secondary-default); border-color: var(--border-secondary-focus); color: var(--text-secondary-focus); }
+
+.foot { font-size: 11px; line-height: 1.5; color: var(--text-default-caption); margin: 0; }

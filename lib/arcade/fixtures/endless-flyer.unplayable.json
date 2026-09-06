@@ -9,8 +9,8 @@
   },
   "theme": {
     "palette": "chemistry",
-    "skin": "abstract",
-    "background": "night"
+    "background": "night",
+    "character": "aidan"
   },
   "scoring": {
     "pointsPerObstacle": 1,

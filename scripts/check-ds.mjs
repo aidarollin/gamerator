@@ -71,6 +71,10 @@ for (const dir of SCAN_DIRS) {
       // hex - `&#9201;` (stopwatch) reads as #9201 to a naive scan. Strip them
       // before matching rather than narrowing the colour pattern, which would
       // start letting real values through.
+      // Prose in a comment discussing colour formats is documentation, not a
+      // value the browser will ever see. Skipped for the same reason as in
+      // check-tokens.mjs: narrow what is skipped, never what is matched.
+      if (/^\s*(\*|\/\/|\/\*)/.test(line)) return;
       const scanned = line.replace(/&#x?[0-9a-fA-F]+;/g, "");
       for (const re of PATTERNS) {
         re.lastIndex = 0;

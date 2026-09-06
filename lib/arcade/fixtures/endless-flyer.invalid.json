@@ -9,8 +9,8 @@
   },
   "theme": {
     "palette": "primary",
-    "skin": "abstract",
-    "background": "plain"
+    "background": "plain",
+    "character": "pbot"
   },
   "scoring": {
     "pointsPerObstacle": 1,

@@ -9,8 +9,8 @@
   },
   "theme": {
     "palette": "b-melayu",
-    "skin": "pbot",
-    "background": "sky"
+    "background": "sky",
+    "character": "pbot"
   },
   "scoring": {
     "pointsPerObstacle": 1,

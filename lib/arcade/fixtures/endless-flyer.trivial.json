@@ -9,8 +9,8 @@
   },
   "theme": {
     "palette": "kafa",
-    "skin": "panda",
-    "background": "plain"
+    "background": "plain",
+    "character": "nadia"
   },
   "scoring": {
     "pointsPerObstacle": 1,

@@ -87,5 +87,37 @@ move to the not-building list once the arcade engines cover the ground, and
 | --- | --- |
 | **A fighting game (Mortal Kombat)** | Needs animation states, hitboxes and opponent AI, and Pandai's avatars are single static PNGs by their own audit. It is a project, not an engine. Recorded because it was asked for by name. |
 | **AI-generated game code** | Unchanged from above, and the reasoning is stronger for arcade than it was for quizzes. |
-| **Sound** | No asset library, and a game that autoplays audio in a classroom is a support ticket. |
 | **Leaderboards or saved scores** | Pandai owns the student record. Duplicating it here forks the source of truth. |
+
+### 2026-09-06 — Sound moved from not-building to built
+
+The reason on the not-building list was "no asset library, and a game that
+autoplays audio in a classroom is a support ticket." The first half was wrong
+and the second was addressable.
+
+**Wrong:** Zul's own Flying Sushi has music and effects, so the constraint was
+mine, not Pandai's. And no asset library is needed - every sound is synthesised
+by the Web Audio API at runtime, which costs zero bytes in the Worker bundle,
+carries no licence, and can be re-keyed per spec.
+
+**Addressed:** nothing plays until the press that starts a game, because a
+browser will not let an AudioContext start any earlier. Mute is one tap, it is
+reachable before the first press, and it persists across visits.
+
+Still not building: sound ASSETS. Recorded voice, licensed music, anything that
+ships a file.
+
+### 2026-09-06 — Game art is no longer bound to the design system
+
+Zul: "use whatever style for the game, keep Pandai DS as a backup and reference
+(minor)."
+
+The canvas now paints from authored arcade scenes in `lib/arcade/palettes.ts`,
+each carrying a sky family and a solid family. The DS token ramp remains the
+live fallback for any palette key with no scene, and the surrounding UI chrome
+is still pure DS. `check:ds` still holds every other file to the token layer;
+`palettes.ts` is named in its allowlist so the exception stays one file wide.
+
+This also closes the open question about the two DS Figma files. It no longer
+decides anything urgent: a hand-built Pandai game and a generated one were never
+going to share a palette once generated games got their own art direction.

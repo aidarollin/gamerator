@@ -17,13 +17,18 @@
  * 4. **Chunky display type.** System UI at 14px is a form. Games use heavy
  *    outlined numerals.
  *
- * All colour still comes from DS tokens - this is about which end of the ramp
- * and how many layers, not about inventing values.
+ * 5. **Two colour families.** A sky and a solid, reading as different
+ *    materials. One ramp painting both is why the obstacles used to look like
+ *    the sky in a darker tint. See `lib/arcade/palettes.ts`.
+ *
+ * Colour arrives as a `Palette`, which is either an authored arcade scene or -
+ * as a fallback - a DS token ramp. This file never picks a value either way.
  */
 
 import { drawArt } from "./art";
 
 export type Palette = {
+  /** Sky family: backdrop, clouds, far hills. */
   deep: string;
   mid: string;
   light: string;
@@ -32,7 +37,27 @@ export type Palette = {
   white: string;
   gold: string;
   danger: string;
+  /**
+   * Solid family: obstacles, ground, platforms - everything you can hit.
+   *
+   * Optional, and that is the point. An arcade scene sets them, so a blue sky
+   * can carry green pipes. A DS token ramp does not have a second family to
+   * offer, so it leaves them out and every solid falls back to the sky family,
+   * which is exactly how this rendered before scenes existed.
+   */
+  solidDeep?: string;
+  solidMid?: string;
+  solidEdge?: string;
 };
+
+/** The solid family, falling back to the sky family when a palette has none. */
+function solid(p: Palette) {
+  return {
+    deep: p.solidDeep ?? p.deep,
+    mid: p.solidMid ?? p.mid,
+    edge: p.solidEdge ?? p.edge,
+  };
+}
 
 export function shade(ctx: CanvasRenderingContext2D) {
   return {
@@ -84,14 +109,49 @@ export function shade(ctx: CanvasRenderingContext2D) {
       }
     },
 
-    /** Near bushes on the ground line. Faster layer, stronger tint. */
+    /**
+     * Near bushes on the ground line. Faster layer, stronger tint.
+     *
+     * Tinted from the SOLID family, not the sky: a bush grows out of the
+     * ground, and sharing the ground's colour is what makes the two read as one
+     * plane rather than as two stickers.
+     */
     bushes(p: Palette, w: number, groundY: number, offset: number) {
       const span = 150;
       const off = (offset * 0.55) % span;
       for (let i = -1; i < Math.ceil(w / span) + 2; i++) {
         const x = i * span - off;
-        drawArt(ctx, "bush", p.deep, x + span / 2, groundY - 12, 96, 48, 0.45);
+        drawArt(ctx, "bush", solid(p).deep, x + span / 2, groundY - 12, 96, 48, 0.45);
       }
+    },
+
+    /**
+     * A grid playfield, for snake.
+     *
+     * This was a flat wash of `white` at 60% until scenes arrived, at which
+     * point a pale sky made the board and the sky the same colour and the game
+     * became a character floating on a blank page. A board needs an EDGE (where
+     * the wall is) and a TEXTURE (how far one step moves you) - a checker does
+     * both for two fills.
+     */
+    board(p: Palette, x: number, y: number, cols: number, rows: number, cell: number) {
+      const s = solid(p);
+      ctx.fillStyle = s.deep;
+      ctx.beginPath();
+      ctx.roundRect(x - 7, y - 7, cols * cell + 14, rows * cell + 14, 16);
+      ctx.fill();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x - 2, y - 2, cols * cell + 4, rows * cell + 4, 11);
+      ctx.clip();
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          ctx.fillStyle = (r + c) % 2 ? p.light : p.white;
+          ctx.fillRect(x + c * cell, y + r * cell, cell, cell);
+        }
+      }
+      ctx.restore();
     },
 
     /** A collectible. */
@@ -133,15 +193,16 @@ export function shade(ctx: CanvasRenderingContext2D) {
      */
     block(p: Palette, x: number, y: number, w: number, h: number, r = 8) {
       if (h <= 0 || w <= 0) return;
-      ctx.fillStyle = p.deep;
+      const s = solid(p);
+      ctx.fillStyle = s.deep;
       ctx.beginPath();
       ctx.roundRect(x, y, w, h, r);
       ctx.fill();
 
       const face = ctx.createLinearGradient(x, 0, x + w, 0);
-      face.addColorStop(0, p.mid);
-      face.addColorStop(0.45, p.mid);
-      face.addColorStop(1, p.deep);
+      face.addColorStop(0, s.mid);
+      face.addColorStop(0.45, s.mid);
+      face.addColorStop(1, s.deep);
       ctx.fillStyle = face;
       ctx.beginPath();
       ctx.roundRect(x + 3, y, Math.max(0, w - 6), h, r);
@@ -158,11 +219,12 @@ export function shade(ctx: CanvasRenderingContext2D) {
 
     /** A pipe cap - the detail that makes a pipe read as a pipe. */
     cap(p: Palette, x: number, y: number, w: number, h: number) {
-      ctx.fillStyle = p.deep;
+      const s = solid(p);
+      ctx.fillStyle = s.deep;
       ctx.beginPath();
       ctx.roundRect(x - 5, y, w + 10, h, 6);
       ctx.fill();
-      ctx.fillStyle = p.mid;
+      ctx.fillStyle = s.mid;
       ctx.beginPath();
       ctx.roundRect(x - 2, y + 2, w + 4, h - 4, 5);
       ctx.fill();
@@ -177,13 +239,14 @@ export function shade(ctx: CanvasRenderingContext2D) {
 
     /** Layered ground: soil, turf, a lit lip, and moving texture. */
     ground(p: Palette, w: number, top: number, height: number, scroll: number) {
+      const s = solid(p);
       const soil = ctx.createLinearGradient(0, top, 0, top + height);
-      soil.addColorStop(0, p.deep);
-      soil.addColorStop(1, p.edge);
+      soil.addColorStop(0, s.deep);
+      soil.addColorStop(1, s.edge);
       ctx.fillStyle = soil;
       ctx.fillRect(0, top, w, height);
 
-      ctx.fillStyle = p.mid;
+      ctx.fillStyle = s.mid;
       ctx.fillRect(0, top, w, 11);
       ctx.save();
       ctx.globalAlpha = 0.55;

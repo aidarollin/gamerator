@@ -69,6 +69,7 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       if (kind === "press" && !dead && h.phase() === "playing") {
         vy = r.flapVelocity;
         flapAnim = 1;
+        h.sfx("flap");
       }
     },
     step(dt) {
@@ -321,12 +322,7 @@ export const snakeFactory: EngineFactory = (h, spec) => {
     draw() {
       const { ctx, paint: p, palette } = h;
       p.sky(palette, W, H);
-      ctx.fillStyle = palette.white;
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      ctx.roundRect(ox - 6, oy - 6, cell * r.gridCols + 12, cell * r.gridRows + 12, 14);
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      p.board(palette, ox, oy, r.gridCols, r.gridRows, cell);
       ctx.fillStyle = palette.gold;
       ctx.beginPath();
       ctx.arc(ox + food.x * cell + cell / 2, oy + food.y * cell + cell / 2, cell * 0.32, 0, Math.PI * 2);
@@ -357,7 +353,7 @@ export const runnerFactory: EngineFactory = (h, spec) => {
     reset() { y = floor - RH; vy = 0; dist = 0; onGround = true; dead = false; parts = []; },
     input(kind) {
       if (kind === "press" && onGround && !dead && h.phase() === "playing") {
-        vy = r.jumpVelocity; onGround = false;
+        vy = r.jumpVelocity; onGround = false; h.sfx("flap");
       }
     },
     step(dt) {
@@ -437,13 +433,13 @@ export const platformerFactory: EngineFactory = (h, spec) => {
       if (kind === "release") { hold = 0; return; }
       // Keyboard press with no position = jump, the primary action.
       if (!where) {
-        if (onGround) { vy = r.jumpVelocity; onGround = false; }
+        if (onGround) { vy = r.jumpVelocity; onGround = false; h.sfx("flap"); }
         return;
       }
       // Left half walks left, right half walks right, top third jumps. One
       // thumb, no virtual d-pad to miss.
       if (where.y < H * 0.34) {
-        if (onGround) { vy = r.jumpVelocity; onGround = false; }
+        if (onGround) { vy = r.jumpVelocity; onGround = false; h.sfx("flap"); }
       } else hold = where.x < W / 2 ? -1 : 1;
     },
     step(dt) {

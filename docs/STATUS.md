@@ -358,3 +358,73 @@ blocks the next phase) unchanged. Nothing pushed.
 
 **Next:** Phase 4 — generation. This is where the AI finally arrives, and it
 needs blocker 4 answered.
+
+---
+
+## 2026-09-06 — Provider verified, Phase 4 built stub-first
+
+Blocker 4 is closed: the provider is **OpenRouter**, key in local `.env.local`
+only. Zul asked that the build spend as little as possible and that the site be
+usable, so Phase 4 was built stub-first and the app is deployed.
+
+**Provider smoke test — total spend $0.0086, staged cheapest-first**
+
+| Stage | Result |
+| --- | --- |
+| Connectivity | ok |
+| Strict tool use | ok, schema-exact arguments |
+| Prompt caching | ok — 14,757 tokens read from cache on the second call |
+| `output_config.format` | **ok — supported** |
+
+The last row corrects my own recommendation. I had argued for strict tool use
+because I could not confirm the gateway passed `output_config` through; it does,
+so the originally specced mechanism is what shipped. Caching working through the
+gateway also means the cost model holds.
+
+**The real integration question was not about the provider.** JSON Schema cannot
+express a `superRefine`, so the model is handed `GameSpecShape` (structural)
+while the server validates `GameSpec` (structural + cross-field). The gap
+between them is exactly the repair turn's job. `GameSpecShape` is exported so
+the generation layer cannot silently send the refined schema and drop the
+refinements; a test pins the split.
+
+**Built**
+
+- `lib/spec/brief.ts`, `lib/config.ts`, `lib/generate/{prompt,provider,stub,live,index,audit}.ts`,
+  `app/api/generate/route.ts`.
+- **The stub is the default provider, not a test double.** A deployment with no
+  provider configured cannot run up a bill, and going live is an explicit act
+  (`GAMERATOR_PROVIDER=live`).
+- The stub reproduces every outcome the live provider can: success, needs-repair,
+  unrepairable, refusal, transport error — driven by `trigger:` strings in the
+  brief's rules field.
+
+**Verified, by running it**
+
+- 56 tests, no key, no network. `npm run check` exit 0.
+- Every SSE path exercised against `wrangler dev`: happy (3 stages → `spec`),
+  repair (5 stages → `spec` with `repaired:true`), unrepairable (→ `invalid`,
+  never a spec), refusal and error as distinct events, and malformed input
+  failing with **HTTP 400 before the stream opens** while a valid brief gets
+  200. Both error paths behave as specified.
+- Deployed and confirmed live: a real POST to `/api/generate` streams a
+  `match-pairs` spec. Costs nothing — the Worker has no API key.
+
+**Phase 4 is NOT complete.** Its exit criterion is ten real briefs producing ten
+valid specs with a non-zero cache read, and that needs live calls. The pipeline
+is done and proven; the prompt is unproven. A stub demonstrates the plumbing,
+not that Claude writes good Tahun 4 peribahasa.
+
+**Not done**
+
+- No authoring UI — that is Phase 5, so the generate flow currently has no page
+  to drive it from.
+- Audit events are logged, not persisted. D1 is Phase 6; `record()` is a
+  one-function swap.
+- No spend ceiling or rate limit yet (Phase 7).
+
+**Blockers** — 1 (DS publication, deferred by decision), 2, 3 (teaching-team
+conventions; no messages to be sent) unchanged. 4 closed.
+
+**Next:** Phase 5 (authoring UI) so the flow is usable, or a live run of Phase
+4's exit criterion when there is appetite to spend a few cents.

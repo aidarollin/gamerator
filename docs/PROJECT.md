@@ -2,48 +2,60 @@
 
 ## Problem statement
 
-Pandai ships learning games, and every one of them is hand-built. A single title
-travels the full distance: a content designer writes the idea, a designer draws
-the screens, a front-end engineer builds it, QA plays it, and somewhere in that
-chain it drifts off Pandai Design System 1.5 because it was assembled from
-scratch rather than from the library.
+> **Rewritten 2026-09-06.** The first version of this section described a tool
+> for generating curriculum quiz games. That was an assumption I made from the
+> phrase "game generator", and it was wrong. Recorded rather than quietly
+> replaced, because the five learning templates in the repository were built on
+> it and their existence only makes sense with this note attached.
 
-The bottleneck is not ideas. The content team has more game concepts than the
-pipeline can absorb. The bottleneck is the distance between a sentence —
-*"a vocabulary matching game for Year 4 Bahasa Melayu, 12 pairs, 90 seconds"* —
-and a playable, on-brand, curriculum-tagged artifact. Today that distance is
-measured in weeks and costs three people's time.
+Pandai is a learning app, and learning apps have a retention problem that has
+nothing to do with the quality of the teaching: a pupil who has finished their
+practice has no reason to still be there. Every successful learning product
+solves this the same way — with something to do that is simply fun, and that
+belongs to the same world as the lessons.
+
+Pandai has the pieces. There is a mascot, a reward economy with coins and
+avatars, badges, streaks, and a design system with nineteen subject identities.
+What there is not is **anything to play**.
+
+Building arcade games by hand is the obvious answer and the wrong one. Each
+title is a designer, a front-end engineer and a QA pass; the pipeline absorbs
+perhaps two a year, so the catalogue is thin, it goes stale, and every one drifts
+off the design system because it was built from scratch.
+
+The insight is the same one as before, applied to a different problem: **the
+variable part of an arcade game is its numbers, not its code.** Flappy Bird is
+one machine — gravity, flap strength, gap size, scroll speed. Change those four
+numbers and you have a different game; change the palette and mascot and it is a
+different game wearing Pandai. Capture the machine once as an engine, capture
+the variation as data, and producing a game becomes a form to fill in, or a
+sentence for a model to turn into numbers.
 
 Three consequences follow:
 
-1. **Few games.** Anything that costs weeks gets rationed, so coverage across
-   subjects and year levels stays thin and refreshes rarely.
-2. **Drift.** Each game is a fresh build, so each one re-decides padding,
-   radius, and colour. Games are the least DS-faithful surface in the product.
-3. **Nothing is reusable.** A finished game is a pile of bespoke components. The
-   *structure* of "matching game" is never captured, so the next one starts at
-   zero.
-
-The insight this project is built on: **the variable part of a learning game is
-its content and its rules, not its code.** A matching game is the same machine
-whether the pairs are Bahasa vocabulary or Science apparatus. Capture the machine
-once as a renderer, capture the variation as data, and the expensive step
-collapses into a form a content designer can fill in — or an AI can fill in from
-a description.
+1. **Nothing to play.** No arcade catalogue at all, so no reason to stay after
+   the practice is done.
+2. **Hand-built games would drift.** Anything built title-by-title re-decides
+   its own colours and spacing, exactly as the learning games would have.
+3. **A game's design is never captured.** The *shape* of "endless flyer" is
+   never written down, so the next one starts at zero.
 
 ## Who it serves
 
-| | Who | What they do here |
+| | Who | What they do |
 | --- | --- | --- |
-| **Primary** | Pandai content & curriculum team | Describe a game, generate it, play it, tweak it, export it |
-| Secondary | Pandai design team | Review generated screens pushed into the Figma Screens file; own the DS the renderer is built from |
-| Tertiary | Pandai product engineers | Consume exported GameSpec bundles and drop them into the main product |
+| **Primary** | Pandai students | Play the games, as a reward or a break between lessons |
+| Secondary | Pandai content & design team | Describe games, tune them, review and approve them |
+| Tertiary | Pandai product engineers | Consume exported specs and place games into Pandai |
 
-This is an **internal tool**. It is not student-facing and has no student
-accounts. Students eventually play these games — but in Pandai proper, after a
-human has reviewed and exported. That indirection is deliberate: it keeps a
-person between the model and a child, which is the only child-safety
-architecture that actually holds.
+Students are the audience the games must satisfy; they are **not** users of this
+tool. Nobody has an account here and no student data is held. Games leave as
+exports and a human places them into Pandai, which keeps a person between a
+generated artifact and a child — the only child-safety architecture that
+actually holds.
+
+That constraint sets the design brief: **mobile first, one thumb, under ninety
+seconds a round, and no reading required to play.**
 
 ## Objectives
 

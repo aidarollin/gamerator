@@ -125,6 +125,10 @@ const statusKeys = [
 
 const lit = (xs) => xs.map((x) => `  "${x}",`).join("\n");
 
+/** The literal behind a token path, whichever group it lives in. */
+const rawValue = (path) =>
+  path in raw.color ? raw.color[path] : raw.dimension[path];
+
 const ts = `${header}
 
 /** Every DS token path that exists in this build, mapped to its CSS variable. */
@@ -136,6 +140,26 @@ ${[...seen.keys()]
 } as const;
 
 export type TokenPath = keyof typeof TOKEN_VARS;
+
+/**
+ * Literal values, keyed by CSS variable name.
+ *
+ * Canvas cannot consume a var() reference; it needs a real value, read at
+ * runtime from the stylesheet. This map is the fallback for when that read
+ * returns nothing - an unmounted node, or a headless render. It exists so that
+ * no component ever writes a colour literal of its own, which check:ds forbids.
+ */
+export const VAR_VALUES: Record<string, string> = {
+${[...seen.keys()]
+  .sort()
+  .map((v) => {
+    const path = seen.get(v).split(":").slice(1).join(":");
+    const value = rawValue(path);
+    const out = typeof value === "number" ? `${value}px` : value;
+    return `  "${v}": ${JSON.stringify(out)},`;
+  })
+  .join("\n")}
+};
 
 /** \`var(--surface-primary-default)\`, typo-proof. */
 export function token(path: TokenPath): string {

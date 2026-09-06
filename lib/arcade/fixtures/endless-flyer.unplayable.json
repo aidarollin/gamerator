@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Impossible",
+    "description": "Every value in range, and a perfect player still dies.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "chemistry",
+    "skin": "abstract",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 3000,
+    "flapVelocity": -150,
+    "scrollSpeed": 400,
+    "gapHeight": 80,
+    "gapSpacing": 140,
+    "gapDrift": 240,
+    "lives": 1
+  }
+}

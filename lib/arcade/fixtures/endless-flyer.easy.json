@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Panda Glide",
+    "description": "A gentle flight for a first try.",
+    "language": "en",
+    "difficulty": "easy"
+  },
+  "theme": {
+    "palette": "kafa",
+    "skin": "panda",
+    "background": "forest"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 15
+  },
+  "rules": {
+    "gravity": 1100,
+    "flapVelocity": -380,
+    "scrollSpeed": 110,
+    "gapHeight": 200,
+    "gapSpacing": 300,
+    "gapDrift": 45,
+    "lives": 5
+  }
+}

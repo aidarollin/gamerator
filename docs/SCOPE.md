@@ -1,5 +1,9 @@
 # SCOPE — what is being built, and what deliberately is not
 
+> **Re-scoped 2026-09-06.** The product is **Pandai-skinned arcade games**, not
+> curriculum quiz games. See [ENGINES.md](ENGINES.md) and the re-scope log at
+> the bottom of this file.
+
 Read this before adding anything. If a feature is on the not-building list, it
 needs an agreed re-scope entry at the bottom of this file before any code.
 
@@ -47,4 +51,41 @@ Anything moved on or off the lists above gets a dated line here, with who agreed
 it and why. An undocumented scope change is how a three-month project becomes a
 nine-month one.
 
-_(empty)_
+### 2026-09-06 — arcade, not quizzes
+
+**Agreed by Zul.** The product is arcade games wearing a Pandai skin — Flappy
+Bird, an endless runner, Breakout, Snake, a platformer. Learning content is an
+*optional twist*, not the point.
+
+The previous scope (curriculum quiz games for the content team) came from an
+assumption I made from the words "game generator". It was never stated by Zul,
+and it shaped PROJECT.md, five templates and fifteen fixtures before it was
+caught.
+
+Decided with it:
+
+- **Audience: students, inside Pandai**, as a reward or break. Not the content
+  team. Mobile first, one thumb, under ninety seconds a round, no reading
+  required to play.
+- **Engines, not generated code** — the same architecture as before, and a
+  stronger case for it: generated arcade code can hang, produce NaN physics, or
+  be unplayable, none of which is checkable by looking.
+- **An unsupported genre is a first-class outcome.** Zul asked for "other types
+  of games if prompted", which pulls against engines. Rather than silently
+  substituting the nearest engine, a request with no engine is answered
+  honestly. See ENGINES.md.
+
+**On the learning templates:** kept, not deleted. They work, they are tested,
+and they are the proof that the spec-and-renderer architecture holds. Deleting
+working code before its replacement is proven is how a pivot loses twice. They
+move to the not-building list once the arcade engines cover the ground, and
+`/play/preview` stays until then.
+
+### Now also not being built
+
+| Not building | Why |
+| --- | --- |
+| **A fighting game (Mortal Kombat)** | Needs animation states, hitboxes and opponent AI, and Pandai's avatars are single static PNGs by their own audit. It is a project, not an engine. Recorded because it was asked for by name. |
+| **AI-generated game code** | Unchanged from above, and the reasoning is stronger for arcade than it was for quizzes. |
+| **Sound** | No asset library, and a game that autoplays audio in a classroom is a support ticket. |
+| **Leaderboards or saved scores** | Pandai owns the student record. Duplicating it here forks the source of truth. |

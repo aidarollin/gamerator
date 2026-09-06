@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Edge",
+    "description": "Bounds probe - values at their limits.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "primary",
+    "skin": "abstract",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 5
+  },
+  "rules": {
+    "gravity": 1800,
+    "flapVelocity": -500,
+    "scrollSpeed": 200,
+    "gapHeight": 130,
+    "gapSpacing": 220,
+    "gapDrift": 90,
+    "lives": 1
+  }
+}

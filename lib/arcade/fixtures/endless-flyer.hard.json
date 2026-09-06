@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Neon Rush",
+    "description": "Fast, tight and unforgiving.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "comp-science",
+    "skin": "abstract",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 2,
+    "targetScore": 40
+  },
+  "rules": {
+    "gravity": 2200,
+    "flapVelocity": -480,
+    "scrollSpeed": 260,
+    "gapHeight": 120,
+    "gapSpacing": 200,
+    "gapDrift": 110,
+    "lives": 1
+  }
+}

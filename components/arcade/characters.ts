@@ -21,6 +21,15 @@ export type CharacterArt = {
   size: number;
   /** Collision radius - deliberately smaller than the art, see below. */
   radius: number;
+  /**
+   * Clip to a circle when drawing.
+   *
+   * The battle avatars are PNGs with an opaque white background - they were cut
+   * for a UI card, not for a game - so drawing them raw puts a white box on the
+   * sky. Clipping to a circle removes the box and reads as a deliberate badge.
+   * The PBot SVGs are already transparent and are drawn whole.
+   */
+  circular: boolean;
   src: Record<Mood, string>;
 };
 
@@ -37,6 +46,7 @@ export const CHARACTERS: Record<Character, CharacterArt> = {
     label: "PBot",
     size: 46,
     radius: 14,
+    circular: false,
     src: {
       idle: "/characters/pbot-awe.svg",
       flying: "/characters/pbot.svg",
@@ -48,6 +58,7 @@ export const CHARACTERS: Record<Character, CharacterArt> = {
     label: "Aidan",
     size: 44,
     radius: 14,
+    circular: true,
     src: {
       idle: "/characters/avatar-aidan.png",
       flying: "/characters/avatar-aidan.png",
@@ -59,6 +70,7 @@ export const CHARACTERS: Record<Character, CharacterArt> = {
     label: "Nadia",
     size: 44,
     radius: 14,
+    circular: true,
     src: {
       idle: "/characters/avatar-nadia.png",
       flying: "/characters/avatar-nadia.png",

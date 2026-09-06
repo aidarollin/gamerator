@@ -10,6 +10,7 @@ import {
   VAR_VALUES,
 } from "@/lib/ds/tokens.generated";
 import { loadCharacter, CHARACTERS, type Mood } from "./characters";
+import { loadArt } from "./art";
 import { shade, type Palette } from "./paint";
 import a from "./arcade.module.css";
 
@@ -97,6 +98,9 @@ export function GameFrame({
 
   useEffect(() => {
     let live = true;
+    // Art loads alongside the character; both degrade to procedural shapes on
+    // failure rather than blocking the game.
+    void loadArt();
     loadCharacter(spec.theme.character).then((s) => {
       if (live) sprites.current = s;
     });

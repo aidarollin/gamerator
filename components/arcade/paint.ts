@@ -21,6 +21,8 @@
  * and how many layers, not about inventing values.
  */
 
+import { drawArt } from "./art";
+
 export type Palette = {
   deep: string;
   mid: string;
@@ -34,52 +36,122 @@ export type Palette = {
 
 export function shade(ctx: CanvasRenderingContext2D) {
   return {
-    /** Vertical wash. Games have skies, not background-colors. */
-    sky(p: Palette, w: number, h: number) {
+    /**
+     * Sky: a vertical wash plus a light source.
+     *
+     * The glow is what stops a gradient reading as a CSS background. It costs
+     * one radial fill and does more for the look than anything else here.
+     */
+    sky(p: Palette, w: number, h: number, night = false) {
       const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, p.mid);
-      g.addColorStop(0.55, p.light);
-      g.addColorStop(1, p.white);
+      if (night) {
+        g.addColorStop(0, p.deep);
+        g.addColorStop(0.6, p.mid);
+        g.addColorStop(1, p.light);
+      } else {
+        g.addColorStop(0, p.mid);
+        g.addColorStop(0.5, p.light);
+        g.addColorStop(1, p.white);
+      }
       ctx.fillStyle = g;
       ctx.fillRect(-40, -40, w + 80, h + 80);
-    },
 
-    /** Soft clouds. Cheap, and the single biggest "this is alive" signal. */
-    clouds(p: Palette, w: number, h: number, offset: number, count = 4) {
+      const sun = ctx.createRadialGradient(w * 0.78, h * 0.16, 4, w * 0.78, h * 0.16, w * 0.5);
+      sun.addColorStop(0, night ? p.white : p.gold);
+      sun.addColorStop(1, "transparent");
       ctx.save();
-      ctx.globalAlpha = 0.85;
-      ctx.fillStyle = p.white;
-      for (let i = 0; i < count; i++) {
-        const seed = i * 137.5;
-        const x = ((seed - offset * (0.25 + (i % 3) * 0.08)) % (w + 160)) - 80;
-        const cx = x < -80 ? x + w + 160 : x;
-        const y = 40 + ((seed * 1.7) % (h * 0.45));
-        const s = 16 + (i % 3) * 7;
-        ctx.beginPath();
-        ctx.arc(cx, y, s, 0, Math.PI * 2);
-        ctx.arc(cx + s * 0.9, y + 4, s * 0.75, 0, Math.PI * 2);
-        ctx.arc(cx - s * 0.85, y + 5, s * 0.65, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.globalAlpha = night ? 0.22 : 0.34;
+      ctx.fillStyle = sun;
+      ctx.fillRect(0, 0, w, h);
       ctx.restore();
     },
 
-    /** A solid with depth: body, inner shade, top highlight. */
+    /** Far hills, tinted from the palette. Slowest layer. */
+    hills(p: Palette, w: number, groundY: number, offset: number) {
+      const span = 240;
+      const off = (offset * 0.18) % span;
+      for (let i = -1; i < Math.ceil(w / span) + 2; i++) {
+        const x = i * span - off;
+        if (!drawArt(ctx, "hill", p.deep, x + span / 2, groundY - 26, span, 120, 0.28)) {
+          ctx.save();
+          ctx.globalAlpha = 0.28;
+          ctx.fillStyle = p.deep;
+          ctx.beginPath();
+          ctx.arc(x + span / 2, groundY + 40, 110, Math.PI, 0);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    },
+
+    /** Near bushes on the ground line. Faster layer, stronger tint. */
+    bushes(p: Palette, w: number, groundY: number, offset: number) {
+      const span = 150;
+      const off = (offset * 0.55) % span;
+      for (let i = -1; i < Math.ceil(w / span) + 2; i++) {
+        const x = i * span - off;
+        drawArt(ctx, "bush", p.deep, x + span / 2, groundY - 12, 96, 48, 0.45);
+      }
+    },
+
+    /** A collectible. */
+    coin(p: Palette, x: number, y: number, size: number, spin = 1) {
+      const w = Math.max(4, size * spin);
+      if (!drawArt(ctx, "coin", p.gold, x, y, w, size)) {
+        ctx.fillStyle = p.gold;
+        ctx.beginPath();
+        ctx.ellipse(x, y, w / 2, size / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+
+    /** Soft clouds. Cheap, and the single biggest "this is alive" signal. */
+    clouds(p: Palette, w: number, h: number, offset: number, count = 5) {
+      for (let i = 0; i < count; i++) {
+        const seed = i * 137.5;
+        const raw = ((seed - offset * (0.16 + (i % 3) * 0.06)) % (w + 220)) - 110;
+        const cx = raw < -110 ? raw + w + 220 : raw;
+        const cy = 34 + ((seed * 1.7) % (h * 0.42));
+        const scale = 0.7 + (i % 3) * 0.3;
+        if (!drawArt(ctx, "cloud", p.white, cx, cy, 120 * scale, 56 * scale, 0.9)) {
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = p.white;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 20 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    },
+
+    /**
+     * A solid with depth: dark body, lit face, rim light, inner shade.
+     *
+     * Four passes rather than one fill. A flat rectangle is the single clearest
+     * "this is a prototype" signal on a canvas, and this is the cheapest fix.
+     */
     block(p: Palette, x: number, y: number, w: number, h: number, r = 8) {
-      if (h <= 0) return;
+      if (h <= 0 || w <= 0) return;
       ctx.fillStyle = p.deep;
       ctx.beginPath();
       ctx.roundRect(x, y, w, h, r);
       ctx.fill();
-      ctx.fillStyle = p.mid;
+
+      const face = ctx.createLinearGradient(x, 0, x + w, 0);
+      face.addColorStop(0, p.mid);
+      face.addColorStop(0.45, p.mid);
+      face.addColorStop(1, p.deep);
+      ctx.fillStyle = face;
       ctx.beginPath();
-      ctx.roundRect(x + 3, y, Math.max(0, w - 9), h, r);
+      ctx.roundRect(x + 3, y, Math.max(0, w - 6), h, r);
       ctx.fill();
+
       ctx.save();
-      ctx.globalAlpha = 0.35;
+      ctx.globalAlpha = 0.4;
       ctx.fillStyle = p.white;
       ctx.beginPath();
-      ctx.roundRect(x + 6, y + 3, Math.max(0, w * 0.22), Math.max(0, h - 6), 4);
+      ctx.roundRect(x + 7, y + 4, Math.max(0, w * 0.18), Math.max(0, h - 8), 4);
       ctx.fill();
       ctx.restore();
     },
@@ -103,17 +175,22 @@ export function shade(ctx: CanvasRenderingContext2D) {
       ctx.restore();
     },
 
-    /** Layered ground: dark base, coloured turf, moving texture. */
+    /** Layered ground: soil, turf, a lit lip, and moving texture. */
     ground(p: Palette, w: number, top: number, height: number, scroll: number) {
-      ctx.fillStyle = p.deep;
+      const soil = ctx.createLinearGradient(0, top, 0, top + height);
+      soil.addColorStop(0, p.deep);
+      soil.addColorStop(1, p.edge);
+      ctx.fillStyle = soil;
       ctx.fillRect(0, top, w, height);
+
       ctx.fillStyle = p.mid;
-      ctx.fillRect(0, top, w, 9);
+      ctx.fillRect(0, top, w, 11);
       ctx.save();
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.55;
       ctx.fillStyle = p.white;
+      ctx.fillRect(0, top, w, 3);
       const tick = scroll % 26;
-      for (let x = -tick; x < w; x += 26) ctx.fillRect(x, top + 2, 13, 3);
+      for (let x = -tick; x < w; x += 26) ctx.fillRect(x, top + 5, 13, 3);
       ctx.restore();
     },
 

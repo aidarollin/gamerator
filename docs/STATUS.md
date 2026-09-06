@@ -740,3 +740,50 @@ the model — recorded for when it goes back on.
   adopt list.
 - One deploy failed on a DNS resolution error mid-session and succeeded on
   retry; nothing to fix, noted so it is not mistaken for a code fault later.
+
+---
+
+## 2026-09-06 — Real art, and screenshots that found three bugs
+
+Model still off.
+
+**Authored art.** Five SVGs in `public/art`: cloud, hill, bush, coin, sparkle.
+All drawn as **white silhouettes** and tinted from DS tokens at draw time
+(`components/arcade/art.ts`, offscreen canvas plus `source-in`, cached per
+asset/colour/size). Baking colour into the SVGs would have broken palette
+theming - a Bahasa Melayu game and a chemistry game would share one green bush.
+
+**A real background.** Sky gradient with a light source, drifting clouds, far
+hills and near bushes at different parallax rates, and a ground with soil, turf
+and a lit lip. Solids gained a lit face, rim light and inner shade instead of a
+single fill.
+
+**Collectibles**, adopted from the reference. Coins sit offset from the gap
+centre so taking one costs a little safety. Deterministic from a seed, and
+optional - they never gate progress, so the playability simulation does not need
+to know about them.
+
+### Screenshots found three bugs that curl could not
+
+Captured with Playwright (imported by absolute path from a sibling repo's
+`node_modules`; nothing installed here, nothing there modified).
+
+1. **Nadia and Aidan had a white box.** The battle avatars are PNGs with an
+   opaque white background - cut for a UI card, not for a game. Now clipped to a
+   circle with a rim, which reads as a deliberate badge. PBot's SVGs are
+   transparent and are still drawn whole.
+2. **brick-breaker was unplayable by keyboard.** A press only launched the ball
+   if it carried a pointer position, so Space started the game and then nothing
+   happened. A stuck score of 0 in the shot is what gave it away. Same class of
+   bug in the platformer - Space could not jump.
+3. **The platformer floated in empty space.** No ground, no scenery below the
+   platforms. It has both now.
+
+None of these were visible to HTTP checks. Every previous verification said 200
+and matched the expected strings.
+
+**Not done**
+
+- Only the flyer has collectibles; the other four engines do not.
+- Still no sound, no round timer, no power-ups.
+- Snake and runner still have flat physics.

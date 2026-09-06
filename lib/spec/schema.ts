@@ -176,7 +176,15 @@ export const FillBlank = z.object({
 
 /* ----------------------------------------------------------- the union */
 
-const Union = z.discriminatedUnion("template", [
+/**
+ * The STRUCTURAL schema: shape only, no cross-field rules.
+ *
+ * This is what the model is handed as `output_config.format`, because JSON
+ * Schema cannot express a `superRefine`. Exported so the generation layer
+ * cannot accidentally send the refined schema and silently drop the
+ * refinements from the request.
+ */
+export const GameSpecShape = z.discriminatedUnion("template", [
   QuizRace,
   MatchPairs,
   SortBuckets,
@@ -194,7 +202,7 @@ const Union = z.discriminatedUnion("template", [
  * only looks right is the most expensive kind, since it survives review and
  * fails in play.
  */
-export const GameSpec = Union.superRefine((spec, ctx) => {
+export const GameSpec = GameSpecShape.superRefine((spec, ctx) => {
   if (spec.template === "quiz-race") {
     spec.content.questions.forEach((q, i) => {
       // correctIndex is bounded 0..3, but a 2-option question with

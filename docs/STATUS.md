@@ -1074,3 +1074,74 @@ confirming a page responds is not the same as looking at it. This is the next
 turn of the same screw: **looking at a page you navigated to directly is not the
 same as arriving.** Every check I ran, HTTP and visual alike, started at a deep
 link. Not one started at `/` and tried to find the product.
+
+---
+
+## 2026-09-07 (later) — The platformer built levels nobody could finish
+
+The most visible flaw in every screenshot, and underneath it a real one.
+
+### Levels could be impossible, and nothing said so
+
+Platform heights were `H - 120 - rng() * 150`, drawn **independently of each
+other**. So one platform could sit 150px above the last. A jump in
+`platformer.valid` peaks at **144px**. Some seeds produced a level that simply
+could not be finished.
+
+`platformerVerdict` said nothing, because it only ever compared a running jump
+against the **horizontal** gap. It had no idea the level also climbed. Third
+time this exact shape has appeared here — the flyer's fixed simulation window,
+brick-breaker's dead check, and now this: **the validator describing a game
+nobody plays.**
+
+Fixed by construction rather than by rejection, in `lib/arcade/level.ts`. For
+each platform a RISE is chosen first, then the gap is capped by
+`reachAtRise(rules, rise)` — how far a jump carries while still at least that
+high, from the later root of `rise = v0·t − g·t²/2`. Choosing them the other way
+round is what made the old one unsound: a gap that is fine on the flat is not
+fine while also climbing, because climbing spends the same air time.
+
+`minGap` turned out to be a preference, not a floor. On a steep climb almost all
+the air time goes upward, and forcing a 40px gap there rebuilds the very bug —
+so when the room runs out the platforms abut, which reads as a step up rather
+than a jump across, and is the right shape for a climb.
+
+`level.test.ts` fuzzes 400 legal specs, keeps the ~50+ the checker accepts, and
+asserts every step of every level is crossable. The can-it-fire test replays the
+OLD generator with the real RNG in its original draw order and asserts it
+produces unreachable steps.
+
+### The ground was a lie
+
+A solid-looking ground strip ran across the bottom, and the player fell straight
+through it to their death. The level said "floor" and meant "pit", which is
+about the least fair thing a platformer can do. Platforms now carry a pillar
+down out of frame, so terrain is terrain and a gap is visibly a hole.
+
+### You could run, or jump, never both
+
+`GameFrame` pushed a `release` on **every** keyup, including the jump key. The
+platformer reads `release` as "stop walking", so on a keyboard every jump
+stopped you dead — the character never left the first platform. It survived this
+long because the other four engines ignore `release` entirely.
+
+Found by watching a screenshot and asking why the mascot was still standing
+where it started after twenty-six presses of "walk right".
+
+### Also
+
+- The goal flag floated at a fixed height near the end of the level. It stands
+  on the last platform now.
+- Coins were sampled with replacement, stacking several on one platform while
+  others had none. One per platform, spread.
+- `cx += gap + (i === 0 ? 0 : 0)` — dead arithmetic, gone with the rest.
+
+**Verified on the deployed site** by running and jumping: `platformer.valid` 5
+coins over 9 jumps, `platformer.hard` 12 over 13, no page errors, and the flag
+photographed standing on the final platform of a short probe level.
+
+**Not done**
+
+- No round timer, no power-ups. The runner and snake still have flat physics.
+- The pit floor is pale sky; it reads as empty but a darker void would read as
+  danger.

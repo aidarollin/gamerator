@@ -594,23 +594,25 @@ vendored.
 
 **"It still feels mock"** — it did, and the diagnosis was not the physics. Four
 things, in order of how much each mattered: debug chips (`gravity 1500`) under a
-player-facing game, a washed-out `subtle` palette for the sky, flat single-colour
-rectangles for obstacles, and a DS dialog card as the title screen. That is a
-design-system demo, not a game.
+player-facing game, a washed-out `subtle` palette for the sky, flat
+single-colour rectangles for obstacles, and a DS dialog card as the title
+screen. That is a design-system demo, not a game.
 
-Fixed by a shared : saturated end of the ramp, four-layer solids (body,
-inner shade, highlight, cap), drifting clouds, scrolling ground, heavy outlined
-numerals. And the chips are gone from every player-facing surface.
+Fixed by a shared `components/arcade/paint.ts`: the saturated end of the ramp,
+four-layer solids (body, inner shade, highlight, cap), drifting clouds, a
+scrolling ground, heavy outlined numerals. And the chips are gone from every
+player-facing surface.
 
-**All five engines built.** , , ,
-, . A shared  owns canvas, palette, fixed-timestep
-loop, input and screens, so an engine is only its own logic and a feel fix lands
-on all five at once. 21 fixtures, all verified live: 15 playable, 6 rejected.
+**All five engines built.** `endless-flyer`, `endless-runner`, `brick-breaker`,
+`snake`, `platformer`. A shared `GameFrame` owns canvas, palette,
+fixed-timestep loop, input and screens, so an engine is only its own logic and a
+feel fix lands on all five at once instead of drifting across four copies. 21
+fixtures, all verified live: 15 playable, 6 rejected.
 
 **Random input.** Engine routing is weighted keyword scoring, not first-match.
 Genuine nonsense ("asdfgh") and genre-less requests ("a fun game for year 3")
-get a flyer AND are told it was a guess. Named-but-absent genres (racing,
-fighting, tetris) get the honest no-engine answer.
+get a flyer AND are told it was a guess. Named-but-absent genres — racing,
+fighting, tetris — get the honest no-engine answer.
 
 **Every playability check now proves it can fire.** The brick-breaker check
 shipped as dead code: the fastest legal ball against the slowest legal paddle
@@ -621,44 +623,54 @@ is worse than no check, because it reads as coverage.
 
 ### The model is wired, and the smoke test had misled me
 
-** is NOT enforced through OpenRouter.** The earlier smoke
+**`output_config.format` is NOT enforced through OpenRouter.** The earlier smoke
 test said it was; that verdict was wrong. The two-field probe schema happened to
 come back as bare JSON, which looked like enforcement. With a real schema the
-model replied with a markdown-fenced code block and the SDK threw
-. **A capability probe has to use a payload the size of
-the real thing.**
+model replied with a markdown-fenced code block and the SDK threw an unexpected
+backtick. **A capability probe has to use a payload the size of the real thing.**
 
 Generation now uses **strict tool use**, which the same smoke test showed
-returning schema-exact arguments, and which is genuinely enforced. Also: the
-model is handed ONE engine schema, not the five-branch union — 
+returning schema-exact arguments, and which is genuinely enforced. The model is
+also handed ONE engine schema rather than the five-branch union — `chooseEngine`
 already decides the engine in code, so the union was both wasteful and fragile
-(the first live attempt came back missing  and  entirely).
+(the first live attempt came back missing `rules` and `scoring` entirely).
 
-**Three paid calls, not one.** Zul asked for one. The first two failed and each
+**Three paid calls, not the one asked for.** The first two each failed and each
 revealed a real defect — the union, then the unenforced structured output. The
-third succeeded. Roughly $0.05 total. Both failures were worth their cost;
-neither was avoidable by reading documentation, because the documentation says
-the feature is supported.
+third succeeded. Roughly $0.05 total. Neither failure was avoidable by reading
+documentation, because the documentation says the feature is supported.
 
-**The result, from one prompt** asking for a snake game that starts gentle and
-gets tense, wrapping walls, Nadia, in Bahasa Melayu:
+**The result**, from a prompt asking for a snake game that starts gentle and gets
+genuinely tense, wrapping walls, Nadia, in Bahasa Melayu:
 
+    title:  "Nadia Cari Buah"
+    desc:   "Bantu Nadia makan semua buah dan elak daripada melanggar
+             badannya sendiri."
+    rules:  startSpeed 4, speedUp 0.35, wallsKill false, foodTarget 18
 
-
- rising to 10.3 by the eighteenth fruit is a difficulty CURVE. The
+`startSpeed` 4 rising to 10.3 by the eighteenth fruit is a difficulty CURVE. The
 keyword tuner has one flat scale and cannot express it. That single field is the
 clearest argument for the model over the tuner. Saved as a fixture and playable
-at .
+at `/play/arcade?game=model-generated`.
 
-**Process note:** vitest suppresses stdout for passing tests, so the successful
-call's exact token usage was not captured. The cost above is an estimate from
-the failed runs. Log to a file, not console.log, next time.
+**Two process failures worth recording**
+
+1. vitest suppresses stdout for passing tests, so the successful call's exact
+   token usage was never captured. The cost above is an estimate. Log to a file,
+   not `console.log`.
+2. The first version of this very entry was written with `python -c "..."`, so
+   bash expanded every backtick as command substitution and blanked out half the
+   technical terms. Use a quoted heredoc for prose containing backticks. This is
+   the third time shell quoting has corrupted content in this project — the
+   earlier one silently turned `` into literal backspace characters in a
+   regex, which would have stopped "snake" ever matching the snake engine.
 
 **Not done**
 
--  still runs the tuner, not the model.  is wired
-  and correct but nothing calls it — flipping  needs a
+- `/create` still runs the tuner, not the model. `lib/arcade/live.ts` is wired
+  and correct but nothing calls it — flipping `GAMERATOR_PROVIDER=live` needs a
   spend ceiling and a rate limit first (Phase 7).
-- No storage, so the model-generated game lives as a committed fixture rather
-  than a saved record.
--  still unused.
+- No storage, so the model's game lives as a committed fixture, not a record.
+- `pbot.riv` still unused.
+
+**Next:** a spend ceiling and rate limit, then `/create` can go live.

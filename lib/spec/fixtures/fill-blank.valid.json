@@ -1,0 +1,68 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Past Tense Verbs",
+    "description": "Complete each sentence with the correct past tense verb.",
+    "language": "en",
+    "subject": "english",
+    "yearLevel": 4,
+    "learningObjective": "Pupils can select the correct simple past tense form of common verbs.",
+    "estimatedMinutes": 6
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "fill-blank",
+  "rules": {
+    "secondsTotal": 180,
+    "wordBank": "shared",
+    "caseSensitive": false
+  },
+  "content": {
+    "sentences": [
+      {
+        "before": "Yesterday, Aminah ",
+        "answer": "walked",
+        "after": " to school with her brother.",
+        "distractors": [
+          "walks",
+          "walking",
+          "walk"
+        ]
+      },
+      {
+        "before": "The cat ",
+        "answer": "slept",
+        "after": " on the sofa all afternoon.",
+        "distractors": [
+          "sleeps",
+          "sleeping"
+        ]
+      },
+      {
+        "before": "They ",
+        "answer": "played",
+        "after": " football in the field.",
+        "distractors": [
+          "play",
+          "playing",
+          "plays"
+        ]
+      },
+      {
+        "before": "I ",
+        "answer": "ate",
+        "after": " nasi lemak for breakfast.",
+        "distractors": [
+          "eat",
+          "eating"
+        ]
+      }
+    ]
+  }
+}

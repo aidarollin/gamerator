@@ -1,0 +1,63 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Min buckets",
+    "description": "Minimum bounds fixture.",
+    "language": "en",
+    "subject": "math",
+    "yearLevel": 1,
+    "learningObjective": "Bounds probe: fewest buckets and fewest items.",
+    "estimatedMinutes": 2
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "sort-buckets",
+  "rules": {
+    "secondsTotal": null,
+    "feedback": "at-end"
+  },
+  "content": {
+    "buckets": [
+      {
+        "id": "odd",
+        "label": "Odd"
+      },
+      {
+        "id": "even",
+        "label": "Even"
+      }
+    ],
+    "items": [
+      {
+        "text": "1",
+        "bucketId": "odd"
+      },
+      {
+        "text": "3",
+        "bucketId": "odd"
+      },
+      {
+        "text": "5",
+        "bucketId": "odd"
+      },
+      {
+        "text": "2",
+        "bucketId": "even"
+      },
+      {
+        "text": "4",
+        "bucketId": "even"
+      },
+      {
+        "text": "6",
+        "bucketId": "even"
+      }
+    ]
+  }
+}

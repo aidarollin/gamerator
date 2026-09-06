@@ -1,0 +1,243 @@
+/* Game renderer layout. Colour comes only from DS tokens; the accent arrives
+ * through the --ramp-* group set by GameShell. */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-md);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--spacing-component-md);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-component-sm);
+}
+
+.barGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-default-heading);
+}
+
+.objective {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-default-body);
+}
+
+.prompt {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-default-heading);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-default-caption);
+}
+
+/* A tappable answer, sorting item, or step. One class so every template's
+ * interactive element has the same target size and focus treatment. */
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--spacing-component-sm);
+  text-align: left;
+  border-radius: var(--radius-2xl);
+  border: var(--border-width-xs) solid var(--border-general-default);
+  background: var(--surface-general-default);
+  color: var(--text-default-heading);
+  font-size: 15px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.option:hover:not(:disabled) {
+  border-color: var(--ramp-default);
+  background: var(--ramp-subtle);
+}
+
+.option:focus-visible {
+  outline: var(--border-width-s) solid var(--ramp-default);
+  outline-offset: var(--border-width-s);
+}
+
+.option:disabled {
+  cursor: default;
+}
+
+.optionSelected {
+  border-color: var(--ramp-default);
+  background: var(--ramp-subtle);
+}
+
+/* Correct and wrong always carry a text marker as well as a colour - a result
+ * shown only in green or red is a result colour-blind players cannot read. */
+.optionCorrect {
+  border-color: var(--border-success-default);
+  background: var(--surface-success-default-subtle);
+  color: var(--text-default-heading);
+}
+
+.optionWrong {
+  border-color: var(--border-warning-default);
+  background: var(--surface-warning-default-subtle);
+  color: var(--text-default-heading);
+}
+
+.marker {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.options {
+  display: grid;
+  gap: var(--spacing-component-xs);
+}
+
+.grid {
+  display: grid;
+  gap: var(--spacing-component-xs);
+}
+
+.pairCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: var(--spacing-component-xs);
+  text-align: center;
+  border-radius: var(--radius-xl);
+  border: var(--border-width-xs) solid var(--border-general-default);
+  background: var(--surface-general-default);
+  color: var(--text-default-heading);
+  font-size: 13px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.pairCard:hover:not(:disabled) {
+  border-color: var(--ramp-default);
+}
+
+.pairCard:focus-visible {
+  outline: var(--border-width-s) solid var(--ramp-default);
+  outline-offset: var(--border-width-s);
+}
+
+.pairFaceDown {
+  background: var(--ramp-subtle);
+  border-color: var(--ramp-default);
+  color: var(--text-default-caption);
+}
+
+.pairMatched {
+  border-color: var(--border-success-default);
+  background: var(--surface-success-default-subtle);
+  cursor: default;
+}
+
+.bucket {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-xs);
+  min-height: 96px;
+  padding: var(--spacing-component-sm);
+  border-radius: var(--radius-2xl);
+  border: var(--border-width-s) dashed var(--border-general-default);
+  background: var(--surface-general-default);
+}
+
+.bucketReady {
+  border-style: solid;
+  border-color: var(--ramp-default);
+  background: var(--ramp-subtle);
+}
+
+.bucketLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-default-heading);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+}
+
+.rowText {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text-default-heading);
+}
+
+.sentence {
+  font-size: 16px;
+  line-height: 1.9;
+  color: var(--text-default-heading);
+}
+
+.blank {
+  display: inline-block;
+  min-width: 90px;
+  padding: 0 var(--spacing-component-xs);
+  border-bottom: var(--border-width-s) solid var(--ramp-default);
+  text-align: center;
+  font-weight: 600;
+}
+
+.blankEmpty {
+  color: var(--text-default-placeholder);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-xs);
+}
+
+.summaryHead {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-default-heading);
+}
+
+.summaryPass {
+  color: var(--text-success-default);
+}
+
+.summaryFail {
+  color: var(--text-warning-default);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

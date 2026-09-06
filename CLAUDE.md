@@ -83,6 +83,27 @@ in Phase 1; do not reintroduce it while tidying that file.
 `npm run check` first and `tsc` fails with `Cannot find name 'LayoutProps'`,
 which reads like a broken tsconfig and is only missing generated types.
 
+**A Worker has no filesystem, and `next dev` will not tell you.** `node:fs` at
+request time works in the dev server and throws `ENOENT ... readdir '/bundle/…'`
+in the deployed Worker. Anything the server reads at runtime must be a static
+import, bundled at build time — that is why `lib/spec/fixtures.generated.ts`
+exists. **Verify server-side data access against `wrangler dev`.**
+
+**`esbuild` stays an explicit devDependency.** `@opennextjs/cloudflare` imports
+it while declaring it nowhere, relying on hoisting. Anything that reorganises
+the dependency tree de-hoists it and the build dies with
+`Cannot find package 'esbuild'`. Pinned at 0.28 to satisfy vite 8; verified
+working. Do not remove it because nothing appears to import it.
+
+**Shuffling is seeded from the spec, never `Math.random()`.** NFR2 requires the
+same spec to produce the same game; unseeded shuffling also breaks hydration,
+because the server and client draw different orders. Use `seededShuffle` with
+`specSeed` from `lib/game/random.ts`.
+
+**Do not use HTML5 drag and drop in a renderer.** It is not keyboard operable,
+which puts NFR8 out of reach for the whole template. `SortBuckets` and
+`SequenceOrder` use select-then-place and move-up/move-down for this reason.
+
 ## Model
 
 `claude-opus-5` via the official `@anthropic-ai/sdk`. Structured output through

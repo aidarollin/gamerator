@@ -1,0 +1,46 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Ambiguous pairs",
+    "description": "Duplicate left side makes the match ambiguous.",
+    "language": "en",
+    "subject": "english",
+    "yearLevel": 2,
+    "learningObjective": "Must be rejected: a duplicated left side has two valid partners.",
+    "estimatedMinutes": 3
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "match-pairs",
+  "rules": {
+    "secondsTotal": 90,
+    "maxAttempts": 10,
+    "gridColumns": 4
+  },
+  "content": {
+    "pairs": [
+      {
+        "left": "run",
+        "right": "lari"
+      },
+      {
+        "left": "run",
+        "right": "berlari"
+      },
+      {
+        "left": "walk",
+        "right": "jalan"
+      },
+      {
+        "left": "jump",
+        "right": "lompat"
+      }
+    ]
+  }
+}

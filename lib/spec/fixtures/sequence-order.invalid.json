@@ -1,0 +1,42 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Duplicate position",
+    "description": "Two steps claim position 2 and nothing claims 3.",
+    "language": "en",
+    "subject": "biology",
+    "yearLevel": 4,
+    "learningObjective": "Must be rejected: positions are not exactly 1..n.",
+    "estimatedMinutes": 3
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "sequence-order",
+  "rules": {
+    "secondsTotal": 90,
+    "orientation": "vertical",
+    "partialCredit": true
+  },
+  "content": {
+    "steps": [
+      {
+        "text": "Egg",
+        "position": 1
+      },
+      {
+        "text": "Larva",
+        "position": 2
+      },
+      {
+        "text": "Pupa",
+        "position": 2
+      }
+    ]
+  }
+}

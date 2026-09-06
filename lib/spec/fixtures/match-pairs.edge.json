@@ -1,0 +1,46 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Min pairs",
+    "description": "Minimum bounds fixture.",
+    "language": "en",
+    "subject": "english",
+    "yearLevel": 1,
+    "learningObjective": "Bounds probe: fewest pairs, untimed, unlimited attempts, narrowest grid.",
+    "estimatedMinutes": 2
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "match-pairs",
+  "rules": {
+    "secondsTotal": null,
+    "maxAttempts": null,
+    "gridColumns": 3
+  },
+  "content": {
+    "pairs": [
+      {
+        "left": "cat",
+        "right": "kucing"
+      },
+      {
+        "left": "dog",
+        "right": "anjing"
+      },
+      {
+        "left": "bird",
+        "right": "burung"
+      },
+      {
+        "left": "fish",
+        "right": "ikan"
+      }
+    ]
+  }
+}

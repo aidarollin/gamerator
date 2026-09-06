@@ -1,0 +1,50 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Kitaran Air",
+    "description": "Susun peringkat kitaran air mengikut urutan.",
+    "language": "ms",
+    "subject": "geo",
+    "yearLevel": 5,
+    "learningObjective": "Murid dapat menyusun peringkat kitaran air mengikut urutan yang betul.",
+    "estimatedMinutes": 5
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "sequence-order",
+  "rules": {
+    "secondsTotal": 150,
+    "orientation": "vertical",
+    "partialCredit": true
+  },
+  "content": {
+    "steps": [
+      {
+        "text": "Air laut menyejat menjadi wap air",
+        "position": 1
+      },
+      {
+        "text": "Wap air naik ke atmosfera",
+        "position": 2
+      },
+      {
+        "text": "Wap air menyejuk dan terkondensasi menjadi awan",
+        "position": 3
+      },
+      {
+        "text": "Titisan air jatuh sebagai hujan",
+        "position": 4
+      },
+      {
+        "text": "Air mengalir kembali ke laut",
+        "position": 5
+      }
+    ]
+  }
+}

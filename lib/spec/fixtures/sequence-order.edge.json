@@ -1,0 +1,42 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Min steps",
+    "description": "Minimum bounds fixture.",
+    "language": "en",
+    "subject": "biology",
+    "yearLevel": 1,
+    "learningObjective": "Bounds probe: fewest steps, horizontal, no partial credit.",
+    "estimatedMinutes": 2
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "sequence-order",
+  "rules": {
+    "secondsTotal": null,
+    "orientation": "horizontal",
+    "partialCredit": false
+  },
+  "content": {
+    "steps": [
+      {
+        "text": "Seed",
+        "position": 1
+      },
+      {
+        "text": "Seedling",
+        "position": 2
+      },
+      {
+        "text": "Plant",
+        "position": 3
+      }
+    ]
+  }
+}

@@ -165,6 +165,27 @@ export function shade(ctx: CanvasRenderingContext2D) {
       }
     },
 
+    /**
+     * A timed bonus. Pulses, and brightens as it runs out.
+     *
+     * A collectible that expires has to LOOK like one, or a player learns it
+     * expired by watching it disappear - which teaches nothing except that the
+     * game is unfair. The pulse is the whole warning.
+     */
+    sparkle(p: Palette, x: number, y: number, size: number, urgency = 0) {
+      const beat = 1 + Math.sin(urgency * Math.PI * 14) * (0.08 + urgency * 0.14);
+      const s = size * beat;
+      ctx.save();
+      ctx.globalAlpha = urgency > 0.85 ? 0.55 + Math.sin(urgency * Math.PI * 30) * 0.45 : 1;
+      if (!drawArt(ctx, "sparkle", p.gold, x, y, s, s)) {
+        ctx.fillStyle = p.gold;
+        ctx.beginPath();
+        ctx.arc(x, y, s / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    },
+
     /** Soft clouds. Cheap, and the single biggest "this is alive" signal. */
     clouds(p: Palette, w: number, h: number, offset: number, count = 5) {
       for (let i = 0; i < count; i++) {

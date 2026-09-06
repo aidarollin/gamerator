@@ -26,6 +26,7 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/simulate.ts` | The **playability simulation** for the flyer |
 | `lib/arcade/engines.ts` | Playability checks for the other four engines |
 | `lib/arcade/ramp.ts` | Ranged physics — `{start, end}` over obstacles |
+| `lib/arcade/collect.ts` | Collectible geometry, **outside the closure so it can be tested** |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. **Wired but unreachable** — see below |
 | `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
@@ -67,6 +68,34 @@ is two commands and it finds what grep cannot.
 call `gapCentres` and `flyerAt`. If a renderer ramps or spawns any other way,
 the playability check is verifying a game nobody plays, and the whole guarantee
 is theatre.
+
+**A hoisted `function` and a `const` arrow are not interchangeable.** The engine
+factories `return` an object and then declare helpers *below* it — legal, because
+`function` declarations hoist. Replace one with `const fn = () => …` in the same
+place and it is never evaluated: the return runs first, every call hits the
+temporal dead zone, and the canvas renders the sky and then stops. `npm run
+check` stayed green — TypeScript does not track use-before-init across a
+closure, and no test renders. Only a screenshot showed the missing bird.
+
+**Your measuring instrument can share a signal with the thing it measures.**
+Three of these in one session, each producing a confident wrong number:
+
+- Counting the 440 Hz score chirp counted the **music**, which plays 440 too.
+- Finding the ball by "lowest dark pixel" found **PBot's visor**, which is the
+  same ink and sits lower — the paddle parked in the corner for an entire run.
+- Chasing gold to catch a coin chased the **burst particles**, which are also
+  gold and also fall.
+
+Before trusting a probe, ask what else produces the signal it keys on.
+
+**A scripted pilot is not a player.** Tapping on a fixed interval settles the
+flyer into one altitude band; if that band misses the coin line it misses
+*every* coin, forever, and reports zero. Jitter the cadence, or read the canvas.
+
+**Optional things hide their own bugs.** A coin nobody collects looks exactly
+like a coin nobody wanted, so a broken collectible ships silently. That is why
+the geometry moved out of the closure into `lib/arcade/collect.ts` — a rule
+trapped in a closure cannot be measured, only played and watched.
 
 **A playability check must be able to fire.** brick-breaker's shipped as dead
 code — the fastest legal ball against the slowest legal paddle still passed, so

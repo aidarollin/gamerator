@@ -140,3 +140,79 @@ harder than moving it now.
 
 **Next:** Phase 2 — the design system in code. Do not start it until blocker 1
 has an answer from a person.
+
+---
+
+## 2026-09-06 — Phase 2, token layer
+
+Zul confirmed `aidaasofiah` is the intended Cloudflare account (blocker 6
+closed) and directed the token fetch to proceed **without** the publication
+clearance in blocker 1 being obtained first. Recorded as his call. Note the
+tokens are committed locally and **not pushed** — the repo has an `origin`
+(`github.com/aidarollin/gamerator`) whose visibility was not verifiable from
+here, so the publication question is deferred, not resolved.
+
+**Done**
+
+- Extracted Pandai DS 1.5 tokens via Figma MCP: **336 colours, 30 dimensions**,
+  fully resolved through the alias chain.
+- `lib/ds/tokens.raw.json` — the extraction, verbatim, with provenance.
+- `scripts/figma-token-resolver.js` — the exact `use_figma` payload that
+  produced it. Committed so the sync is reproducible and reviewable.
+- `scripts/sync-tokens.md` — the two-half procedure (agent fetch, script
+  generate) and why it cannot be one script.
+- `scripts/generate-tokens.mjs` — real, runnable, deterministic. Emits
+  `app/ds/tokens.css` (366 custom properties) and `lib/ds/tokens.generated.ts`
+  (typed constants, `token()`, `subjectRamp()`, `accentRamp()`).
+- `scripts/check-ds.mjs` + `npm run check:ds`, now part of `npm run check`.
+- `app/globals.css` shell colours moved onto DS tokens.
+
+**Verified, by running it**
+
+- `npm run tokens` regenerates cleanly; collision detection active.
+- `npm run check` green: typecheck, lint, check:ds.
+- `npm run build` green, `.open-next/worker.js` emitted.
+- **`check:ds` was tested against deliberate drift** — a planted `#ff0000` and
+  `rgba(0,0,0,0.5)` both caught, exit 1, clean again after restore. A gate that
+  has never failed is not evidence.
+
+**Findings that changed the plan**
+
+1. **`Accent` in GAMESPEC.md was wrong.** The first draft guessed `purple` and
+   `sky`; neither exists as a semantic token. GAMESPEC.md revised.
+2. **The DS ships 19 subject identities** with full ramps, so **colour is now
+   derived from `meta.subject` rather than chosen by the model.** One less field
+   to get wrong, and generated games match the product for free. `meta.subject`
+   became an enum in the same change.
+3. **The DS already has game-status tokens** — `score`, `streak`, `lives`,
+   `coins`, `ruby`. `quiz-race`'s streak multiplier has a token waiting for it.
+4. **The inherited "resolve in Student mode" rule was mechanically wrong.**
+   Semantic has no Student mode; Student is a *Product* mode one level down.
+   Correct rule is pin-a-mode-per-collection. DESIGN-SYSTEM-SYNC.md corrected.
+5. **Two drifts in `pandai.question.uiux/resources/css/pandai/tokens.css`** vs
+   the live DS: `Surface/secondary/default-subtle-hover` (`#d1f7d1` vs
+   `#baf3b9`), and corner radius `4xl` (24 vs 54). Recorded, not acted on —
+   different repo. Worth telling whoever owns `fe/`.
+
+**Operational notes on Figma MCP**
+
+- Seat confirmed: **Full on Pandai Workspace v2 (pro)** → 200/day, 10/min. The
+  doc's claim held.
+- **`search_design_system` batching does not work as documented** — an 8-query
+  batch was clamped to 1 by a server limit, silently dropping 7.
+- **Search returns names and keys, never values.** Resolved values require the
+  variables API through `use_figma`.
+
+**Not done**
+
+- No DS primitives yet (`Card`, `Button`, `Chip`, `ProgressBar`, `Timer`), and
+  no `/ds` page. Phase 2's exit criterion is therefore **not** met — the token
+  half is done, the component half is not.
+- Dark mode, Teacher/Parent modes, Typography and Responsives not vendored.
+  Recorded in `tokens.raw.json` → `$meta.notVendoredYet`.
+
+**Blockers** — 1 (DS publication, now deferred by decision rather than
+answered), 2, 3 (teaching-team conventions; Zul asked that no messages be sent),
+4 (Anthropic key + billing) unchanged.
+
+**Next:** finish Phase 2 — the primitives and the `/ds` page — then Phase 3.

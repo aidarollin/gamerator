@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next / opennext / cloudflare build output
+.next/
+out/
+build/
+.open-next/
+.wrangler/
+
+# secrets - never commit
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.key
+*.pem
+*.p12
+.wrangler/state/
+
+# test + coverage
+coverage/
+*.lcov
+
+# eval output
+evals/results/
+
+# misc
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+next-env.d.ts
+.vercel

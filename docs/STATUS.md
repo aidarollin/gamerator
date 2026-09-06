@@ -787,3 +787,62 @@ and matched the expected strings.
 - Only the flyer has collectibles; the other four engines do not.
 - Still no sound, no round timer, no power-ups.
 - Snake and runner still have flat physics.
+
+---
+
+## 2026-09-06 — Context saved to docs
+
+Written down so the state survives a compaction. Nothing built in this entry.
+
+**What changed**
+
+- `CLAUDE.md` **rewritten**. It still described the learning-game product and
+  `GameSpec`, which would have misled anyone reading it after a compact. It now
+  describes the arcade generator, says where everything is, and states the
+  model-off contract.
+- `README.md` rewritten: live URLs, five engines, and a docs index that marks
+  `GAMESPEC.md` and `AUTHORING-GUIDELINES.md` as **legacy**.
+- `docs/SCREENSHOTS.md` added — the Playwright procedure, and the three bugs
+  that HTTP checks passed clean.
+
+## Current state, in one place
+
+**Product:** arcade games with a Pandai skin, for students, as a break between
+lessons. Learning content is an optional twist. Pivoted here on 2026-09-06 from
+curriculum quiz games, which was my assumption and not Zul's.
+
+**Built and live:**
+
+- Five engines: `endless-flyer`, `endless-runner`, `brick-breaker`, `snake`,
+  `platformer`. 21 fixtures, all verified live.
+- 366 DS 1.5 tokens, 19 subject palettes, real PBot / Aidan / Nadia characters.
+- Authored art tinted from tokens; parallax; collectibles in the flyer.
+- Flyer physics **ramp** across a run; the simulation covers the hardest point.
+- Playability simulation per engine, each fuzz-tested to prove it can fire.
+- `/create` (free tuner), `/play/arcade`, `/ds`, `/embed`, `/api/generate`.
+- Export: iframe, Blade partial, spec JSON. Spec travels in the URL.
+
+**Off:** the model. Three-way locked, see CLAUDE.md. Turning it on needs a spend
+ceiling and rate limit first. Total ever spent: about **$0.06**.
+
+**Open questions for Zul**
+
+1. **Two DS Figma files.** Flying Sushi cites `Y0DLhf2MGdGwG0jyjN7EbQ`; we
+   synced `TLVKe3bgJTdVvuPAzgDq2f`. None of Flying Sushi's colours appear in our
+   336 extracted tokens. Decides whether generated and hand-built games match.
+2. **DS publication.** This repo holds DS token values and two internal Figma
+   keys, and the training program assumes public. Deferred by Zul's decision,
+   not resolved. Nothing has been pushed.
+3. Teaching-team conventions: TypeScript vs the program's Python default, and
+   the week-folder structure. No messages sent, per instruction.
+
+**Next, in the order I would take them** — all from
+[REFERENCE-FLYING-SUSHI.md](REFERENCE-FLYING-SUSHI.md):
+
+1. **Sound.** BGM, effects, a mute toggle with a persisted preference. The
+   largest remaining gap against Flying Sushi, and SCOPE's "no assets" reason is
+   disproved by that repo.
+2. Collectibles in the other four engines.
+3. A round timer with a budget shared across retries.
+4. Power-ups (magnet, rush).
+5. Ranged physics for the runner; snake's `speedUp` is already a ramp.

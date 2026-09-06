@@ -1,72 +1,134 @@
-const PHASES = [
-  { n: 1, name: "Skeleton, deployed", state: "current" },
-  { n: 2, name: "Design system in code", state: "todo" },
-  { n: 3, name: "Schema, fixtures, renderer — no AI", state: "todo" },
-  { n: 4, name: "Generation", state: "todo" },
-  { n: 5, name: "Authoring UI", state: "todo" },
-  { n: 6, name: "Persistence", state: "todo" },
-  { n: 7, name: "Access, audit, spending wall", state: "todo" },
-  { n: 8, name: "Export, and the rest of the catalog", state: "todo" },
-  { n: 9, name: "Evals and guardrails", state: "todo" },
-  { n: 10, name: "Figma review loop, runbook, handoff", state: "todo" },
+import Link from "next/link";
+import { Card } from "@/components/ds";
+import { ENGINES } from "@/lib/arcade/schema";
+
+/**
+ * The front door.
+ *
+ * This was the Phase 1 skeleton for far too long - a build plan, a list of ten
+ * phases, the words "it has no features and is not supposed to", and a
+ * description of the learning-game product this stopped being on 2026-09-06. It
+ * linked to nothing, so anyone arriving at the root saw a status report and a
+ * dead end while the whole product sat one URL away.
+ *
+ * A landing page's job is to say what the thing is and let you into it. The
+ * build plan belongs in docs/, which is where it now lives alone.
+ */
+
+export const metadata = {
+  title: "gamerator - Pandai arcade games from a description",
+  description:
+    "Describe a game and get a playable one, wearing the real Pandai mascots and design system.",
+};
+
+const heading = { color: "var(--text-default-heading)" };
+const body = {
+  fontSize: 14,
+  lineHeight: 1.65,
+  color: "var(--text-default-body)",
+};
+
+const DOORS = [
+  {
+    href: "/create",
+    title: "Make a game",
+    blurb:
+      "Describe what you want - \"a hard flappy bird with PBot through pink pipes\" - and play the result. Free: the physics are derived from your words in code.",
+    cta: "Start here",
+  },
+  {
+    href: "/play/arcade",
+    title: "Play the samples",
+    blurb:
+      "Twenty-one hand-written specs across all five engines, including the ones the playability simulation rejects and why.",
+    cta: "Browse",
+  },
+  {
+    href: "/ds",
+    title: "Design system",
+    blurb:
+      "The Pandai DS 1.5 layer this is built on - 366 tokens and the primitives, generated from Figma rather than transcribed.",
+    cta: "Inspect",
+  },
 ] as const;
 
 export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-16">
-      <header className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">gamerator</h1>
-        <p className="text-sm leading-relaxed opacity-70">
-          An internal game generator for the Pandai content team. A content
-          designer describes a learning game; the system produces a playable,
-          Pandai Design System 1.5 faithful game and an export the product team
-          can consume.
+    <main
+      style={{
+        maxWidth: 720,
+        margin: "0 auto",
+        padding: "var(--spacing-component-md)",
+        display: "grid",
+        gap: "var(--spacing-component-lg)",
+      }}
+    >
+      <header style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
+        <h1 style={{ ...heading, fontSize: 28, fontWeight: 700, letterSpacing: "-0.01em" }}>
+          gamerator
+        </h1>
+        <p style={{ ...body, fontSize: 15 }}>
+          Describe an arcade game and get a playable one, wearing the real Pandai
+          mascots and the real design system - with an export a Pandai engineer
+          can drop straight into the site.
         </p>
       </header>
 
-      <section className="rounded-lg border border-black/10 p-4 dark:border-white/15">
-        <h2 className="text-sm font-medium">Phase 1 — skeleton, deployed</h2>
-        <p className="mt-2 text-sm leading-relaxed opacity-70">
-          This page exists to prove one thing: the Next.js + OpenNext +
-          Cloudflare Workers stack builds and serves. It has no features and is
-          not supposed to. The AI arrives in Phase 4, after the renderer can
-          already play hand-written specs.
+      <nav style={{ display: "grid", gap: "var(--spacing-component-sm)" }}>
+        {DOORS.map((d) => (
+          <Link key={d.href} href={d.href} style={{ textDecoration: "none" }}>
+            <Card>
+              <div style={{ display: "grid", gap: "var(--spacing-component-3xs)" }}>
+                <span style={{ ...heading, fontSize: 17, fontWeight: 600 }}>
+                  {d.title}
+                </span>
+                <span style={body}>{d.blurb}</span>
+                <span
+                  style={{
+                    ...body,
+                    marginTop: "var(--spacing-component-2xs)",
+                    fontWeight: 600,
+                    color: "var(--text-primary-default)",
+                  }}
+                >
+                  {d.cta} &rarr;
+                </span>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </nav>
+
+      <section style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
+        <h2 style={{ ...heading, fontSize: 15, fontWeight: 600 }}>
+          How it works
+        </h2>
+        <p style={body}>
+          The model never writes code. A description produces a validated{" "}
+          <code>ArcadeSpec</code> - a small JSON document naming one of{" "}
+          {ENGINES.length} hand-written engines, its physics, its palette and its
+          character - and a deterministic engine plays it. That is what makes
+          every generated game checkable before anyone sees it: a headless
+          simulation plays the spec first, and one that cannot be beaten, or
+          cannot be lost, is rejected with a reason.
+        </p>
+        <p style={body}>
+          Nothing here spends money. The physics are currently derived from your
+          words in code; the model provider is wired but deliberately switched
+          off.
         </p>
       </section>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium">Build phases</h2>
-        <ol className="flex flex-col gap-1">
-          {PHASES.map((phase) => (
-            <li
-              key={phase.n}
-              className="flex items-baseline gap-3 text-sm tabular-nums"
-            >
-              <span className="w-5 shrink-0 text-right opacity-40">
-                {phase.n}
-              </span>
-              <span
-                className={
-                  phase.state === "current"
-                    ? "font-medium"
-                    : "opacity-50"
-                }
-              >
-                {phase.name}
-              </span>
-              {phase.state === "current" && (
-                <span className="rounded-full border border-black/15 px-2 py-0.5 text-[11px] opacity-60 dark:border-white/20">
-                  current
-                </span>
-              )}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <footer className="text-xs leading-relaxed opacity-50">
-        Plan and reasoning live in <code>docs/</code>. Read{" "}
-        <code>docs/STATUS.md</code> first — it carries the live blockers.
+      <footer
+        style={{
+          ...body,
+          fontSize: 12,
+          paddingTop: "var(--spacing-component-sm)",
+          borderTop: "1px solid var(--border-general-default)",
+        }}
+      >
+        Engines: {ENGINES.join(", ")}. Plan, decisions and the dated log live in{" "}
+        <code>docs/</code> - start with <code>docs/STATUS.md</code>.
       </footer>
     </main>
   );

@@ -58,6 +58,12 @@ NOT enforced through OpenRouter**; generation uses **strict tool use**. See
 
 ## Things that will bite you
 
+**Arrive the way a visitor does.** Every check for six sessions started at a
+deep link, so nobody noticed that `/` was still the Phase 1 skeleton - "it has
+no features and is not supposed to" - and that no page linked to any other. Zul
+opened the site and found a build plan. Before shipping, load `/` and try to
+reach the thing you built without touching the URL bar.
+
 **Verify by LOOKING, not just by HTTP.** Three real bugs shipped past checks
 that returned 200 with the right strings: a white box around the Nadia and Aidan
 avatars, brick-breaker being unplayable by keyboard, and a platformer floating in

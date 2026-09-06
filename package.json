@@ -10,9 +10,10 @@
     "deploy": "opennextjs-cloudflare deploy",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
-    "check": "npm run typecheck && npm run lint && npm run check:ds",
+    "check": "npm run typecheck && npm run lint && npm run check:ds && npm run check:tokens",
     "tokens": "node scripts/generate-tokens.mjs",
-    "check:ds": "node scripts/check-ds.mjs"
+    "check:ds": "node scripts/check-ds.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

@@ -216,3 +216,74 @@ answered), 2, 3 (teaching-team conventions; Zul asked that no messages be sent),
 4 (Anthropic key + billing) unchanged.
 
 **Next:** finish Phase 2 — the primitives and the `/ds` page — then Phase 3.
+
+---
+
+## 2026-09-06 — Phase 2 complete
+
+Instruction: finish Phase 2, and change nothing outside this repo. Honoured —
+Figma was read but never written, and no other repo was touched.
+
+**Done**
+
+- Read real geometry for Button, Cards, Progress Bar and Tag off their Figma
+  nodes. No value in the primitives was hand-picked; `components/ds/ds.module.css`
+  names the source node above every block.
+- `components/ds/` — `Card` (+ `CardStack`), `Button`, `Chip`, `ProgressBar`,
+  `Timer`, `StatusPill`, plus `tokens.ts` carrying `rampStyle` / `resolveRamp` /
+  `statusStyle`.
+- Accent theming works by projecting a ramp onto `--ramp-*` inline, so one class
+  set renders all 19 subject identities with no component ever naming a colour.
+- `app/ds/page.tsx` — every primitive, all 19 subjects, all 10 accent families,
+  spacing and radius scales.
+- `scripts/check-tokens.mjs` + `npm run check:tokens`, now in `npm run check`.
+
+**Verified, by running it**
+
+- `npm run check` green: typecheck, lint, check:ds, check:tokens.
+- `npm run build` green.
+- `/ds` served from real `workerd`: HTTP 200, 138KB, **19 distinct subject
+  token vars referenced**, and **zero raw hex in the rendered HTML**.
+- **Both gates tested against planted failures.** `check:tokens` catches a
+  dangling `--subjects-bahasa-melayu-default` (the DS key is `b-melayu` — the
+  exact mistake it exists for); `check:ds` catches a planted `#ff0000`.
+
+**Two false positives found and fixed in the gates themselves**
+
+- `check:tokens` flagged `var(--status-${key}-default)` — a template literal,
+  not a typo. Interpolated names are now skipped, which is exhaustive rather
+  than a hole because the STATUS_KEYS ramp check already covers every value the
+  interpolation can take.
+- `check:ds` flagged `&#9201;` (a stopwatch entity) as `#9201`. Numeric HTML
+  entities are now stripped before the colour scan, rather than narrowing the
+  colour pattern — narrowing would have started letting real values through.
+
+**Findings**
+
+1. **Card radius drift, and it is the consequential one.** The other repo's
+   `DESIGN-SYSTEM.md` radius table says cards are 16 (`corner-xl`); every card
+   in the live DS binds `Radius/3xl` = **24**. A card built to that table is
+   visibly squarer than the DS it claims to follow. Recorded, not acted on.
+2. **All three Button variants share one hover treatment** in the DS — Primary,
+   Secondary and Tertiary all resolve to `Surface/secondary/default` +
+   `Border/secondary/focus` + `Text/secondary/focus` on State=Hover. Verified
+   across all three nodes so nobody later "fixes" it.
+3. **Quiz Card binds its stroke to `Subject/default`** — subject theming is
+   already a real component behaviour in the DS, not an idea we invented.
+4. Button set carries **198 variants**; only Type=Student / Size=L was read.
+
+**Known gaps, deliberately**
+
+- Button sizes M and S scale padding and keep every colour identical. Their DS
+  nodes were **not** read, and both the CSS and the `/ds` page say so. Read them
+  before treating those two as DS-exact.
+- `Timer` is **not** a DS component — the DS has no Timer node. Composed from
+  Tag geometry plus Status tokens, and labelled as such in code.
+- Dark mode, Teacher/Parent modes, Typography and Responsives still not
+  vendored.
+
+**Blockers** — 1 (DS publication, deferred by decision), 2, 3 (teaching-team
+conventions; no messages to be sent), 4 (Anthropic key + billing) unchanged.
+Nothing pushed; all work is local.
+
+**Next:** Phase 3 — schema, fixtures, renderer. Still no AI, by design.

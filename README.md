@@ -1,23 +1,32 @@
 # gamerator
 
-An internal game generator for the Pandai content team. A content designer
-describes a learning game in plain language — subject, year level, objective,
-and the rules they want — and gets back a **playable, Pandai Design System 1.5
-faithful game** in under three minutes, plus an export the product team can drop
-into Pandai proper.
+A generator for **Pandai-skinned arcade games**. Describe a game — *"a hard
+flappy bird with PBot through chemistry pink pipes"* — and get a playable one,
+wearing the real Pandai mascots and design system, with an export a Pandai
+engineer can drop into the product.
 
-The AI never writes game code. It emits a schema-validated **GameSpec** (JSON);
-a deterministic React renderer built from Pandai DS components plays any valid
-spec. That one constraint is what makes the output safe, on-brand, testable and
-cheap. See [docs/GAMESPEC.md](docs/GAMESPEC.md).
+The AI never writes game code. It emits a schema-validated **ArcadeSpec**;
+hand-written deterministic engines play it. That one constraint is what makes
+the output safe, on-brand, testable and cheap — and it is what allows a
+generated game to be **simulated for playability before anyone sees it**.
+
+## Live
+
+<https://gamerator.aidaasofiah.workers.dev>
+
+| Page | What |
+| --- | --- |
+| [/create](https://gamerator.aidaasofiah.workers.dev/create) | Describe a game, play it, export it |
+| [/play/arcade](https://gamerator.aidaasofiah.workers.dev/play/arcade) | All 21 fixtures across five engines |
+| [/ds](https://gamerator.aidaasofiah.workers.dev/ds) | Every DS primitive in all 19 subject palettes |
+| [/embed](https://gamerator.aidaasofiah.workers.dev/embed) | The embeddable surface Pandai drops into Blade |
 
 ## Status
 
-**Phases 1–3 complete.** Live at
-<https://gamerator.aidaasofiah.workers.dev/> (Phase 1 build); DS primitives at
-`/ds`, and all five game templates playable from hand-written fixtures at
-`/play/preview`. 366 Pandai DS 1.5 tokens vendored, 38 tests, no AI in the
-codebase yet — that is Phase 4. Read [docs/STATUS.md](docs/STATUS.md) first in
+Five engines built: `endless-flyer`, `endless-runner`, `brick-breaker`, `snake`,
+`platformer`. 366 Pandai DS 1.5 tokens vendored. Flyer physics ramp across a
+run. **The model is deliberately off** — `/create` runs a free deterministic
+tuner; see [CLAUDE.md](CLAUDE.md). Read [docs/STATUS.md](docs/STATUS.md) first in
 every session.
 
 ## The docs pack
@@ -27,14 +36,18 @@ anything structural, and keep it true afterwards.
 
 | Doc | Read it when |
 | --- | --- |
-| [PROJECT.md](docs/PROJECT.md) | You need the problem, the objectives, and the requirements |
-| [SCOPE.md](docs/SCOPE.md) | Before adding anything — it names what is deliberately not being built |
-| [TECHNICAL-PLAN.md](docs/TECHNICAL-PLAN.md) | Before changing architecture, the stack, or deployment |
-| [GAMESPEC.md](docs/GAMESPEC.md) | Before touching the schema, the template catalog, or the renderer |
-| [AUTHORING-GUIDELINES.md](docs/AUTHORING-GUIDELINES.md) | The rules shown to the person describing a game |
-| [DESIGN-SYSTEM-SYNC.md](docs/DESIGN-SYSTEM-SYNC.md) | Before any Figma MCP work — it says where Figma belongs and where it does not |
-| [BUILD-GUIDE.md](docs/BUILD-GUIDE.md) | The phased build, start to finish |
-| [STATUS.md](docs/STATUS.md) | Start of every session, to see the live blockers |
+| [STATUS.md](docs/STATUS.md) | **Start of every session** — dated log and live blockers |
+| [ENGINES.md](docs/ENGINES.md) | The arcade catalog and the ArcadeSpec |
+| [SCOPE.md](docs/SCOPE.md) | Before adding anything — names what is deliberately not built |
+| [EXPORT.md](docs/EXPORT.md) | Getting a game into Pandai |
+| [SCREENSHOTS.md](docs/SCREENSHOTS.md) | After any visual change — verify by looking |
+| [REFERENCE-FLYING-SUSHI.md](docs/REFERENCE-FLYING-SUSHI.md) | Zul's own game, and what to adopt from it |
+| [TECHNICAL-PLAN.md](docs/TECHNICAL-PLAN.md) | Architecture, stack, and the ten build gotchas |
+| [PROJECT.md](docs/PROJECT.md) | Problem, users, objectives, program fit |
+| [DESIGN-SYSTEM-SYNC.md](docs/DESIGN-SYSTEM-SYNC.md) | Before any Figma work |
+| [BUILD-GUIDE.md](docs/BUILD-GUIDE.md) | The phased build |
+| [GAMESPEC.md](docs/GAMESPEC.md) | **Legacy** — the learning templates, superseded by ENGINES.md |
+| [AUTHORING-GUIDELINES.md](docs/AUTHORING-GUIDELINES.md) | **Legacy** — written for the learning product |
 
 ## Relationship to the training program
 

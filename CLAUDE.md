@@ -1,131 +1,125 @@
 # CLAUDE.md
 
-**gamerator** — an internal game generator for the Pandai content team. A content
-designer describes a learning game; the system produces a playable, Pandai
-Design System 1.5 faithful game and an export the product team can consume.
+**gamerator** — a generator for **Pandai-skinned arcade games**. Someone
+describes a game ("a hard flappy bird with PBot through chemistry pink pipes")
+and gets a playable one, wearing the real Pandai mascots and the real design
+system, with an export a Pandai engineer can drop in.
 
-Read [README.md](README.md) for the docs pack index and
-[docs/STATUS.md](docs/STATUS.md) at the start of every session for live blockers.
-Nothing is built yet — [docs/BUILD-GUIDE.md](docs/BUILD-GUIDE.md) is the order of
-work.
+Read [docs/STATUS.md](docs/STATUS.md) at the start of every session — it is the
+dated log and carries the live blockers.
+
+Live: <https://gamerator.aidaasofiah.workers.dev> ·
+`/create` (describe a game) · `/play/arcade` (fixtures) · `/ds` (design system)
 
 ## The rule the whole system rests on
 
-**The model emits data, not code.** A prompt produces a `GameSpec` — validated
-JSON — and a hand-written deterministic renderer plays it. If you find yourself
-generating JavaScript, HTML, or CSS from a model call, stop: that is a different
-architecture and [docs/SCOPE.md](docs/SCOPE.md) explicitly excludes it.
+**The model emits data, not code.** A prompt produces an `ArcadeSpec` —
+validated JSON naming an engine, its physics, its palette and its character — and
+a hand-written deterministic engine plays it. If you find yourself generating
+JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
+
+## Where things are
+
+| Path | What |
+| --- | --- |
+| `lib/arcade/schema.ts` | `ArcadeSpec` 2.0, five engines, all validation |
+| `lib/arcade/simulate.ts` | The **playability simulation** for the flyer |
+| `lib/arcade/engines.ts` | Playability checks for the other four engines |
+| `lib/arcade/ramp.ts` | Ranged physics — `{start, end}` over obstacles |
+| `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
+| `lib/arcade/live.ts` | The model provider. **Wired but unreachable** — see below |
+| `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
+| `components/arcade/` | `GameFrame` (shell) + `engines.tsx` (five factories) |
+| `components/arcade/paint.ts` | Shared drawing: sky, parallax, blocks, ground |
+| `components/arcade/art.ts` | Authored SVGs, tinted from DS tokens at draw time |
+| `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens. **Generated** |
+| `lib/spec/`, `components/game/` | The **legacy learning templates**. Still work, not the product |
+
+## The model is OFF, deliberately
+
+Zul asked for it to stay off until he says otherwise. It is off three ways:
+
+1. Nothing imports `lib/arcade/live.ts`.
+2. `providerMode()` returns `"stub"` unless `GAMERATOR_PROVIDER=live`.
+3. The paid spec `lib/arcade/live-once.spec.ts` is excluded from `npm test` —
+   the default include is `lib/**/*.test.ts` and it is `.spec.ts`. Running it
+   needs `vitest.live.mts` named explicitly.
+
+**Do not turn it on without being asked.** When asked, it also needs a spend
+ceiling and a rate limit first (Phase 7), or a loop runs up a real bill.
+
+Provider is **OpenRouter**. Two settings move together and the base URL stops at
+`/api` — the SDK appends `/v1/messages` itself. And **`output_config.format` is
+NOT enforced through OpenRouter**; generation uses **strict tool use**. See
+[docs/STATUS.md](docs/STATUS.md) for how that was found out the expensive way.
 
 ## Things that will bite you
 
-**Nothing renders that has not passed `safeParse`.** The renderer's prop type is
-the parsed `GameSpec`, not `unknown` and not a hand-written interface — an
-unvalidated object cannot reach it without a type error. Do not weaken that type
-to make a test easier. It is the property that makes this safe to point at
-children's learning material.
+**Verify by LOOKING, not just by HTTP.** Three real bugs shipped past checks
+that returned 200 with the right strings: a white box around the Nadia and Aidan
+avatars, brick-breaker being unplayable by keyboard, and a platformer floating in
+empty space. See [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) — capturing a screen
+is two commands and it finds what grep cannot.
 
-**Model output is never `eval`'d, injected, or passed to
-`dangerouslySetInnerHTML`.** Every string from a spec is a text node. There is no
-performance argument that outweighs this.
+**The renderer and the simulation must generate the level the same way.** Both
+call `gapCentres` and `flyerAt`. If a renderer ramps or spawns any other way,
+the playability check is verifying a game nobody plays, and the whole guarantee
+is theatre.
 
-**Colour cannot be expressed as a value.** `accent` is an enum of semantic names
-that code maps to DS tokens. Never add a free-form colour field to the schema —
-it would undo DS fidelity in one commit. The `Accent` enum and the
-accent-to-token map are a pair; a test asserts every member resolves.
+**A playability check must be able to fire.** brick-breaker's shipped as dead
+code — the fastest legal ball against the slowest legal paddle still passed, so
+it could never reject anything. `engines.test.ts` fuzzes every check across its
+own bounds and asserts each both accepts and rejects. A check that cannot fire
+is worse than none: it reads as coverage.
 
-**Figma MCP is design-time only, never in the request path.** It is per-seat
-authenticated and rate limited to roughly 200 calls a day. A Worker has no seat.
-Tokens are synced into the repo by a human running a script. See
-[docs/DESIGN-SYSTEM-SYNC.md](docs/DESIGN-SYSTEM-SYNC.md) — and load the
-`/figma-use` skill before any `use_figma` call.
+**The simulation must reach the hardest point of the ramp.** Physics ramp now, so
+a fixed window would only sample the gentle opening. It runs
+`rampOverObstacles + 4`.
 
-**Resolve every DS value in Student (green) mode.** DS colour families are
-mode-scoped and a flat lookup silently returns a Teacher (pink) or Parent value.
-A token that reads pink is wrong. Also: two Figma libraries answer variable
-searches — match on `libraryName` before trusting a result.
+**Colour cannot be expressed as a value.** `theme.palette` is a DS subject or
+accent key. Authored art is a white silhouette tinted at draw time. `check:ds`
+enforces it; `check:tokens` catches dangling `var(--…)`.
 
-**One repair turn, not a loop.** A spec that fails validation twice means the
-prompt or the schema is wrong. Retrying is a way of not finding that out.
+**Shell quoting has corrupted content three times.** `python -c "..."` lets bash
+expand backticks; a heredoc without quoting turned `\b` into literal backspace
+characters and silently broke a routing regex. **Use `<<'EOF'` for any content
+with backticks or backslashes**, or the Write tool.
 
-**The system prompt is a frozen cache prefix.** No timestamps, no per-request
-ids, no unsorted iteration. Verify with `usage.cache_read_input_tokens`; a zero
-across repeated requests means something in the prefix is moving.
+**Build gotchas** — full list in
+[docs/TECHNICAL-PLAN.md](docs/TECHNICAL-PLAN.md), numbered 1–10. The ones that
+cost the most: `npm run build` must stay `opennextjs-cloudflare build`;
+`open-next.config.ts` needs `buildCommand: "npm run build:next"`;
+`next.config.ts` cannot be top-level-await; **a Worker has no filesystem**, so
+anything read at runtime must be a static import; `esbuild` must stay an
+explicit devDependency; stop the dev server before building.
 
-**Two error paths in the SSE route, and they are not interchangeable.** Before
-the stream opens, fail with an HTTP status. After the first byte the status is
-locked at 200, so failures must be emitted as error stream events.
+**Never pipe `npm run check` into `tail`** — you get `tail`'s exit code and a
+failing gate looks green. That happened, and a broken typecheck was committed.
 
-**Versions are immutable.** An edit inserts a `game_versions` row; it never
-updates one.
+## Commands
 
-**`ANTHROPIC_API_KEY` is server-only** — a Worker secret in production,
-`.env.local` in development. Note that `.dev.vars` does *not* give `next dev` a
-key: it populates `getCloudflareContext().env`, while the route reads
-`process.env`. The dev server's "Using secrets defined in .dev.vars" line looks
-like it worked and did not.
+```bash
+npm run check     # typecheck + lint + check:ds + check:tokens + tests
+npm run build     # opennextjs-cloudflare build (stop the dev server first)
+npx wrangler deploy
+npm run tokens    # regenerate the DS token layer
+npm run fixtures  # regenerate the bundled fixture index
+```
 
-**Build gotchas carried from askpbot** — `npm run build` must stay
-`opennextjs-cloudflare build`; `open-next.config.ts` needs
-`buildCommand: "npm run build:next"` or the build recurses into itself;
-`initOpenNextCloudflareForDev()` stays guarded by `NODE_ENV === "development"`;
-stop the dev server before building. Full explanations in
-[docs/TECHNICAL-PLAN.md](docs/TECHNICAL-PLAN.md).
-
-**`next.config.ts` must not be top-level-await.** Next 16 `require()`s the
-compiled config, so an `await import(...)` — or awaiting
-`initOpenNextCloudflareForDev()` — fails the build with
-`ERR_REQUIRE_ASYNC_MODULE`. Static import, `void` the call. The error names
-`next.config.compiled.js` and never points at the line responsible. Hit and fixed
-in Phase 1; do not reintroduce it while tidying that file.
-
-**Build before check on a fresh clone.** `app/layout.tsx` uses
-`LayoutProps<"/">`, a Next 16 route type generated into `.next/types`. Run
-`npm run check` first and `tsc` fails with `Cannot find name 'LayoutProps'`,
-which reads like a broken tsconfig and is only missing generated types.
-
-**A Worker has no filesystem, and `next dev` will not tell you.** `node:fs` at
-request time works in the dev server and throws `ENOENT ... readdir '/bundle/…'`
-in the deployed Worker. Anything the server reads at runtime must be a static
-import, bundled at build time — that is why `lib/spec/fixtures.generated.ts`
-exists. **Verify server-side data access against `wrangler dev`.**
-
-**`esbuild` stays an explicit devDependency.** `@opennextjs/cloudflare` imports
-it while declaring it nowhere, relying on hoisting. Anything that reorganises
-the dependency tree de-hoists it and the build dies with
-`Cannot find package 'esbuild'`. Pinned at 0.28 to satisfy vite 8; verified
-working. Do not remove it because nothing appears to import it.
-
-**Shuffling is seeded from the spec, never `Math.random()`.** NFR2 requires the
-same spec to produce the same game; unseeded shuffling also breaks hydration,
-because the server and client draw different orders. Use `seededShuffle` with
-`specSeed` from `lib/game/random.ts`.
-
-**Do not use HTML5 drag and drop in a renderer.** It is not keyboard operable,
-which puts NFR8 out of reach for the whole template. `SortBuckets` and
-`SequenceOrder` use select-then-place and move-up/move-down for this reason.
-
-## Model
-
-`claude-opus-5` via the official `@anthropic-ai/sdk`. Structured output through
-`client.messages.parse()` with `zodOutputFormat(GameSpec)` and
-`output_config: { format: ... }` — not the deprecated `output_format`. Thinking
-is `{ type: "adaptive" }`; `budget_tokens` returns a 400 on this model. Assistant
-prefill also returns a 400 — shape output with the schema, not a primed turn.
-Check `stop_reason` for `"refusal"` before reading content.
+`npm run check` needs one prior build on a fresh clone — `LayoutProps` is a
+generated route type.
 
 ## Docs discipline
 
-1. The docs describe what exists, not what is planned. Anything unbuilt is marked
-   unbuilt.
+1. The docs describe what exists. Anything unbuilt is marked unbuilt.
 2. Never write a command nobody has run.
-3. Append to `docs/STATUS.md` every working session, dated that day. Never
-   backdate.
-4. Adding a feature means checking `docs/SCOPE.md` first.
+3. Append to `docs/STATUS.md` every session, dated that day. Never backdate.
+4. Check `docs/SCOPE.md` before adding a feature.
 5. If code and docs disagree, that is a bug in the docs — fix it in the same
    change.
 
 ## Secrets
 
-No API keys, tokens, or `.env` files in version control. Credentials come from
-environment variables at runtime. `.env.example` is the committed template and
-must stay in sync when config options change.
+`ANTHROPIC_API_KEY` (an OpenRouter key) lives in `.env.local`, gitignored, never
+committed and never echoed. It is not a Worker secret, so **the deployed site
+cannot spend money**.

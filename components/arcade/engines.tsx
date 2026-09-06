@@ -1,7 +1,7 @@
 "use client";
 
 import { WORLD, type ArcadeSpec } from "@/lib/arcade/schema";
-import { gapCentres, SIM } from "@/lib/arcade/simulate";
+import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
 import { makeRng } from "@/lib/game/random";
 import { CHARACTERS } from "./characters";
 import { spawnBurst, stepParticles, type Particle } from "./paint";
@@ -30,7 +30,13 @@ export const flyerFactory: EngineFactory = (h, spec) => {
   const floor = H - GROUND;
 
   let y = H / 2, vy = 0, dist = 0, dead = false, t = 0, pop = 0, flapAnim = 0;
+  let passed = 0, tilt = 0;
   let parts: Particle[] = [];
+
+  // The physics in force RIGHT NOW, from the same function the validator
+  // simulates. If the renderer ramped any other way the playability check would
+  // be verifying a game nobody plays.
+  const at = () => flyerAt(r, passed);
 
   const die = () => {
     if (dead) return;
@@ -44,7 +50,7 @@ export const flyerFactory: EngineFactory = (h, spec) => {
   };
 
   return {
-    reset() { y = H / 2; vy = 0; dist = 0; dead = false; parts = []; },
+    reset() { y = H / 2; vy = 0; dist = 0; passed = 0; dead = false; parts = []; },
     input(kind) {
       if (kind === "press" && !dead && h.phase() === "playing") {
         vy = r.flapVelocity;
@@ -55,13 +61,25 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       t += dt; pop = Math.max(0, pop - dt * 4); flapAnim = Math.max(0, flapAnim - dt * 5);
       parts = stepParticles(parts, dt);
       if (dead) return;
-      vy += r.gravity * dt; y += vy * dt; dist += r.scrollSpeed * dt;
+      const now = at();
+      vy += r.gravity * dt; y += vy * dt; dist += now.scrollSpeed * dt;
+
+      // Lerped tilt, borrowed from Flying Sushi. Assigning the target angle
+      // directly - which this did - reads stiff; easing into it reads alive.
+      const targetTilt = Math.max(-0.45, Math.min(1, vy / 650));
+      tilt += (targetTilt - tilt) * Math.min(1, dt * 10);
+
       if (y - art.radius <= 0) { y = art.radius; vy = 0; }
       if (y + art.radius >= floor) { y = floor - art.radius; die(); return; }
-      const i = Math.floor(dist / r.gapSpacing);
-      if (dist - i * r.gapSpacing < r.scrollSpeed * dt && i > 0) {
-        const c = centres[i % centres.length], half = r.gapHeight / 2;
+
+      // Obstacles are spaced by the ramp, so their x positions are a running
+      // sum rather than index * spacing.
+      const nextX = obstacleX(passed + 1);
+      if (nextX - dist <= 0) {
+        const c = centres[(passed + 1) % centres.length];
+        const half = flyerAt(r, passed + 1).gapHeight / 2;
         if (y - art.radius < c - half || y + art.radius > c + half) return die();
+        passed += 1;
         pop = 1;
         h.addScore(spec.scoring.pointsPerObstacle);
       }
@@ -70,11 +88,11 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       const { paint: p, palette } = h;
       p.sky(palette, W, H);
       p.clouds(palette, W, H, dist);
-      const first = Math.floor(dist / r.gapSpacing);
-      for (let i = first; i <= first + 4; i++) {
+      for (let i = passed; i <= passed + 5; i++) {
         if (i <= 0) continue;
-        const c = centres[i % centres.length], half = r.gapHeight / 2;
-        const x = SIM.birdX + i * r.gapSpacing - dist;
+        const c = centres[i % centres.length];
+        const half = flyerAt(r, i).gapHeight / 2;
+        const x = SIM.birdX + obstacleX(i) - dist;
         if (x < -80 || x > W + 80) continue;
         const w = 54;
         p.block(palette, x - w / 2, -30, w, c - half + 30, 8);
@@ -85,7 +103,7 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       p.ground(palette, W, floor, GROUND, dist);
       p.burst(palette, parts);
       drawCharacter(h, spec, SIM.birdX, y, {
-        tilt: Math.max(-0.45, Math.min(1, vy / 650)) + (dead ? t * 2 : 0),
+        tilt: tilt + (dead ? t * 2 : 0),
         bob: h.phase() === "ready" ? Math.sin(t * 3) * 6 : 0,
         squash: 1 + flapAnim * 0.12,
         dead,
@@ -93,6 +111,13 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       if (h.phase() === "playing") p.score(palette, String(h.score()), W / 2, 76, 50, pop);
     },
   };
+
+  /** Distance from the start to obstacle `n`, accumulating the ramped spacing. */
+  function obstacleX(n: number) {
+    let d = 0;
+    for (let i = 1; i <= n; i++) d += flyerAt(r, i - 1).gapSpacing;
+    return d;
+  }
 };
 
 /* ----------------------------------------------------------- brick-breaker */

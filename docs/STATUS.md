@@ -674,3 +674,69 @@ at `/play/arcade?game=model-generated`.
 - `pbot.riv` still unused.
 
 **Next:** a spend ceiling and rate limit, then `/create` can go live.
+
+---
+
+## 2026-09-06 — Ranged physics: runs that build instead of repeat
+
+Adopted item 1 from [REFERENCE-FLYING-SUSHI.md](REFERENCE-FLYING-SUSHI.md). The
+model stays off, unchanged.
+
+**What changed.** `endless-flyer` physics were four fixed numbers for a whole
+run. Four of them are now `{ start, end }` ranges interpolated over
+`rampOverObstacles`:
+
+| field | was | now |
+| --- | --- | --- |
+| `scrollSpeed` | one value | range, usually rising |
+| `gapHeight` | one value | range, usually narrowing |
+| `gapSpacing` | one value | range, usually shortening |
+| `gapDrift` | one value | range, usually widening |
+| `gravity`, `flapVelocity` | one value | **still constant** |
+
+Gravity and flap stay constant deliberately: they are the *feel of the
+character*, and a hero whose weight changes mid-run reads as a bug rather than
+as escalation. Everything the world does to the player ramps instead.
+
+**Two differences from the reference.** It ramps on **obstacles passed**, not
+wall-clock — difficulty should track progress, and a player hovering in an empty
+gap is not getting better. And there is no round timer yet; that is the next
+item, not this change.
+
+**The simulation had to change with it, and this is the important part.** A
+fixed twelve-obstacle window would sample only the gentle opening of a ramped
+spec. The simulation now runs `rampOverObstacles + 4`, so it always reaches the
+hardest point. The new `endless-flyer.unplayable` fixture exists to prove it:
+
+> a perfect player misses obstacle 20 by 72px — 95% into the ramp the gap is
+> 93px at 376px/s, too tight for these physics
+
+It cleared **nineteen** obstacles before failing. Under the old fixed window
+that spec would have validated and shipped an impossible game. The failure
+message now names how far into the ramp it happened, so a repair turn knows
+whether to soften the end or the whole curve.
+
+**Also adopted:** the lerped tilt. The character now eases toward its
+velocity-derived angle instead of being assigned it every frame — one line, and
+it reads noticeably less stiff.
+
+**The tuner learned to ramp.** "starts easy and builds to something tense" now
+produces speed 75→195, gap 210→149, spacing 330→242, drift 30→91 over 12
+obstacles. "steady, the same difficulty throughout" flattens the climb and
+stretches the ramp to 30. Values are rounded to one decimal, because float
+arithmetic was leaking `90.80000000000001` into the JSON a Pandai engineer reads.
+
+**The system prompt gained the range rules**, including the point that a flat
+run repeats and that the ramp's END is what gets simulated. Not spent against
+the model — recorded for when it goes back on.
+
+**Verified live:** 21/21 fixtures correct, 50 tests, `npm run check` clean.
+
+**Not done**
+
+- Only `endless-flyer` ramps. The runner, breaker, snake and platformer are
+  still flat; snake has `speedUp`, which is a ramp in all but name.
+- No round timer, no collectibles, no power-ups, no sound — items 2 to 5 on the
+  adopt list.
+- One deploy failed on a DNS resolution error mid-session and succeeded on
+  retry; nothing to fix, noted so it is not mistaken for a code fault later.

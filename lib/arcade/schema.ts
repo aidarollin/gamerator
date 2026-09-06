@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ACCENT_FAMILIES, SUBJECT_KEYS } from "@/lib/ds/tokens.generated";
-import { flyerPlayability } from "./simulate";
+import { flyerPlayability, simulatedObstacles } from "./simulate";
+import { Range } from "./ramp";
 import {
   BrickBreakerRules,
   SnakeRules,
@@ -81,18 +82,26 @@ export const EndlessFlyer = z.object({
   ...base,
   engine: z.literal("endless-flyer"),
   rules: z.object({
-    /** px/s^2 downward. */
+    /**
+     * Gravity and flap stay constant - they are the FEEL of the character, and
+     * a hero whose weight changes mid-run reads as a bug rather than as
+     * escalation. Everything the world does to the player ramps instead.
+     */
     gravity: z.number().min(400).max(3000),
     /** px/s, negative is upward. Applied instantly on tap. */
     flapVelocity: z.number().min(-800).max(-150),
-    /** px/s the world moves left. */
-    scrollSpeed: z.number().min(60).max(400),
-    /** Vertical opening, px. */
-    gapHeight: z.number().min(80).max(300),
-    /** Horizontal distance between gap centres, px. */
-    gapSpacing: z.number().min(140).max(600),
-    /** How far a gap centre may move between obstacles, px. */
-    gapDrift: z.number().min(0).max(240),
+
+    /** px/s the world moves left. Usually rises. */
+    scrollSpeed: Range(60, 400),
+    /** Vertical opening, px. Usually narrows. */
+    gapHeight: Range(80, 300),
+    /** Horizontal distance between gap centres, px. Usually shortens. */
+    gapSpacing: Range(140, 600),
+    /** How far a gap centre may move between obstacles, px. Usually widens. */
+    gapDrift: Range(0, 240),
+    /** Obstacles until the ramp reaches its end values. */
+    rampOverObstacles: z.number().int().min(1).max(60),
+
     lives: z.number().int().min(1).max(5),
   }),
 });
@@ -144,25 +153,32 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
   if (spec.engine === "endless-flyer") {
     const r = spec.rules;
 
-    // A gap the player physically cannot fit through.
+    // A gap the player physically cannot fit through - checked at the
+    // TIGHTEST point of the ramp, not the start.
     const minGap = WORLD.birdRadius * 2 + 24;
-    if (r.gapHeight < minGap) {
+    const tightest = Math.min(r.gapHeight.start, r.gapHeight.end);
+    if (tightest < minGap) {
       ctx.addIssue({
         code: "custom",
         path: ["rules", "gapHeight"],
-        message: `gapHeight ${r.gapHeight} leaves no room for the player; needs at least ${minGap}`,
+        message: `the ramp reaches a ${tightest}px gap, which leaves no room for the player; needs at least ${minGap}`,
       });
     }
 
-    // Drift beyond what the opening allows puts gaps off-world.
-    if (r.gapDrift > WORLD.height - r.gapHeight) {
+    // Drift beyond what the opening allows puts gaps off-world - again at the
+    // worst combination the ramp produces.
+    const widestDrift = Math.max(r.gapDrift.start, r.gapDrift.end);
+    if (widestDrift > WORLD.height - tightest) {
       ctx.addIssue({
         code: "custom",
         path: ["rules", "gapDrift"],
-        message: `gapDrift ${r.gapDrift} exceeds the vertical room left by a ${r.gapHeight}px gap`,
+        message: `gapDrift reaches ${widestDrift}, which exceeds the vertical room left by a ${tightest}px gap`,
       });
     }
 
+    // The simulation runs the WHOLE ramp plus a margin, so the hardest point
+    // is exercised rather than an average. A spec that opens gently and becomes
+    // impossible at the end would otherwise validate and break in play.
     const verdict = flyerPlayability(r);
     if (!verdict.playable) {
       ctx.addIssue({
@@ -176,8 +192,7 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
       ctx.addIssue({
         code: "custom",
         path: ["rules"],
-        message:
-          "these physics are trivially easy - the player cannot lose, so there is no game",
+        message: `these physics are trivially easy even ${simulatedObstacles(r)} obstacles in - the player cannot lose, so there is no game`,
       });
     }
     return;

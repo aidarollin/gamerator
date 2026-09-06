@@ -19,10 +19,23 @@
   "rules": {
     "gravity": 400,
     "flapVelocity": -160,
-    "scrollSpeed": 60,
-    "gapHeight": 300,
-    "gapSpacing": 600,
-    "gapDrift": 0,
+    "scrollSpeed": {
+      "start": 60,
+      "end": 60
+    },
+    "gapHeight": {
+      "start": 300,
+      "end": 300
+    },
+    "gapSpacing": {
+      "start": 600,
+      "end": 600
+    },
+    "gapDrift": {
+      "start": 0,
+      "end": 0
+    },
+    "rampOverObstacles": 5,
     "lives": 5
   }
 }

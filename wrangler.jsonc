@@ -1,0 +1,34 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "gamerator",
+	"compatibility_date": "2026-09-05",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	}
+
+	// Bindings arrive with the phase that needs them - see docs/BUILD-GUIDE.md.
+	// Adding one before its phase means deploying a resource nothing reads.
+	//
+	// Phase 6 - D1 for specs, versions, and the audit log:
+	//   "d1_databases": [
+	//     { "binding": "DB", "database_name": "gamerator", "database_id": "<id>" }
+	//   ]
+	//
+	// Phase 7 - KV for per-identity rate limits and the idempotency cache:
+	//   "kv_namespaces": [{ "binding": "CACHE", "id": "<id>" }]
+	//
+	// Phase 8 - R2 for export bundles:
+	//   "r2_buckets": [{ "binding": "EXPORTS", "bucket_name": "gamerator-exports" }]
+	//
+	// Also deferred: the WORKER_SELF_REFERENCE service binding and the
+	// NEXT_INC_CACHE_R2_BUCKET from OpenNext's template. Both exist to make
+	// incremental caching work, and both require resources to exist before the
+	// first deploy. Phase 1 renders one static page and needs neither.
+	// See https://opennext.js.org/cloudflare/caching
+}

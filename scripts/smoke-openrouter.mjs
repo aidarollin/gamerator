@@ -176,7 +176,7 @@ try {
     messages: [
       { role: "user", content: "A Year 4 science quiz, 5 questions. Emit it." },
     ],
-    output_config: { format: zodOutputFormat(Mini, "mini") },
+    output_config: { format: zodOutputFormat(Mini) },
   });
   console.log(
     r.parsed_output

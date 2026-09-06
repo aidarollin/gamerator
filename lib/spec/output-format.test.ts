@@ -18,7 +18,7 @@ import { GameSpec, GameSpecShape } from "./schema";
 
 describe("output_config format", () => {
   it("converts the structural schema to a JSON Schema output format", () => {
-    expect(() => zodOutputFormat(GameSpecShape, "game_spec")).not.toThrow();
+    expect(() => zodOutputFormat(GameSpecShape)).not.toThrow();
   });
 
   it("the structural schema accepts a spec the full schema rejects", () => {

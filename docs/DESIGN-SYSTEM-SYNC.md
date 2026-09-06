@@ -43,10 +43,30 @@ here so they do not cost it again:
   loose query returns hits from both libraries. **Match on `libraryName` before
   trusting a result**, or you will silently wire a token from the wrong system.
 
-And the rule that governs every lookup: **resolve every DS value in Student
-(green) mode.** DS colour families are mode-scoped, so a flat lookup quietly
-returns a Teacher (pink) or Parent value. If a token you pulled reads pink or
-maroon, it is wrong — go back and resolve it in the right mode.
+And the rule that governs every lookup. The inherited form of it was **"resolve
+every DS value in Student (green) mode"**, which is right in spirit and wrong in
+mechanism. Verified against the live file on 2026-09-06:
+
+**Pin a mode per collection.** The variables resolve through a three-level alias
+chain, and each level has its own modes:
+
+| Collection | Vars | Modes | This build pins |
+| --- | --- | --- | --- |
+| Semantic | 386 | Light, Dark | **Light** |
+| Product | 90 | Student, Teacher, Parent | **Student** |
+| Primitives | 542 | Value | Value |
+| Responsives | 70 | Desktop, Tablet, Mobile | Desktop |
+| Typography | 57 | Value | Value |
+
+`Surface/primary/default` is a Semantic token that aliases `Product:Primary/Base`
+which aliases `Primitives:OG-Green/500`. **Semantic has no Student mode at all** —
+Student lives one level down, in Product. So "resolve in Student mode" cannot be
+applied to a Semantic lookup directly; what you actually do is pin Semantic to
+Light *and* Product to Student, and let the chain resolve.
+
+Read each collection's *default* mode instead and you mix levels, with nothing
+in the output to show it happened. That is the failure the old phrasing was
+reaching for.
 
 Before rationing DS reads on a hunch about limits, run `whoami` — it is exempt
 from the rate limit and reports the actual plan and seat.
@@ -67,7 +87,24 @@ Figma DS 1.5  --(Figma MCP, human-run)-->  scripts/sync-tokens.mjs
                          Accent -> token mapping)          properties)
 ```
 
-Rules for the sync:
+### Drift found on the first sync — 2026-09-06
+
+Two values in `pandai.question.uiux/resources/css/pandai/tokens.css` disagree
+with the live DS. **Recorded, not acted on** — that file belongs to another repo
+and another branch, and this project is not the right place to change it.
+
+| Token | tokens.css says | Live DS says |
+| --- | --- | --- |
+| `Surface/secondary/default-subtle-hover` | `#d1f7d1` (comment: "Lime.200") | `#baf3b9` (Lime/**300**) |
+| Corner radius `4xl` | `24` | `54` — the live `3xl` is 24 |
+
+Neither is dramatic on its own. Both are exactly what vendoring a stylesheet by
+hand produces over time, and both are the argument for generating this layer
+from Figma instead of copying it. Worth telling whoever owns `fe/` — the radius
+one in particular, since a component asking for `4xl` would land more than twice
+as round as intended.
+
+### Rules for the sync
 
 1. **`tokens.generated.ts` is generated. Never hand-edit it.** It carries a
    header saying so and the date and DS version it came from.

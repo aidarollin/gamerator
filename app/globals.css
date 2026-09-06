@@ -1,11 +1,13 @@
-/* Phase 2 replaces the shell palette below with lib/ds tokens generated
-   from Pandai Design System 1.5. Until then these are scaffold neutrals, and
-   no component may introduce a colour value of its own. */
+/* Pandai DS 1.5 tokens are imported below and are the only source of colour in
+   this app. No component may introduce a colour value of its own - see
+   CLAUDE.md. The rule is enforced by `npm run check:ds`. */
 @import "tailwindcss";
+@import "./ds/tokens.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Shell surfaces, driven from DS tokens rather than picked. */
+  --background: var(--surface-general-page);
+  --foreground: var(--text-default-heading);
 }
 
 @theme inline {
@@ -15,15 +17,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Dark mode is deliberately absent. The Semantic collection carries a Dark
+   mode, but this build vendors Light only (see lib/ds/tokens.raw.json ->
+   $meta.notVendoredYet). Shipping a half-tokenised dark theme would mean
+   hand-picking the missing half, which is exactly the drift this file exists
+   to prevent. Re-run the sync with Semantic=Dark to add it properly. */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }

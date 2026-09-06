@@ -32,32 +32,38 @@ rulebook. If the two disagree, the code wins — fix this doc.
 
 ## Shared envelope
 
+> **Revised 2026-09-06, after the Phase 2 sync.** The first draft of this
+> section guessed an `Accent` enum containing `purple` and `sky`. Neither exists
+> as a semantic DS token — they are Primitives only, and binding to a primitive
+> is exactly the drift this schema exists to prevent. The real DS turned out to
+> offer something better; what follows is grounded in
+> [`lib/ds/tokens.raw.json`](../lib/ds/tokens.raw.json).
+
 ```typescript
 import { z } from "zod";
+import { SUBJECT_KEYS, ACCENT_FAMILIES } from "@/lib/ds/tokens.generated";
 
-export const Accent = z.enum([
-  "primary",      // DS Surface/primary        - Pandai green
-  "secondary",    // DS Surface/secondary      - lime
-  "informative",  // DS Surface/informative    - blue
-  "warning",      // DS Surface/warning        - red
-  "purple",
-  "sky",
-  "butter",
-  "azure",
-]);
+// The 19 subject identities the DS actually ships, each with a full
+// default / hover / subtle / subtle-hover / focus ramp.
+export const Subject = z.enum(SUBJECT_KEYS);
+
+// Semantic families carrying the complete Surface ramp. Used ONLY when a game
+// has no subject to derive from.
+export const AccentFamily = z.enum(ACCENT_FAMILIES);
 
 export const Meta = z.object({
   title: z.string().min(3).max(60),
   description: z.string().max(200),
   language: z.enum(["ms", "en"]),
-  subject: z.string().max(40),
+  subject: Subject,
   yearLevel: z.number().int().min(1).max(13),
   learningObjective: z.string().max(200),
   estimatedMinutes: z.number().int().min(1).max(20),
 });
 
 export const Presentation = z.object({
-  accent: Accent,
+  // No accent field. Colour is DERIVED from meta.subject - see below.
+  accentOverride: AccentFamily.optional(),
   mascot: z.boolean(),
 });
 
@@ -71,6 +77,42 @@ export const Scoring = z.object({
 `yearLevel` runs to 13 rather than 12 on purpose: Malaysian schooling covers
 Tingkatan 1–5 on top of Tahun 1–6, and a bound that rejects a real year level is
 a bug that only shows up in front of a user.
+
+### Colour is derived, not chosen
+
+The DS ships a **per-subject colour identity** — 19 subjects, each with a full
+five-step ramp (`Subjects/b-melayu/default` is `#4d77ff`, and so on). Pandai
+already wears these everywhere else in the product.
+
+So `accent` is not a field the model fills. It is computed:
+
+```typescript
+const ramp = spec.presentation.accentOverride
+  ? accentRamp(spec.presentation.accentOverride)
+  : subjectRamp(spec.meta.subject);
+```
+
+Three things follow, and each one is worth more than the field it replaced:
+
+1. **One less thing the model can get wrong.** A generated Bahasa Melayu game
+   cannot come back wearing Chemistry pink, because nothing in the pipeline is
+   choosing.
+2. **Games match the product for free.** A BM game is BM-blue in the generator
+   for the same reason it is BM-blue in Pandai — same token.
+3. **`meta.subject` is now an enum, not a free string.** "Bahasa Melayu",
+   "bahasa melayu" and "BM" were three different values a moment ago; now there
+   is one, and it is the same key the DS uses.
+
+`accentOverride` exists for the case a game genuinely has no subject. Expect it
+to be unused, and treat a spec that sets it as worth a second look.
+
+### Game status colours already exist
+
+The DS carries a `Status/` group: `score`, `streak`, `lives`, `coins`, `ruby` —
+each with `default`, `focus` and `on color`. That is not a coincidence of
+naming; Pandai already has game-shaped surfaces, and `quiz-race`'s streak
+multiplier has a token waiting for it. Renderers must use these rather than
+reaching for `Surface/success` because it happens to be green.
 
 ## Template catalog — v1
 

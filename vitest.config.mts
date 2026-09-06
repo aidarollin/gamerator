@@ -5,6 +5,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./", import.meta.url)),
+      // `server-only` throws outside a React Server Component, which includes
+      // this environment. Its guard is a Next build-time contract, not runtime
+      // behaviour the tests need.
+      "server-only": fileURLToPath(
+        new URL("./test/stubs/server-only.ts", import.meta.url),
+      ),
     },
   },
   test: {

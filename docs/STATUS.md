@@ -505,3 +505,85 @@ Both still catch real failures — re-verified against planted ones.
 
 **Next:** point the generator at ArcadeSpec so a typed sentence produces a
 flyer, then add `brick-breaker` and `snake` (no art needed).
+
+---
+
+## 2026-09-06 — Real characters, real game feel, the prompt page, and export
+
+Four things asked for at once. All four done, still at zero model spend.
+
+**1. Real Pandai characters.** The hero was a drawn disc, which is most of why
+the game read as a prototype. Copied into `public/characters/` (this repo only):
+six PBot expression SVGs plus the Aidan and Nadia battle avatars.
+
+PBot ships as an expression set, which turned out to be a gift: the same
+character reacts. `pbot-awe` on the start screen, `pbot` while flying,
+`pbot-dizzy` on a crash, `pbot-mastery` in reserve for beating a target. A
+character that reacts is most of the distance between a prototype and a game.
+Aidan and Nadia have one pose each, so they tilt and squash instead — handled by
+the same interface rather than a special case.
+
+`theme.skin` became `theme.character`, typed to the real cast.
+
+**2. The UI felt mock, and it was.** Fixes, in rough order of how much each
+mattered:
+
+- Score and lives moved **inside** the game. The old chrome framed the canvas
+  like a form field, which is what made it read as a mock-up.
+- Parallax hills at a third of world speed, and a ground that scrolls at world
+  speed so motion reads even mid-gap.
+- Particles, screen shake and a tumble on death; a squash on flap; an idle bob
+  on the start screen; the score pops when it changes.
+- A proper start and game-over panel, with a big score and the target.
+- The hitbox is **smaller than the sprite**, deliberately. Pixel-accurate
+  collision against a character with ears feels unfair.
+
+**3. The prompt page — `/create`.** It did not exist; this was the honest gap.
+Type a sentence, get a playable game. It is wired to a deterministic tuner in
+`lib/arcade/generate.ts` that maps words to physics in code, so **the page works
+and costs nothing**. Pointing it at the model is a swap behind the same seam.
+
+The no-engine answer is wired in and is the interesting part: asking for a
+fighting game gets told there is no engine, what the catalog does have, and that
+an engine is a pull request — instead of silently receiving a flyer.
+
+**4. Export — `docs/EXPORT.md`, and `/embed` is live.** Three forms from one
+spec: an iframe embed that works today with zero integration, the same as a
+Blade partial with the spec from a controller, and the raw JSON as the source of
+truth. The spec travels inside the URL (base64url, ~550 chars for a flyer), so
+nothing has to be stored on either side for an embed to work.
+
+Recommended next and deliberately not built: a **web component**. It would
+inherit Pandai's own DS tokens from the host page and raise DOM events Alpine
+could listen to, but it needs the engine extracted from React, its own build
+target and a versioning story. The iframe covers the same ground today at a
+fraction of the cost.
+
+**Verified on the deployed site**
+
+- All five character assets serve 200.
+- `/create` renders; "hard flappy bird with PBot through chemistry pink pipes"
+  produces a hard chemistry PBot game; "easy gentle flyer, Nadia" produces an
+  easy Nadia game with 5 lives.
+- The mortal-kombat prompt returns the no-engine answer.
+- A real spec round-trips through `/embed`: 546 chars encoded, renders the game.
+- 79 tests, `npm run check` exit 0.
+
+**Two more gate false positives**, both fixed by narrowing what is *skipped*
+rather than what is matched, and both re-verified against planted failures:
+`check:ds` flagged prose in a CSS comment, and the drop shadows. Shadows now
+derive from a DS ink token via `color-mix` rather than a hand-picked black,
+because the DS expresses elevation as Figma effect styles this build has not
+vendored.
+
+**Not done**
+
+- Still one engine. `brick-breaker` and `snake` need no art and are next.
+- `/create` runs on the deterministic tuner, not the model. Real generation is a
+  provider swap plus wiring `ArcadeSpec` into `lib/generate` — a live request is
+  currently **refused** rather than silently served by the stub, so a "live"
+  deployment cannot quietly be a lie.
+- No storage, so no library and no short embed links. D1 is Phase 6.
+- `pbot.riv` (Rive animation) unused — the SVG expression set was enough.
+
+**Next:** `brick-breaker` and `snake`, or wire `/create` to the model.

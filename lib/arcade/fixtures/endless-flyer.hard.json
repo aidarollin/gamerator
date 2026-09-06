@@ -9,8 +9,8 @@
   },
   "theme": {
     "palette": "comp-science",
-    "skin": "abstract",
-    "background": "night"
+    "background": "night",
+    "character": "aidan"
   },
   "scoring": {
     "pointsPerObstacle": 2,

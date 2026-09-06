@@ -9,8 +9,8 @@
   },
   "theme": {
     "palette": "kafa",
-    "skin": "panda",
-    "background": "forest"
+    "background": "forest",
+    "character": "pbot"
   },
   "scoring": {
     "pointsPerObstacle": 1,

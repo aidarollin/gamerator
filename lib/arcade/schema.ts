@@ -22,9 +22,18 @@ export const Meta = z.object({
   difficulty: z.enum(["easy", "normal", "hard"]),
 });
 
+/**
+ * The playable cast, and they are real Pandai characters rather than invented
+ * ones - PBot from the mascot set, Aidan and Nadia from the battle avatars.
+ * A game whose hero is a generic disc does not feel like Pandai; it feels like
+ * a prototype, which is exactly what it was.
+ */
+export const Character = z.enum(["pbot", "aidan", "nadia"]);
+export type Character = z.infer<typeof Character>;
+
 export const Theme = z.object({
   palette: Palette,
-  skin: z.enum(["pbot", "panda", "abstract"]),
+  character: Character,
   background: z.enum(["sky", "night", "forest", "plain"]),
 });
 

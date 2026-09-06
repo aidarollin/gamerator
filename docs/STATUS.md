@@ -1036,3 +1036,41 @@ took looking at a picture.
 - The platformer's generated level still leaves a large empty middle and runs
   platforms off the right edge. Unchanged, and now the most visible flaw.
 - No round timer, no power-ups. The runner and snake still have flat physics.
+
+---
+
+## 2026-09-07 — The front door was still the Phase 1 skeleton
+
+Zul opened the live site and saw the build plan. Not a bug in anything I had
+built - a gap where the thing joining it together should have been.
+
+`app/page.tsx` had never been touched since Phase 1. It said **"Phase 1 -
+skeleton, deployed"**, **"it has no features and is not supposed to"**, listed
+ten build phases with phase 1 marked *current*, and described the learning-game
+product this stopped being on 2026-09-06. It linked to nothing.
+
+And it was not alone: **no page linked to any other page.** `/create`,
+`/play/arcade` and `/ds` were islands, reachable only by typing the URL. Six
+sessions of work sat one URL away from a visitor who had no way to know it
+existed, and every screenshot I took went straight to a deep link, so I never
+once arrived the way a person does.
+
+**Fixed**
+
+- `app/page.tsx` rewritten as a landing page: what this is, three doors, and an
+  honest note that nothing here spends money. The build plan belongs in `docs/`,
+  which is now the only place it lives.
+- `components/SiteNav.tsx` - one header on every page, marking the current
+  route, hidden on `/embed` because that gets pasted into other people's pages.
+- The root `metadata.description` was still the learning-game copy. That is what
+  search results and link previews use.
+
+**Verified on the deployed site** by clicking, not by curl: Make → `/create`,
+Play → `/play/arcade`, Design system → `/ds`, the card CTA → `/create`, and the
+wordmark back to `/`. No page errors.
+
+**The lesson, which is not a new one here.** `docs/SCREENSHOTS.md` says
+confirming a page responds is not the same as looking at it. This is the next
+turn of the same screw: **looking at a page you navigated to directly is not the
+same as arriving.** Every check I ran, HTTP and visual alike, started at a deep
+link. Not one started at `/` and tried to find the product.

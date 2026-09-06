@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "platformer",
+  "meta": {
+    "title": "Uncrossable",
+    "description": "The level has a gap no jump can clear.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "rbt",
+    "character": "aidan",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 4000,
+    "jumpVelocity": -400,
+    "moveSpeed": 90,
+    "platforms": 6,
+    "maxGap": 220,
+    "coins": 4,
+    "lives": 1
+  }
+}

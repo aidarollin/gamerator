@@ -1,0 +1,27 @@
+{
+  "specVersion": "2.0",
+  "engine": "brick-breaker",
+  "meta": {
+    "title": "Impossible Paddle",
+    "description": "Ball far outruns the paddle.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "rbt",
+    "character": "aidan",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "ballSpeed": 560,
+    "paddleWidth": 40,
+    "paddleSpeed": 200,
+    "rows": 4,
+    "cols": 8,
+    "lives": 1
+  }
+}

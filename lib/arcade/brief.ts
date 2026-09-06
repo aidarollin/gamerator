@@ -33,37 +33,73 @@ export type ArcadeBrief = z.infer<typeof ArcadeBrief>;
  * pick one, because picking is what it does. Being unable to answer is the
  * whole point here.
  */
-const ENGINE_HINTS: { engine: string; words: RegExp; built: boolean }[] = [
-  { engine: "endless-flyer", built: true, words: /flappy|flyer|fly|bird|terbang|wing|jetpack|helicopter/i },
-  { engine: "endless-runner", built: false, words: /runner|running|run|dino|jump over|side.?scroll|lari/i },
-  { engine: "platformer", built: false, words: /mario|platform|jump.*level|world \d|super mario/i },
-  { engine: "brick-breaker", built: false, words: /breakout|brick|arkanoid|paddle|bata/i },
-  { engine: "snake", built: false, words: /snake|nokia|ular/i },
+type Engine = (typeof ENGINES)[number];
+
+/**
+ * Every word that points at an engine, weighted. Scored rather than
+ * first-match-wins, because "a snake game where you fly" should not be decided
+ * by whichever regex happens to sit higher in the array.
+ */
+const ENGINE_WORDS: { engine: Engine; words: RegExp; weight: number }[] = [
+  { engine: "endless-flyer", weight: 3, words: /flappy|flyer|terbang|jetpack|helicopter/i },
+  { engine: "endless-flyer", weight: 1, words: /\bfly\b|\bbird\b|\bwing|burung/i },
+  { engine: "endless-runner", weight: 3, words: /endless runner|dino|side.?scroll/i },
+  { engine: "endless-runner", weight: 1, words: /\brun\b|running|runner|\blari\b|jump over|obstacle/i },
+  { engine: "platformer", weight: 3, words: /mario|platformer|platform game/i },
+  { engine: "platformer", weight: 1, words: /platform|level|coins|world \d/i },
+  { engine: "brick-breaker", weight: 3, words: /breakout|brick.?breaker|arkanoid/i },
+  { engine: "brick-breaker", weight: 1, words: /brick|paddle|\bball\b|\bbata\b/i },
+  { engine: "snake", weight: 3, words: /\bsnake\b|nokia|\bular\b/i },
+  { engine: "snake", weight: 1, words: /grid|grow longer|eat food/i },
 ];
 
-const UNSUPPORTED = /fight|mortal kombat|street fighter|combat|shooter|racing|race|tower defen[cs]e|rpg|puzzle|tetris|chess/i;
+/**
+ * Genres with no engine and no plan for one. Named explicitly so the answer can
+ * be specific about what was asked for.
+ */
+const UNSUPPORTED: { label: string; words: RegExp }[] = [
+  { label: "a fighting game", words: /fight|mortal kombat|street fighter|tekken|combat|brawler/i },
+  { label: "a shooter", words: /shooter|shoot.?em|fps|gun|space invaders|galaga/i },
+  { label: "a racing game", words: /rac(e|ing)|kart|driving|car game|lumba/i },
+  { label: "a puzzle game", words: /tetris|puzzle|match.?3|candy|sudoku|2048|teka.?teki/i },
+  { label: "a tower defence game", words: /tower defen[cs]e|td game/i },
+  { label: "an RPG", words: /\brpg\b|role.?play|adventure game|open world|minecraft|roblox/i },
+  { label: "a card or board game", words: /card game|board game|chess|checkers|catur|poker/i },
+];
 
 export type EngineChoice =
-  | { kind: "engine"; engine: (typeof ENGINES)[number] }
-  | { kind: "not-built"; requested: string; nearest: string }
-  | { kind: "no-engine"; nearest: string };
+  | { kind: "engine"; engine: Engine; confident: boolean }
+  | { kind: "no-engine"; requested: string; nearest: Engine };
 
+/**
+ * Which engine a prompt is asking for, decided in code rather than by the model.
+ *
+ * Deliberately not a model call. A model asked "which engine?" always picks
+ * one, because picking is what it does - and being unable to answer is exactly
+ * the outcome that matters here. Keyword scoring can genuinely return "no idea".
+ */
 export function chooseEngine(prompt: string): EngineChoice {
-  for (const hint of ENGINE_HINTS) {
-    if (!hint.words.test(prompt)) continue;
-    if (hint.built) return { kind: "engine", engine: "endless-flyer" };
-    return {
-      kind: "not-built",
-      requested: hint.engine,
-      nearest: "endless-flyer",
-    };
+  for (const u of UNSUPPORTED) {
+    if (u.words.test(prompt)) {
+      return { kind: "no-engine", requested: u.label, nearest: "endless-flyer" };
+    }
   }
-  if (UNSUPPORTED.test(prompt)) {
-    return { kind: "no-engine", nearest: "endless-flyer" };
+
+  const scores = new Map<Engine, number>();
+  for (const { engine, words, weight } of ENGINE_WORDS) {
+    if (words.test(prompt)) scores.set(engine, (scores.get(engine) ?? 0) + weight);
   }
-  // No signal either way. The catalog has one engine, so use it rather than
-  // refusing a prompt that simply did not name a genre.
-  return { kind: "engine", engine: "endless-flyer" };
+
+  if (scores.size === 0) {
+    // Genuine nonsense, or a real request that simply names no genre - "a fun
+    // game for Year 3", or "asdfgh". Both get a flyer, and both get TOLD it was
+    // a guess, which is the difference between a default and a silent one.
+    return { kind: "engine", engine: "endless-flyer", confident: false };
+  }
+
+  const best = [...scores.entries()].sort((a, b) => b[1] - a[1]);
+  const tied = best.length > 1 && best[0][1] === best[1][1];
+  return { kind: "engine", engine: best[0][0], confident: !tied && best[0][1] >= 1 };
 }
 
 export const ALL_ENGINE_NAMES = [...ENGINES, ...PLANNED_ENGINES];

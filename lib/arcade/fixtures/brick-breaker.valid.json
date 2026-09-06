@@ -1,0 +1,27 @@
+{
+  "specVersion": "2.0",
+  "engine": "brick-breaker",
+  "meta": {
+    "title": "PBot Blocks",
+    "description": "Steer the paddle and clear every brick.",
+    "language": "en",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "chemistry",
+    "character": "pbot",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 18
+  },
+  "rules": {
+    "ballSpeed": 250,
+    "paddleWidth": 96,
+    "paddleSpeed": 620,
+    "rows": 3,
+    "cols": 6,
+    "lives": 3
+  }
+}

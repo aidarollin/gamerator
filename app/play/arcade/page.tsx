@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, Chip } from "@/components/ds";
-import { EndlessFlyer } from "@/components/arcade/EndlessFlyer";
-import { ArcadeSpec, PLANNED_ENGINES } from "@/lib/arcade/schema";
+import { ArcadeGame } from "@/components/arcade/ArcadeGame";
+import { ArcadeSpec, ENGINES } from "@/lib/arcade/schema";
 import { ARCADE_FIXTURE_NAMES, readArcadeFixture } from "@/lib/arcade/fixtures";
 
 export const metadata = {
@@ -40,9 +40,9 @@ export default async function ArcadePage({
           Pandai arcade
         </h1>
         <p style={{ ...text, maxWidth: "68ch" }}>
-          Every game here is one engine playing different numbers. Change
-          gravity, flap strength, gap size and palette and you have a different
-          game &mdash; that is the whole idea. Tap, click or press space to fly.
+          Five engines, each playing different numbers. Change the physics and
+          the palette and you have a different game &mdash; that is the whole
+          idea.
         </p>
       </header>
 
@@ -77,12 +77,12 @@ export default async function ArcadePage({
 
       <Card>
         <strong style={{ color: "var(--text-default-heading)" }}>
-          Engines not built yet
+          The catalog
         </strong>
         <p style={text}>
-          {PLANNED_ENGINES.join(", ")}. A request with no engine is answered
-          honestly rather than substituted with the nearest thing &mdash; see{" "}
-          <code>docs/ENGINES.md</code>.
+          {ENGINES.join(", ")}. A request with no engine at all &mdash; a
+          fighter, a racer &mdash; is answered honestly rather than substituted
+          with the nearest thing. See <code>docs/ENGINES.md</code>.
         </p>
       </Card>
     </main>
@@ -131,22 +131,6 @@ function GameView({ name }: { name: string }) {
 
   const spec = result.data;
   return (
-    <div style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
-      <EndlessFlyer spec={spec} />
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "var(--spacing-component-2xs)",
-          justifyContent: "center",
-        }}
-      >
-        <Chip>{spec.meta.difficulty}</Chip>
-        <Chip>{spec.theme.palette}</Chip>
-        <Chip>gravity {spec.rules.gravity}</Chip>
-        <Chip>gap {spec.rules.gapHeight}</Chip>
-        <Chip>speed {spec.rules.scrollSpeed}</Chip>
-      </div>
-    </div>
+    <ArcadeGame spec={spec} />
   );
 }

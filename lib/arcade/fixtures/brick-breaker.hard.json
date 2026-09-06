@@ -1,0 +1,27 @@
+{
+  "specVersion": "2.0",
+  "engine": "brick-breaker",
+  "meta": {
+    "title": "Aidan Smash",
+    "description": "Fast ball, small paddle, one life.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "english",
+    "character": "aidan",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 2,
+    "targetScore": 40
+  },
+  "rules": {
+    "ballSpeed": 420,
+    "paddleWidth": 62,
+    "paddleSpeed": 720,
+    "rows": 5,
+    "cols": 8,
+    "lives": 1
+  }
+}

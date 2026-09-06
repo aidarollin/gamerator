@@ -74,3 +74,16 @@
 .warn { color: var(--text-warning-default); font-size: 15px; }
 .body { font-size: 13px; line-height: 1.6; color: var(--text-default-body); }
 .issues { font-size: 13px; line-height: 1.6; color: var(--text-default-body); padding-left: var(--spacing-component-md); }
+
+.guess {
+  max-width: 46ch;
+  margin: 0;
+  padding: var(--spacing-component-xs) var(--spacing-component-sm);
+  border-radius: var(--radius-2xl);
+  background: var(--surface-informative-default-subtle);
+  border: var(--border-width-xs) solid var(--border-informative-default-hover);
+  color: var(--text-default-body);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}

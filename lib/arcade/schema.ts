@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { ACCENT_FAMILIES, SUBJECT_KEYS } from "@/lib/ds/tokens.generated";
 import { flyerPlayability } from "./simulate";
+import {
+  BrickBreakerRules,
+  SnakeRules,
+  EndlessRunnerRules,
+  PlatformerRules,
+  brickBreakerVerdict,
+  snakeVerdict,
+  endlessRunnerVerdict,
+  platformerVerdict,
+} from "./engines";
 
 /**
  * The ArcadeSpec: the contract between the model and the game engines.
@@ -87,7 +97,37 @@ export const EndlessFlyer = z.object({
   }),
 });
 
-export const ArcadeSpecShape = z.discriminatedUnion("engine", [EndlessFlyer]);
+export const BrickBreaker = z.object({
+  ...base,
+  engine: z.literal("brick-breaker"),
+  rules: BrickBreakerRules,
+});
+
+export const Snake = z.object({
+  ...base,
+  engine: z.literal("snake"),
+  rules: SnakeRules,
+});
+
+export const EndlessRunner = z.object({
+  ...base,
+  engine: z.literal("endless-runner"),
+  rules: EndlessRunnerRules,
+});
+
+export const Platformer = z.object({
+  ...base,
+  engine: z.literal("platformer"),
+  rules: PlatformerRules,
+});
+
+export const ArcadeSpecShape = z.discriminatedUnion("engine", [
+  EndlessFlyer,
+  BrickBreaker,
+  Snake,
+  EndlessRunner,
+  Platformer,
+]);
 
 /**
  * The full schema: shape plus the rules a field bound cannot express.
@@ -140,19 +180,68 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
           "these physics are trivially easy - the player cannot lose, so there is no game",
       });
     }
+    return;
+  }
+
+  // Every other engine reports through the same shape, so the outcome handling
+  // and the repair turn do not need to know which engine failed.
+  const verdict =
+    spec.engine === "brick-breaker"
+      ? brickBreakerVerdict(spec.rules, WORLD)
+      : spec.engine === "snake"
+        ? snakeVerdict(spec.rules)
+        : spec.engine === "endless-runner"
+          ? endlessRunnerVerdict(spec.rules, 30)
+          : platformerVerdict(spec.rules);
+
+  if (!verdict.ok) {
+    ctx.addIssue({ code: "custom", path: ["rules"], message: verdict.reason });
+    return;
+  }
+  if (verdict.trivial) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["rules"],
+      message:
+        "these settings are trivially easy - the player cannot lose, so there is no game",
+    });
   }
 });
 
 export type ArcadeSpec = z.infer<typeof ArcadeSpec>;
 export type EndlessFlyerSpec = z.infer<typeof EndlessFlyer>;
+export type BrickBreakerSpec = z.infer<typeof BrickBreaker>;
+export type SnakeSpec = z.infer<typeof Snake>;
+export type EndlessRunnerSpec = z.infer<typeof EndlessRunner>;
+export type PlatformerSpec = z.infer<typeof Platformer>;
 export type Engine = ArcadeSpec["engine"];
 
-export const ENGINES = ["endless-flyer"] as const;
+/**
+ * The concrete schema for one engine.
+ *
+ * The engine is chosen deterministically by chooseEngine() before generation,
+ * so the model never needs the union - and must not be given it. A
+ * discriminated union becomes a five-branch `anyOf` in JSON Schema, and the
+ * first live call came back missing `rules` and `scoring` entirely because of
+ * it. Handing over one concrete object schema is smaller, cheaper and does not
+ * depend on how well a provider handles `anyOf`.
+ */
+export const ENGINE_SCHEMAS = {
+  "endless-flyer": EndlessFlyer,
+  "brick-breaker": BrickBreaker,
+  snake: Snake,
+  "endless-runner": EndlessRunner,
+  platformer: Platformer,
+} as const;
 
-/** Engines named in ENGINES.md but not yet built. Drives the no-engine reply. */
-export const PLANNED_ENGINES = [
+export const ENGINES = [
+  "endless-flyer",
   "brick-breaker",
   "snake",
   "endless-runner",
   "platformer",
 ] as const;
+
+/** Nothing left in the catalog is unbuilt. Kept so the no-engine path, which
+ *  handles genres with no engine at all, still has somewhere to point. */
+export const PLANNED_ENGINES = [] as const;

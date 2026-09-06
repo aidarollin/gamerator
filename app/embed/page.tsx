@@ -1,4 +1,4 @@
-import { EndlessFlyer } from "@/components/arcade/EndlessFlyer";
+import { ArcadeGame } from "@/components/arcade/ArcadeGame";
 import { ArcadeSpec } from "@/lib/arcade/schema";
 import { decodeSpec } from "@/lib/arcade/embed";
 
@@ -48,7 +48,7 @@ export default async function EmbedPage({
       }}
     >
       {spec ? (
-        <EndlessFlyer spec={spec} />
+        <ArcadeGame spec={spec} />
       ) : (
         <p
           style={{

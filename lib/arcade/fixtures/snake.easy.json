@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "snake",
+  "meta": {
+    "title": "PBot Snake",
+    "description": "Wrap around the walls and take your time.",
+    "language": "en",
+    "difficulty": "easy"
+  },
+  "theme": {
+    "palette": "kafa",
+    "character": "pbot",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 8
+  },
+  "rules": {
+    "gridCols": 12,
+    "gridRows": 12,
+    "startSpeed": 3.5,
+    "speedUp": 0.08,
+    "wallsKill": false,
+    "foodTarget": 8,
+    "lives": 5
+  }
+}

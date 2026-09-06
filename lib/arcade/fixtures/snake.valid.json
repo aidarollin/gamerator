@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "snake",
+  "meta": {
+    "title": "Nadia Ular",
+    "description": "Jadi sepanjang mungkin tanpa menggigit diri sendiri.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "math",
+    "character": "nadia",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 12
+  },
+  "rules": {
+    "gridCols": 14,
+    "gridRows": 14,
+    "startSpeed": 5,
+    "speedUp": 0.15,
+    "wallsKill": true,
+    "foodTarget": 12,
+    "lives": 3
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-runner",
+  "meta": {
+    "title": "Wall Too Tall",
+    "description": "The runner cannot get over it.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "rbt",
+    "character": "aidan",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 4000,
+    "jumpVelocity": -400,
+    "scrollSpeed": 300,
+    "spacing": 200,
+    "obstacleHeight": 90,
+    "lives": 1
+  }
+}

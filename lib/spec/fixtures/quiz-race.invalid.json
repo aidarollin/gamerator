@@ -1,0 +1,64 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Broken index",
+    "description": "correctIndex points past the options array.",
+    "language": "en",
+    "subject": "math",
+    "yearLevel": 3,
+    "learningObjective": "Must be rejected: correctIndex out of range for the options given.",
+    "estimatedMinutes": 3
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "quiz-race",
+  "rules": {
+    "secondsTotal": 60,
+    "shuffleQuestions": false,
+    "shuffleOptions": false,
+    "streakMultiplier": false,
+    "revealAnswer": "at-end"
+  },
+  "content": {
+    "questions": [
+      {
+        "prompt": "2 + 2",
+        "options": [
+          "4",
+          "5"
+        ],
+        "correctIndex": 2
+      },
+      {
+        "prompt": "3 + 3",
+        "options": [
+          "6",
+          "7"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "prompt": "4 + 4",
+        "options": [
+          "8",
+          "9"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "prompt": "5 + 5",
+        "options": [
+          "10",
+          "11"
+        ],
+        "correctIndex": 0
+      }
+    ]
+  }
+}

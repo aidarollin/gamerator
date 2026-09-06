@@ -1,0 +1,79 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Haiwan dan Habitat",
+    "description": "Asingkan haiwan mengikut habitatnya.",
+    "language": "ms",
+    "subject": "science",
+    "yearLevel": 3,
+    "learningObjective": "Murid dapat mengelaskan haiwan mengikut habitat.",
+    "estimatedMinutes": 6
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "sort-buckets",
+  "rules": {
+    "secondsTotal": 180,
+    "feedback": "per-drop"
+  },
+  "content": {
+    "buckets": [
+      {
+        "id": "darat",
+        "label": "Darat"
+      },
+      {
+        "id": "air",
+        "label": "Air"
+      },
+      {
+        "id": "udara",
+        "label": "Udara"
+      }
+    ],
+    "items": [
+      {
+        "text": "Harimau",
+        "bucketId": "darat"
+      },
+      {
+        "text": "Gajah",
+        "bucketId": "darat"
+      },
+      {
+        "text": "Kambing",
+        "bucketId": "darat"
+      },
+      {
+        "text": "Ikan yu",
+        "bucketId": "air"
+      },
+      {
+        "text": "Ketam",
+        "bucketId": "air"
+      },
+      {
+        "text": "Sotong",
+        "bucketId": "air"
+      },
+      {
+        "text": "Helang",
+        "bucketId": "udara"
+      },
+      {
+        "text": "Rama-rama",
+        "bucketId": "udara"
+      },
+      {
+        "text": "Kelawar",
+        "bucketId": "udara"
+      }
+    ]
+  }
+}

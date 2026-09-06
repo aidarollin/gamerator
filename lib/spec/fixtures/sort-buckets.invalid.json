@@ -1,0 +1,67 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Dangling bucket",
+    "description": "An item names a missing bucket; another bucket is empty.",
+    "language": "en",
+    "subject": "science",
+    "yearLevel": 4,
+    "learningObjective": "Must be rejected: dangling bucketId and a bucket with no items.",
+    "estimatedMinutes": 4
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "sort-buckets",
+  "rules": {
+    "secondsTotal": 120,
+    "feedback": "at-end"
+  },
+  "content": {
+    "buckets": [
+      {
+        "id": "solid",
+        "label": "Solid"
+      },
+      {
+        "id": "liquid",
+        "label": "Liquid"
+      },
+      {
+        "id": "gas",
+        "label": "Gas"
+      }
+    ],
+    "items": [
+      {
+        "text": "Ice",
+        "bucketId": "solid"
+      },
+      {
+        "text": "Rock",
+        "bucketId": "solid"
+      },
+      {
+        "text": "Wood",
+        "bucketId": "solid"
+      },
+      {
+        "text": "Water",
+        "bucketId": "liquid"
+      },
+      {
+        "text": "Milk",
+        "bucketId": "liquid"
+      },
+      {
+        "text": "Steam",
+        "bucketId": "vapour"
+      }
+    ]
+  }
+}

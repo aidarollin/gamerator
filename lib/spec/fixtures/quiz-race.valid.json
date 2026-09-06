@@ -1,0 +1,84 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Sistem Suria",
+    "description": "Kenal pasti planet dalam Sistem Suria.",
+    "language": "ms",
+    "subject": "science",
+    "yearLevel": 4,
+    "learningObjective": "Murid dapat mengenal pasti planet dalam Sistem Suria mengikut kedudukan.",
+    "estimatedMinutes": 5
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "quiz-race",
+  "rules": {
+    "secondsTotal": 120,
+    "shuffleQuestions": true,
+    "shuffleOptions": true,
+    "streakMultiplier": true,
+    "revealAnswer": "immediately"
+  },
+  "content": {
+    "questions": [
+      {
+        "prompt": "Planet manakah paling hampir dengan Matahari?",
+        "options": [
+          "Zuhrah",
+          "Utarid",
+          "Bumi",
+          "Marikh"
+        ],
+        "correctIndex": 1,
+        "hint": "Ia juga planet yang paling kecil."
+      },
+      {
+        "prompt": "Planet manakah dikenali sebagai Planet Merah?",
+        "options": [
+          "Marikh",
+          "Musytari",
+          "Zuhal",
+          "Uranus"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "prompt": "Planet manakah yang terbesar dalam Sistem Suria?",
+        "options": [
+          "Zuhal",
+          "Musytari",
+          "Neptun",
+          "Bumi"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "prompt": "Planet manakah mempunyai sistem gelang yang paling jelas?",
+        "options": [
+          "Uranus",
+          "Neptun",
+          "Zuhal",
+          "Utarid"
+        ],
+        "correctIndex": 2,
+        "hint": "Gelangnya terdiri daripada ais dan batu."
+      },
+      {
+        "prompt": "Berapakah bilangan planet dalam Sistem Suria?",
+        "options": [
+          "7",
+          "8",
+          "9",
+          "10"
+        ],
+        "correctIndex": 1
+      }
+    ]
+  }
+}

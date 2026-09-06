@@ -1,0 +1,54 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Maksud Peribahasa",
+    "description": "Padankan peribahasa dengan maksudnya.",
+    "language": "ms",
+    "subject": "b-melayu",
+    "yearLevel": 4,
+    "learningObjective": "Murid dapat mengenal pasti maksud peribahasa yang biasa digunakan.",
+    "estimatedMinutes": 6
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "match-pairs",
+  "rules": {
+    "secondsTotal": null,
+    "maxAttempts": null,
+    "gridColumns": 4
+  },
+  "content": {
+    "pairs": [
+      {
+        "left": "Bagai aur dengan tebing",
+        "right": "Saling membantu antara satu sama lain"
+      },
+      {
+        "left": "Ringan tulang",
+        "right": "Rajin bekerja"
+      },
+      {
+        "left": "Berat mata memandang",
+        "right": "Orang lain lebih susah daripada kita"
+      },
+      {
+        "left": "Melentur buluh biarlah dari rebungnya",
+        "right": "Mendidik anak sejak kecil"
+      },
+      {
+        "left": "Ada gula ada semut",
+        "right": "Tempat mewah menarik ramai orang"
+      },
+      {
+        "left": "Sudah terhantuk baru tengadah",
+        "right": "Menyesal setelah tertimpa musibah"
+      }
+    ]
+  }
+}

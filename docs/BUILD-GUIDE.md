@@ -128,6 +128,17 @@ is rejected by `safeParse`; the renderer test suite passes with no API key set.
 This is the phase to not rush. Everything after it is plumbing; this is the
 product.
 
+**Done 2026-09-06.** Schema with cross-field refinements, 15 fixtures, five
+renderers, and `/play/preview`. 38 tests, no API key, no network. All 15
+fixtures verified against `wrangler dev`: the ten valid/edge ones render real
+game content, the five invalid ones are refused with the issues listed.
+
+Two things this phase caught that `next dev` would have hidden — both recorded
+in [TECHNICAL-PLAN.md](TECHNICAL-PLAN.md) as gotchas 9 and 10: **a Worker has
+no filesystem**, so the fixture loader had to become a bundled static import;
+and **`esbuild` must be an explicit devDependency**, because adding vitest
+de-hoisted it and broke the build.
+
 ---
 
 ## Phase 4 — Generation

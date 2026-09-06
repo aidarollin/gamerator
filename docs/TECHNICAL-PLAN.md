@@ -111,6 +111,22 @@ Two more, both hit and fixed during Phase 1 on this repo:
    `.next/types`. Before the first build, `tsc --noEmit` fails with
    `Cannot find name 'LayoutProps'` — which reads like a broken tsconfig and is
    just missing generated types. Order is build, then check.
+9. **A Worker has no filesystem, and `next dev` does not tell you.** Reading
+   data with `node:fs` at request time works perfectly in the dev server and
+   fails in the deployed Worker with
+   `ENOENT ... readdir '/bundle/…'`. Anything the server needs at runtime must
+   be a static import so it is bundled at build time. This is why
+   `lib/spec/fixtures.generated.ts` exists instead of a `readdirSync`.
+   **Verify server-side data access against `wrangler dev`, never against
+   `next dev` alone.**
+10. **`esbuild` must stay an explicit devDependency.**
+    `@opennextjs/cloudflare` imports it directly but declares it nowhere,
+    relying on it being hoisted from `@opennextjs/aws`. Installing anything that
+    reorganises the tree — vitest did — de-hoists it and the build dies with
+    `Cannot find package 'esbuild'`. Note the version tension: `@opennextjs/aws`
+    pins 0.25.x while vite 8 needs ^0.27 || ^0.28. The top-level pin is
+    **0.28**, which satisfies vite, and the build is verified working on it.
+    Do not remove it because "nothing imports it".
 
 ## The AI layer
 

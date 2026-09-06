@@ -1,0 +1,64 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Min quiz",
+    "description": "Minimum bounds fixture.",
+    "language": "en",
+    "subject": "math",
+    "yearLevel": 1,
+    "learningObjective": "Bounds probe: fewest questions, fewest options, shortest timer.",
+    "estimatedMinutes": 1
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "quiz-race",
+  "rules": {
+    "secondsTotal": 30,
+    "shuffleQuestions": false,
+    "shuffleOptions": false,
+    "streakMultiplier": false,
+    "revealAnswer": "never"
+  },
+  "content": {
+    "questions": [
+      {
+        "prompt": "1 + 1",
+        "options": [
+          "2",
+          "3"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "prompt": "2 + 2",
+        "options": [
+          "4",
+          "5"
+        ],
+        "correctIndex": 0
+      },
+      {
+        "prompt": "3 + 3",
+        "options": [
+          "7",
+          "6"
+        ],
+        "correctIndex": 1
+      },
+      {
+        "prompt": "4 + 4",
+        "options": [
+          "9",
+          "8"
+        ],
+        "correctIndex": 1
+      }
+    ]
+  }
+}

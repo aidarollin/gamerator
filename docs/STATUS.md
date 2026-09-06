@@ -287,3 +287,74 @@ conventions; no messages to be sent), 4 (Anthropic key + billing) unchanged.
 Nothing pushed; all work is local.
 
 **Next:** Phase 3 — schema, fixtures, renderer. Still no AI, by design.
+
+---
+
+## 2026-09-06 — Phase 3 complete
+
+**Done**
+
+- `lib/spec/schema.ts` — all five templates plus the envelope, with cross-field
+  refinements on the union (a `.superRefine` on a member would change its type
+  and break the discriminated union).
+- 15 fixtures, three per template, **written before the renderer**.
+- `lib/game/random.ts` — seeded PRNG and shuffle.
+- `components/game/` — `QuizRace`, `MatchPairs`, `SortBuckets`,
+  `SequenceOrder`, `FillBlank`, `GameShell`, and `GameRenderer`.
+- `app/play/preview` — plays any fixture; shows validation issues for the ones
+  that are supposed to fail.
+- vitest added; `npm test` is now part of `npm run check`.
+
+**Verified, by running it**
+
+- 38 tests pass with no API key and no network.
+- `npm run check` green; `npm run build` green.
+- **All 15 fixtures checked against `wrangler dev`**: ten valid/edge render real
+  game content (probed for actual prompts, options, subject tokens), five
+  invalid are refused with their issues listed. 15/15.
+
+**Two failures `next dev` would have hidden**
+
+1. **A Worker has no filesystem.** The first fixture loader used
+   `readdirSync`. It worked fine locally and every preview page 500'd on the
+   Worker with `ENOENT ... readdir '/bundle/lib/spec/fixtures'`. Fixtures are now
+   a generated barrel of static imports, bundled at build time, with a test that
+   fails if the barrel drifts from the directory.
+   *My first run of the fixture check reported 5 failures. That reading was
+   wrong — every page was 500ing, so neither expected string appeared and the
+   probe defaulted to "rendered". The real fault was all 15, not 5.*
+2. **`esbuild` was silently de-hoisted.** `@opennextjs/cloudflare` imports it
+   without declaring it. Installing vitest reorganised the tree and the build
+   died with `Cannot find package 'esbuild'`. Now an explicit devDependency at
+   0.28 — note `@opennextjs/aws` wants 0.25.x and vite 8 wants ^0.27||^0.28, so
+   only 0.28 satisfies the tree; the build is verified working on it.
+
+Both are recorded as gotchas 9 and 10 in TECHNICAL-PLAN.md and in CLAUDE.md.
+
+**Design decisions worth keeping**
+
+- **Shuffling is seeded from the spec.** NFR2 requires determinism, and
+  `Math.random()` would also break hydration by drawing different orders on
+  server and client. A reported bug is now replayable from the spec alone.
+- **No HTML5 drag and drop.** It is not keyboard operable, so it would put NFR8
+  out of reach for two whole templates. `SortBuckets` uses select-then-place;
+  `SequenceOrder` uses move-up/move-down.
+- **Correct and wrong always carry a word, not just a colour.**
+- `GameRenderer`'s switch has no `default` branch, so adding a template to the
+  schema without a renderer is a compile error rather than a blank screen.
+- `@types/node` bumped 20 → 24 to match the Node the project actually runs on.
+
+**Not done**
+
+- No component-level renderer tests — the suite covers the schema, the fixtures
+  and the shuffle. Renderer behaviour is verified by playing the fixtures at
+  `/play/preview`, which is integration rather than unit coverage. Adding
+  `@testing-library/react` would close that gap.
+- Nothing deployed since Phase 1; `/play/preview` has only been run locally.
+
+**Blockers** — 1 (DS publication, deferred by decision), 2, 3 (teaching-team
+conventions; no messages to be sent), 4 (Anthropic key + billing, which now
+blocks the next phase) unchanged. Nothing pushed.
+
+**Next:** Phase 4 — generation. This is where the AI finally arrives, and it
+needs blocker 4 answered.

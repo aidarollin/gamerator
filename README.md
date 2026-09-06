@@ -13,11 +13,12 @@ cheap. See [docs/GAMESPEC.md](docs/GAMESPEC.md).
 
 ## Status
 
-**Phases 1 and 2 complete.** Live at
-<https://gamerator.aidaasofiah.workers.dev/>; the DS primitives are at `/ds`.
-366 Pandai DS 1.5 tokens are vendored and every primitive renders in all 19
-subject identities. Phase 3 (schema, fixtures, renderer — still no AI) is next.
-Read [docs/STATUS.md](docs/STATUS.md) first in every session.
+**Phases 1–3 complete.** Live at
+<https://gamerator.aidaasofiah.workers.dev/> (Phase 1 build); DS primitives at
+`/ds`, and all five game templates playable from hand-written fixtures at
+`/play/preview`. 366 Pandai DS 1.5 tokens vendored, 38 tests, no AI in the
+codebase yet — that is Phase 4. Read [docs/STATUS.md](docs/STATUS.md) first in
+every session.
 
 ## The docs pack
 
@@ -49,7 +50,9 @@ three places this arrangement needs a decision from the teaching team.
 npm install
 npm run build      # opennextjs-cloudflare build; stop the dev server first
 npm run check      # typecheck + lint + DS gates. Needs one prior build.
+npm test           # 38 tests: schema, fixtures, seeded shuffle. No API key.
 npm run tokens     # regenerate the DS token layer from lib/ds/tokens.raw.json
+npm run fixtures   # regenerate the bundled fixture index after adding one
 npm run dev        # Next dev server
 npx wrangler dev   # the real Worker runtime, against .open-next/
 ```

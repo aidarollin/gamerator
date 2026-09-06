@@ -10,10 +10,13 @@
     "deploy": "opennextjs-cloudflare deploy",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
-    "check": "npm run typecheck && npm run lint && npm run check:ds && npm run check:tokens",
+    "check": "npm run typecheck && npm run lint && npm run check:ds && npm run check:tokens && npm run test",
     "tokens": "node scripts/generate-tokens.mjs",
     "check:ds": "node scripts/check-ds.mjs",
-    "check:tokens": "node scripts/check-tokens.mjs"
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "fixtures": "node scripts/generate-fixture-index.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
@@ -25,13 +28,15 @@
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.6",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24.13.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vitest": "^5.0.0",
     "wrangler": "^4.129.0"
   }
 }

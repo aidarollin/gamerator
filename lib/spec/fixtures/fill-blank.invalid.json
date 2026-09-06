@@ -1,0 +1,63 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Distractor clash",
+    "description": "A distractor equals the answer, so two options are correct.",
+    "language": "en",
+    "subject": "english",
+    "yearLevel": 3,
+    "learningObjective": "Must be rejected: distractor duplicates the answer.",
+    "estimatedMinutes": 4
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "fill-blank",
+  "rules": {
+    "secondsTotal": 120,
+    "wordBank": "shared",
+    "caseSensitive": false
+  },
+  "content": {
+    "sentences": [
+      {
+        "before": "She ",
+        "answer": "ran",
+        "after": " to the shop.",
+        "distractors": [
+          "Ran",
+          "runs"
+        ]
+      },
+      {
+        "before": "He ",
+        "answer": "sang",
+        "after": " a song.",
+        "distractors": [
+          "sings"
+        ]
+      },
+      {
+        "before": "We ",
+        "answer": "swam",
+        "after": " in the pool.",
+        "distractors": [
+          "swim"
+        ]
+      },
+      {
+        "before": "They ",
+        "answer": "wrote",
+        "after": " a letter.",
+        "distractors": [
+          "write"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "specVersion": "1.0",
+  "meta": {
+    "title": "Min blanks",
+    "description": "Minimum bounds fixture: no word bank, empty leading text.",
+    "language": "en",
+    "subject": "math",
+    "yearLevel": 1,
+    "learningObjective": "Bounds probe: fewest sentences, no word bank, empty before and after.",
+    "estimatedMinutes": 2
+  },
+  "presentation": {
+    "mascot": true
+  },
+  "scoring": {
+    "pointsCorrect": 10,
+    "pointsIncorrect": 0,
+    "passThreshold": 0.6
+  },
+  "template": "fill-blank",
+  "rules": {
+    "secondsTotal": null,
+    "wordBank": "none",
+    "caseSensitive": true
+  },
+  "content": {
+    "sentences": [
+      {
+        "before": "",
+        "answer": "10",
+        "after": "",
+        "distractors": []
+      },
+      {
+        "before": "5 + 5 = ",
+        "answer": "10",
+        "after": "",
+        "distractors": []
+      },
+      {
+        "before": "",
+        "answer": "20",
+        "after": " is twice ten.",
+        "distractors": []
+      },
+      {
+        "before": "3 x 3 = ",
+        "answer": "9",
+        "after": "",
+        "distractors": []
+      }
+    ]
+  }
+}

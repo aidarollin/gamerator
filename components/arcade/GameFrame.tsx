@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { ArcadeSpec } from "@/lib/arcade/schema";
 import { WORLD } from "@/lib/arcade/schema";
 import {
@@ -12,6 +18,8 @@ import {
 import { loadCharacter, CHARACTERS, type Mood } from "./characters";
 import { loadArt } from "./art";
 import { shade, type Palette } from "./paint";
+import { sceneFor } from "@/lib/arcade/palettes";
+import * as sound from "./sound";
 import a from "./arcade.module.css";
 
 /**
@@ -38,6 +46,13 @@ export type EngineHost = {
   finish: () => void;
   shake: (amount?: number) => void;
   phase: () => Phase;
+  /**
+   * Play an effect. Most sounds fire from the host calls above rather than from
+   * here - scoring already means a chirp, losing a life already means a thud -
+   * so an engine only reaches for this when it does something the shared verbs
+   * cannot express.
+   */
+  sfx: (name: sound.Sfx) => void;
 };
 
 export type Engine = {
@@ -72,10 +87,23 @@ export function GameFrame({
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [lives, setLives] = useState(spec.rules.lives);
+  // Read straight from the sound module, which owns the preference. See
+  // sound.ts for why this is a store subscription rather than mirrored state.
+  const mutedUi = useSyncExternalStore(
+    sound.subscribeMute,
+    sound.mutedSnapshot,
+    sound.mutedServerSnapshot,
+  );
 
   const art = CHARACTERS[spec.theme.character];
   const sprites = useRef<Record<Mood, HTMLImageElement> | null>(null);
-  const state = useRef({ phase: "ready" as Phase, score: 0, lives: spec.rules.lives, shake: 0 });
+  const state = useRef({
+    phase: "ready" as Phase,
+    score: 0,
+    lives: spec.rules.lives,
+    shake: 0,
+    combo: 0,
+  });
   const engineRef = useRef<Engine | null>(null);
   const pending = useRef<{ kind: "press" | "release"; where?: { x: number; y: number } }[]>([]);
 
@@ -85,16 +113,26 @@ export function GameFrame({
   }, []);
 
   const start = useCallback(() => {
+    // A browser will only let an AudioContext start from a user gesture, and
+    // this is that gesture - the press or click that begins a run. Called
+    // before anything else here so the first sound of the game is not the one
+    // that gets swallowed.
+    sound.unlock();
+
     if (state.current.phase === "dead") {
-      state.current = { phase: "ready", score: 0, lives: spec.rules.lives, shake: 0 };
+      state.current = { phase: "ready", score: 0, lives: spec.rules.lives, shake: 0, combo: 0 };
       setScore(0);
       setLives(spec.rules.lives);
       engineRef.current?.reset();
       enter("ready");
       return;
     }
-    if (state.current.phase === "ready") enter("playing");
-  }, [enter, spec.rules.lives]);
+    if (state.current.phase === "ready") {
+      sound.play("start");
+      sound.startMusic(spec.meta.difficulty === "hard");
+      enter("playing");
+    }
+  }, [enter, spec.rules.lives, spec.meta.difficulty]);
 
   useEffect(() => {
     let live = true;
@@ -104,8 +142,12 @@ export function GameFrame({
     loadCharacter(spec.theme.character).then((s) => {
       if (live) sprites.current = s;
     });
+    // Music must not outlive the component. Navigating away from a game while
+    // it plays would otherwise leave a scheduler running against a context
+    // nothing on screen owns any more.
     return () => {
       live = false;
+      sound.stopMusic();
     };
   }, [spec.theme.character]);
 
@@ -116,45 +158,80 @@ export function GameFrame({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const isSubject = (SUBJECT_KEYS as readonly string[]).includes(spec.theme.palette);
-    const ramp = isSubject
-      ? subjectRamp(spec.theme.palette as (typeof SUBJECT_KEYS)[number])
-      : accentRamp(spec.theme.palette as never);
+    /**
+     * Colour, in the order Zul settled on: the game's own scene first, the
+     * design system as the backup.
+     *
+     * The DS branch is not dead code kept for sentiment - it is what any
+     * palette key without a scene renders through, which is what happens the
+     * day the DS gains a subject and `palettes.ts` has not caught up. A new
+     * subject then looks a little flat instead of throwing.
+     */
+    // An arrow bound after the null guard, not a hoisted declaration: a
+    // function statement can be called before `host` is proven non-null, so TS
+    // refuses to carry the narrowing into it.
+    const dsPalette = (): Palette => {
+      const isSubject = (SUBJECT_KEYS as readonly string[]).includes(spec.theme.palette);
+      const ramp = isSubject
+        ? subjectRamp(spec.theme.palette as (typeof SUBJECT_KEYS)[number])
+        : accentRamp(spec.theme.palette as never);
 
-    // The saturated end of the ramp, not the pale end. This one choice is most
-    // of the difference between "a game" and "a component demo".
-    const palette: Palette = {
-      deep: readToken(host, ramp.focus),
-      mid: readToken(host, ramp.default),
-      light: readToken(host, ramp.subtleHover),
-      edge: readToken(host, ramp.hover),
-      ink: readToken(host, "--text-default-heading"),
-      white: readToken(host, "--surface-general-default"),
-      gold: readToken(host, "--status-coins-default"),
-      danger: readToken(host, "--surface-warning-default"),
+      // The saturated end of the ramp, not the pale end. This one choice is
+      // most of the difference between "a game" and "a component demo".
+      return {
+        deep: readToken(host, ramp.focus),
+        mid: readToken(host, ramp.default),
+        light: readToken(host, ramp.subtleHover),
+        edge: readToken(host, ramp.hover),
+        ink: readToken(host, "--text-default-heading"),
+        white: readToken(host, "--surface-general-default"),
+        gold: readToken(host, "--status-coins-default"),
+        danger: readToken(host, "--surface-warning-default"),
+      };
     };
+
+    const palette: Palette = sceneFor(spec.theme.palette, spec.theme.background) ?? dsPalette();
 
     const hostApi: EngineHost = {
       ctx,
       palette,
       paint: shade(ctx),
       sprites: () => sprites.current,
+      /**
+       * Sound rides on the shared verbs rather than on fifteen call sites in
+       * `engines.tsx`. Scoring already means a chirp and losing a life already
+       * means a thud, in every engine, so wiring it here gives all five sound
+       * at once - the same reason the loop and the input live here.
+       */
       addScore: (n) => {
         state.current.score += n;
         setScore(state.current.score);
         setBest((b) => (state.current.score > b ? state.current.score : b));
+        sound.play("score", state.current.combo++);
       },
       score: () => state.current.score,
       loseLife: () => {
         state.current.lives -= 1;
+        state.current.combo = 0;
         setLives(state.current.lives);
-        if (state.current.lives <= 0) enter("dead");
+        if (state.current.lives <= 0) {
+          sound.play("die");
+          sound.stopMusic();
+          enter("dead");
+        } else {
+          sound.play("hit");
+        }
       },
-      finish: () => enter("dead"),
+      finish: () => {
+        sound.play(state.current.score >= spec.scoring.targetScore ? "win" : "die");
+        sound.stopMusic();
+        enter("dead");
+      },
       shake: (amount = 1) => {
         state.current.shake = amount;
       },
       phase: () => state.current.phase,
+      sfx: (name) => sound.play(name),
     };
 
     const engine = factory(hostApi, spec);
@@ -238,6 +315,26 @@ export function GameFrame({
             <span key={i} className={i < lives ? a.heart : a.heartSpent}>♥</span>
           ))}
         </div>
+
+        <button
+          type="button"
+          className={a.mute}
+          aria-pressed={mutedUi}
+          aria-label={mutedUi ? "Unmute" : "Mute"}
+          onClick={(e) => {
+            // Stops the click reaching the tap zone underneath, which would
+            // otherwise flap the moment you reached for the volume.
+            e.stopPropagation();
+            const next = !sound.isMuted();
+            sound.setMuted(next);
+            if (!next && state.current.phase === "playing") {
+              sound.unlock();
+              sound.startMusic(spec.meta.difficulty === "hard");
+            }
+          }}
+        >
+          {mutedUi ? "\u{1F507}" : "\u{1F50A}"}
+        </button>
 
         {phase === "playing" ? (
           <div

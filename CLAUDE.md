@@ -31,7 +31,9 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
 | `components/arcade/` | `GameFrame` (shell) + `engines.tsx` (five factories) |
 | `components/arcade/paint.ts` | Shared drawing: sky, parallax, blocks, ground |
-| `components/arcade/art.ts` | Authored SVGs, tinted from DS tokens at draw time |
+| `components/arcade/art.ts` | Authored SVGs, tinted from the palette at draw time |
+| `components/arcade/sound.ts` | Synthesised audio. **No files** - Web Audio at runtime |
+| `lib/arcade/palettes.ts` | The **arcade scenes**. The one file allowed hand-picked colour |
 | `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens. **Generated** |
 | `lib/spec/`, `components/game/` | The **legacy learning templates**. Still work, not the product |
 
@@ -76,9 +78,26 @@ is worse than none: it reads as coverage.
 a fixed window would only sample the gentle opening. It runs
 `rampOverObstacles + 4`.
 
-**Colour cannot be expressed as a value.** `theme.palette` is a DS subject or
-accent key. Authored art is a white silhouette tinted at draw time. `check:ds`
-enforces it; `check:tokens` catches dangling `var(--…)`.
+**Colour is a palette, not a value.** `theme.palette` is still a DS subject or
+accent key - it names an identity, never a hex. That key resolves to an
+**arcade scene** (`lib/arcade/palettes.ts`), and only if none matches does it
+fall back to the DS token ramp. Authored art is a white silhouette tinted at
+draw time, so it follows whichever wins.
+
+A scene carries TWO families - `sky` and `solid` - and that split is most of
+why a game looks like a game. One ramp painting both is how the obstacles ended
+up looking like the sky in a darker tint. If you add a scene, check the two
+families read as different materials: the first `forest` was green on green and
+the platformer came out as one flat sheet.
+
+`palettes.ts` is the ONLY file outside the generated token layer allowed to
+hold colour, by Zul's decision on 2026-09-06, and `scripts/check-ds.mjs` names
+it explicitly. Everything else - all chrome, every component - is still held to
+tokens. `check:tokens` catches dangling `var(--…)`.
+
+**Anything drawn OVER the canvas needs its own contrast.** The hearts are DS
+pink and were invisible on a chemistry game, which is pink. The canvas can be
+any colour now; DOM overlays cannot assume a DS surface behind them.
 
 **Shell quoting has corrupted content three times.** `python -c "..."` lets bash
 expand backticks; a heredoc without quoting turned `\b` into literal backspace
@@ -123,3 +142,13 @@ generated route type.
 `ANTHROPIC_API_KEY` (an OpenRouter key) lives in `.env.local`, gitignored, never
 committed and never echoed. It is not a Worker secret, so **the deployed site
 cannot spend money**.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

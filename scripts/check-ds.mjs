@@ -13,6 +13,20 @@
  *   lib/ds/tokens.raw.json     the extraction from Figma
  *   app/ds/tokens.css          generated from it
  *   lib/ds/tokens.generated.ts generated from it
+ *   lib/arcade/palettes.ts     the arcade scenes - see below
+ *
+ * THE ONE HAND-PICKED EXCEPTION
+ *
+ * `lib/arcade/palettes.ts` holds authored colour, by Zul's decision on
+ * 2026-09-06: "use whatever style for the game, keep Pandai DS as a backup and
+ * reference (minor)." A DS ramp is one hue in five quiet tints, and a game
+ * needs a sky family AND a solid family that read as different materials.
+ *
+ * It is listed here rather than exempted by directory so the exception stays
+ * exactly one file wide. Every other component, page and script is still held
+ * to the token layer, and the DS remains the live fallback for any palette key
+ * without a scene. If a second file ever wants an exception, that is a
+ * conversation, not an edit to this list.
  */
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -30,6 +44,7 @@ const ALLOW = new Set([
   join("scripts", "check-ds.mjs"),
   join("scripts", "generate-tokens.mjs"),
   join("scripts", "figma-token-resolver.js"),
+  join("lib", "arcade", "palettes.ts"),
 ]);
 
 // #abc, #aabbcc, #aabbccdd - plus the functional colour notations, which are

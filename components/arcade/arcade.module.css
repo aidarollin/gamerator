@@ -1,5 +1,11 @@
-/* Arcade shell. Colour comes only from DS tokens; the canvas reads the same
- * tokens at runtime because canvas needs real values, not var() references.
+/* Arcade shell. The CHROME here is still pure DS token - it is Pandai UI, and
+ * should look like it. The CANVAS is not: since 2026-09-06 the game paints from
+ * an authored arcade scene (lib/arcade/palettes.ts) with the token ramp as its
+ * fallback, because a game and a form want different colour.
+ *
+ * That split is why anything overlaying the canvas - the hearts, the mute
+ * button - carries its own contrast rather than trusting the background to be a
+ * DS surface. It is not: it could be a night sky or a pink one.
  *
  * The chrome is deliberately minimal: score and lives are drawn INSIDE the
  * game, so the page around it does not frame the game like a form field. That
@@ -49,8 +55,16 @@
   filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--text-default-heading) 35%, transparent));
 }
 
+/* Outlined, because these sit on the canvas and the canvas can be any colour.
+ * A chemistry game is pink, and pink hearts on it were all but invisible. */
 .heart { color: var(--status-lives-default); }
-.heartSpent { color: var(--surface-general-default); opacity: 0.55; }
+.heartSpent { color: var(--surface-general-default); opacity: 0.7; }
+
+.heart,
+.heartSpent {
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--surface-general-default) 92%, transparent);
+  paint-order: stroke fill;
+}
 
 .tapZone {
   position: absolute;
@@ -130,3 +144,28 @@
   color: var(--text-default-body);
   text-align: center;
 }
+
+/* Mute. Sits above the tap zone so it is reachable mid-run, and above the
+ * overlay so it is reachable before the first press too - a student who wants
+ * silence should not have to start the game to ask for it. */
+.mute {
+  position: absolute;
+  top: var(--spacing-component-sm);
+  left: var(--spacing-component-sm);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-default-heading);
+  background: color-mix(in srgb, var(--surface-general-default) 78%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-default-heading) 28%, transparent);
+}
+
+.mute:hover { background: var(--surface-general-default); }

@@ -1,0 +1,27 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-runner",
+  "meta": {
+    "title": "Aidan Sprint",
+    "description": "Faster, taller, one life.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "economy",
+    "character": "aidan",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 2,
+    "targetScore": 40
+  },
+  "rules": {
+    "gravity": 2600,
+    "jumpVelocity": -760,
+    "scrollSpeed": 280,
+    "spacing": 240,
+    "obstacleHeight": 52,
+    "lives": 1
+  }
+}

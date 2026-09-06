@@ -1,0 +1,27 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-runner",
+  "meta": {
+    "title": "PBot Run",
+    "description": "Jump PBot over everything in the way.",
+    "language": "en",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "geo",
+    "character": "pbot",
+    "background": "sky"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 25
+  },
+  "rules": {
+    "gravity": 2200,
+    "jumpVelocity": -720,
+    "scrollSpeed": 190,
+    "spacing": 300,
+    "obstacleHeight": 38,
+    "lives": 3
+  }
+}

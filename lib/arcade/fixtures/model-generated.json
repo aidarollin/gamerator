@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "meta": {
+    "title": "Nadia Cari Buah",
+    "description": "Bantu Nadia makan semua buah dan elak daripada melanggar badannya sendiri.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "science",
+    "character": "nadia",
+    "background": "forest"
+  },
+  "scoring": {
+    "pointsPerObstacle": 5,
+    "targetScore": 90
+  },
+  "engine": "snake",
+  "rules": {
+    "gridCols": 16,
+    "gridRows": 16,
+    "startSpeed": 4,
+    "speedUp": 0.35,
+    "wallsKill": false,
+    "foodTarget": 18,
+    "lives": 3
+  }
+}

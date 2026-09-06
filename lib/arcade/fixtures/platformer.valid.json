@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "platformer",
+  "meta": {
+    "title": "Nadia Jump",
+    "description": "Run, jump and collect coins to reach the flag.",
+    "language": "en",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "biology",
+    "character": "nadia",
+    "background": "sky"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gravity": 2000,
+    "jumpVelocity": -760,
+    "moveSpeed": 190,
+    "platforms": 8,
+    "maxGap": 95,
+    "coins": 8,
+    "lives": 3
+  }
+}

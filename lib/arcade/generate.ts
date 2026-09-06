@@ -1,6 +1,5 @@
-import { ArcadeSpec } from "./schema";
+import { ArcadeSpec, type Engine } from "./schema";
 import { chooseEngine, renderArcadeBrief, type ArcadeBrief } from "./brief";
-import { readArcadeFixture } from "./fixtures";
 import { providerMode } from "@/lib/config";
 
 /**
@@ -15,100 +14,146 @@ import { providerMode } from "@/lib/config";
 export type Issue = { path: string; message: string };
 
 export type ArcadeOutcome =
-  | { status: "ok"; spec: ArcadeSpec; note?: string }
+  | { status: "ok"; spec: ArcadeSpec; guessed: boolean; note?: string }
   | { status: "invalid"; issues: Issue[] }
-  /** The genre has an engine in the catalog, but it is not built yet. */
-  | { status: "not-built"; requested: string; nearest: string }
-  /** The genre has no engine at all, and is not planned. */
-  | { status: "no-engine"; nearest: string }
+  /** No engine exists for the genre asked for, and none is planned. */
+  | { status: "no-engine"; requested: string; nearest: string }
   | { status: "error"; code: string; message: string };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-/**
- * Turn a prompt into physics without a model.
- *
- * Every knob here maps to a word a person would actually type. It is not
- * pretending to be a model; it is a defensible default so the page works.
- */
-function tuneFromPrompt(brief: ArcadeBrief) {
-  const p = brief.prompt.toLowerCase();
-  const base = readArcadeFixture("endless-flyer.valid") as ArcadeSpec;
+type Tone = {
+  /** -1 easy, 0 normal, 1 hard. */
+  scale: number;
+  difficulty: "easy" | "normal" | "hard";
+  lives: number;
+};
 
-  const hard = /hard|difficult|brutal|fast|insane|susah|laju|expert/.test(p);
-  const easy = /easy|gentle|slow|beginner|kids|senang|mudah|perlahan/.test(p);
-  const difficulty =
-    brief.difficulty ?? (hard ? "hard" : easy ? "easy" : "normal");
-
+function readTone(p: string, override?: ArcadeBrief["difficulty"]): Tone {
+  const hard = /hard|difficult|brutal|fast|insane|punishing|tough|susah|laju|expert/.test(p);
+  const easy = /easy|gentle|slow|beginner|kid|young|calm|senang|mudah|perlahan/.test(p);
+  const difficulty = override ?? (hard ? "hard" : easy ? "easy" : "normal");
   const scale = difficulty === "hard" ? 1 : difficulty === "easy" ? -1 : 0;
-  const tight = /tight|narrow|sempit/.test(p) ? 1 : 0;
-  const floaty = /floaty|slow fall|light/.test(p) ? 1 : 0;
-
-  const rules = {
-    gravity: clamp(1500 + scale * 500 - floaty * 400, 400, 3000),
-    flapVelocity: clamp(-420 - scale * 50 + floaty * 60, -800, -150),
-    scrollSpeed: clamp(150 + scale * 90, 60, 400),
-    gapHeight: clamp(165 - scale * 35 - tight * 20, 80, 300),
-    gapSpacing: clamp(265 - scale * 45, 140, 600),
-    gapDrift: clamp(70 + scale * 30, 0, 240),
+  return {
+    scale,
+    difficulty,
     lives: difficulty === "hard" ? 1 : difficulty === "easy" ? 5 : 3,
   };
+}
 
-  const character =
-    brief.character ??
-    (/aidan/i.test(p) ? "aidan" : /nadia/i.test(p) ? "nadia" : "pbot");
-
-  const palette = brief.palette ?? guessPalette(p) ?? base.theme.palette;
-
-  const title = titleFrom(p, character);
-
-  return {
-    specVersion: "2.0" as const,
-    engine: "endless-flyer" as const,
-    meta: {
-      title,
-      description:
-        brief.language === "ms"
-          ? `Terbangkan ${character === "pbot" ? "PBot" : character} melalui celah.`
-          : `Fly ${character === "pbot" ? "PBot" : character} through the gaps.`,
-      language: brief.language,
-      difficulty,
-    },
-    theme: {
-      palette,
-      character,
-      background: /night|dark|malam/.test(p) ? ("night" as const) : ("sky" as const),
-    },
-    scoring: {
-      pointsPerObstacle: difficulty === "hard" ? 2 : 1,
-      targetScore: difficulty === "hard" ? 40 : difficulty === "easy" ? 15 : 25,
-    },
-    rules,
-  };
+/**
+ * Physics per engine, derived from words.
+ *
+ * Every knob maps to something a person would actually type. This is not
+ * pretending to be a model - it is a defensible default so the page works and
+ * costs nothing.
+ */
+function rulesFor(engine: Engine, p: string, tone: Tone) {
+  const s = tone.scale;
+  switch (engine) {
+    case "endless-flyer": {
+      const tight = /tight|narrow|sempit/.test(p) ? 1 : 0;
+      const floaty = /floaty|light|slow fall/.test(p) ? 1 : 0;
+      return {
+        gravity: clamp(1500 + s * 500 - floaty * 400, 400, 3000),
+        flapVelocity: clamp(-420 - s * 50 + floaty * 60, -800, -150),
+        scrollSpeed: clamp(150 + s * 90, 60, 400),
+        gapHeight: clamp(165 - s * 35 - tight * 20, 80, 300),
+        gapSpacing: clamp(265 - s * 45, 140, 600),
+        gapDrift: clamp(70 + s * 30, 0, 240),
+        lives: tone.lives,
+      };
+    }
+    case "endless-runner":
+      return {
+        gravity: clamp(2200 + s * 400, 800, 4000),
+        jumpVelocity: clamp(-720 - s * 40, -1200, -300),
+        scrollSpeed: clamp(190 + s * 90, 80, 460),
+        spacing: clamp(300 - s * 60, 120, 600),
+        obstacleHeight: clamp(38 + s * 14, 18, 90),
+        lives: tone.lives,
+      };
+    case "brick-breaker":
+      return {
+        ballSpeed: clamp(250 + s * 110, 120, 560),
+        paddleWidth: clamp(96 - s * 26, 40, 160),
+        paddleSpeed: clamp(620 + s * 80, 200, 900),
+        rows: clamp(3 + (s > 0 ? 2 : 0), 2, 7),
+        cols: /wide|many|banyak/.test(p) ? 8 : 6,
+        lives: tone.lives,
+      };
+    case "snake": {
+      const big = /big|large|besar/.test(p) ? 4 : 0;
+      return {
+        gridCols: clamp(14 + big, 8, 24),
+        gridRows: clamp(14 + big, 8, 24),
+        startSpeed: clamp(5 + s * 2.5, 2, 12),
+        speedUp: clamp(0.15 + s * 0.1, 0, 0.6),
+        wallsKill: !/wrap|no wall|tiada dinding/.test(p),
+        foodTarget: clamp(12 + s * 6, 3, 60),
+        lives: tone.lives,
+      };
+    }
+    case "platformer":
+      return {
+        gravity: clamp(2000 + s * 350, 900, 4000),
+        jumpVelocity: clamp(-760 - s * 30, -1300, -350),
+        moveSpeed: clamp(190 + s * 40, 80, 340),
+        platforms: clamp(8 + (s > 0 ? 3 : 0), 4, 14),
+        maxGap: clamp(95 + s * 30, 40, 220),
+        coins: clamp(8 + (s > 0 ? 4 : 0), 0, 20),
+        lives: tone.lives,
+      };
+  }
 }
 
 const PALETTE_WORDS: [RegExp, string][] = [
   [/pink|chemistry|kimia/i, "chemistry"],
-  [/blue|bahasa|melayu|bm/i, "b-melayu"],
+  [/blue|bahasa melayu|\bbm\b|melayu/i, "b-melayu"],
   [/green|math|matematik/i, "math"],
   [/purple|biology|biologi/i, "biology"],
   [/yellow|science|sains/i, "science"],
-  [/red|english|bahasa inggeris/i, "english"],
+  [/red|english|inggeris/i, "english"],
   [/orange|economy|ekonomi/i, "economy"],
-  [/dark|black|rbt/i, "rbt"],
+  [/dark|black|gelap|\brbt\b/i, "rbt"],
+  [/gold|coin|emas/i, "gold"],
 ];
 
-function guessPalette(p: string): string | undefined {
+function guessPalette(p: string) {
   for (const [re, key] of PALETTE_WORDS) if (re.test(p)) return key;
   return undefined;
 }
 
-function titleFrom(prompt: string, character: string): string {
+const NOUN = {
+  "endless-flyer": ["Flight", "Terbang"],
+  "endless-runner": ["Run", "Lari"],
+  "brick-breaker": ["Blocks", "Bata"],
+  snake: ["Snake", "Ular"],
+  platformer: ["Jump", "Lompat"],
+} as const;
+
+function titleFor(engine: Engine, character: string, lang: "ms" | "en") {
   const who = character === "pbot" ? "PBot" : character[0].toUpperCase() + character.slice(1);
-  const words = prompt.trim().split(/\s+/).slice(0, 4).join(" ");
-  const cleaned = words.replace(/[^\p{L}\p{N} ]/gu, "").trim();
-  const title = cleaned ? `${who}: ${cleaned}` : `${who} Flight`;
-  return title.slice(0, 40);
+  return `${who} ${NOUN[engine][lang === "ms" ? 1 : 0]}`.slice(0, 40);
+}
+
+function describe(engine: Engine, character: string, lang: "ms" | "en") {
+  const who = character === "pbot" ? "PBot" : character[0].toUpperCase() + character.slice(1);
+  const en: Record<Engine, string> = {
+    "endless-flyer": `Tap to keep ${who} in the air and through the gaps.`,
+    "endless-runner": `Jump ${who} over everything in the way.`,
+    "brick-breaker": `Steer the paddle and clear every brick.`,
+    snake: `Grow as long as you can without biting yourself.`,
+    platformer: `Run, jump and collect coins to reach the flag.`,
+  };
+  const ms: Record<Engine, string> = {
+    "endless-flyer": `Ketik untuk terbangkan ${who} melalui celah.`,
+    "endless-runner": `Lompatkan ${who} melepasi halangan.`,
+    "brick-breaker": `Kawal pemukul dan pecahkan semua bata.`,
+    snake: `Jadi sepanjang mungkin tanpa menggigit diri sendiri.`,
+    platformer: `Berlari, melompat dan kutip syiling ke bendera.`,
+  };
+  return (lang === "ms" ? ms : en)[engine];
 }
 
 export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome> {
@@ -117,17 +162,11 @@ export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome>
   // Answered before any generation happens: there is nothing to generate for a
   // genre with no engine, and pretending otherwise wastes a call and the
   // person's time.
-  if (choice.kind === "not-built") {
-    return { status: "not-built", requested: choice.requested, nearest: choice.nearest };
-  }
   if (choice.kind === "no-engine") {
-    return { status: "no-engine", nearest: choice.nearest };
+    return { status: "no-engine", requested: choice.requested, nearest: choice.nearest };
   }
 
   if (providerMode() === "live") {
-    // Wiring the live provider to ArcadeSpec is the next piece of work; until
-    // then a live request is refused rather than silently served by the stub,
-    // which would make a "live" deployment quietly a lie.
     return {
       status: "error",
       code: "live_arcade_not_wired",
@@ -136,15 +175,46 @@ export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome>
     };
   }
 
-  const candidate = tuneFromPrompt(brief);
+  const p = brief.prompt.toLowerCase();
+  const tone = readTone(p, brief.difficulty);
+  const character =
+    brief.character ?? (/aidan/i.test(p) ? "aidan" : /nadia/i.test(p) ? "nadia" : "pbot");
+  const engine = choice.engine;
+
+  const candidate = {
+    specVersion: "2.0" as const,
+    engine,
+    meta: {
+      title: titleFor(engine, character, brief.language),
+      description: describe(engine, character, brief.language),
+      language: brief.language,
+      difficulty: tone.difficulty,
+    },
+    theme: {
+      palette: brief.palette ?? guessPalette(p) ?? "b-melayu",
+      character,
+      background: /night|dark|malam/.test(p) ? ("night" as const) : ("sky" as const),
+    },
+    scoring: {
+      pointsPerObstacle: tone.difficulty === "hard" ? 2 : 1,
+      targetScore: tone.difficulty === "hard" ? 40 : tone.difficulty === "easy" ? 15 : 25,
+    },
+    rules: rulesFor(engine, p, tone),
+  };
+
   const parsed = ArcadeSpec.safeParse(candidate);
 
   if (parsed.success) {
-    return { status: "ok", spec: parsed.data, note: renderArcadeBrief(brief) };
+    return {
+      status: "ok",
+      spec: parsed.data,
+      guessed: !choice.confident,
+      note: renderArcadeBrief(brief),
+    };
   }
 
-  // The stub's tuning is deterministic, so a failure here is a bug in the
-  // tuning rather than a model mistake - and it is surfaced, not swallowed.
+  // The tuning is deterministic, so a failure here is a bug in the tuning rather
+  // than a model mistake - and it is surfaced, not swallowed.
   return {
     status: "invalid",
     issues: parsed.error.issues.map((i) => ({

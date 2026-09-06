@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Card, Chip } from "@/components/ds";
-import { EndlessFlyer } from "@/components/arcade/EndlessFlyer";
+import { ArcadeGame } from "@/components/arcade/ArcadeGame";
 import { ExportPanel } from "@/components/arcade/ExportPanel";
 import { generateArcade } from "@/lib/arcade/generate";
 import { ArcadeBrief } from "@/lib/arcade/brief";
-import { PLANNED_ENGINES } from "@/lib/arcade/schema";
+import { ENGINES } from "@/lib/arcade/schema";
 import { CHARACTERS } from "@/components/arcade/characters";
 import s from "./create.module.css";
 
@@ -136,24 +136,23 @@ async function Result({ params }: { params: Record<string, string | undefined> }
   const outcome = await generateArcade(parsed.data);
 
   // The honest answers, before the happy path.
-  if (outcome.status === "not-built" || outcome.status === "no-engine") {
-    const requested =
-      outcome.status === "not-built" ? outcome.requested : "that kind of game";
+  if (outcome.status === "no-engine") {
+    const requested = outcome.requested;
     return (
       <Card>
         <strong className={s.warn}>No engine for that yet</strong>
         <p className={s.body}>
           You asked for <strong>{requested}</strong>, and there is no engine for
           it. Rather than quietly handing you the nearest thing and letting you
-          wonder why it is not what you asked for: the catalog currently has{" "}
-          <strong>endless-flyer</strong>, with{" "}
-          {PLANNED_ENGINES.join(", ")} designed but not built.
+          wonder why it is not what you asked for: the catalog has{" "}
+          {ENGINES.join(", ")}.
         </p>
         <p className={s.body}>
           An engine is code, tests and a design review &mdash; a change to this
           repository, not something a prompt can conjure. Try{" "}
-          <Link href="/create?prompt=a+flappy+bird+with+PBot">a flyer</Link> in
-          the meantime.
+          <Link href="/create?prompt=a+flappy+bird+with+PBot">a flyer</Link>,{" "}
+          <Link href="/create?prompt=a+brick+breaker+game">breakout</Link> or{" "}
+          <Link href="/create?prompt=a+snake+game">snake</Link> instead.
         </p>
       </Card>
     );
@@ -187,15 +186,17 @@ async function Result({ params }: { params: Record<string, string | undefined> }
 
   return (
     <div className={s.result}>
-      <EndlessFlyer spec={outcome.spec} />
-      <div className={s.tags}>
-        <Chip state="accent">{outcome.spec.theme.character}</Chip>
-        <Chip>{outcome.spec.meta.difficulty}</Chip>
-        <Chip>{outcome.spec.theme.palette}</Chip>
-        <Chip>gravity {Math.round(outcome.spec.rules.gravity)}</Chip>
-        <Chip>gap {Math.round(outcome.spec.rules.gapHeight)}</Chip>
-        <Chip>{outcome.spec.rules.lives} lives</Chip>
-      </div>
+      {/* No physics chips. A player-facing surface showing "gravity 1500" is a
+          debug view, and that was most of why this read as a mock-up. The
+          numbers are all in the spec, one tab away in the export panel. */}
+      {outcome.guessed && (
+        <p className={s.guess}>
+          Nothing in that named a kind of game, so this is a flyer &mdash; a
+          guess, said out loud rather than made quietly. Name a genre (snake,
+          breakout, runner, platformer) to pick deliberately.
+        </p>
+      )}
+      <ArcadeGame spec={outcome.spec} />
       <ExportPanel spec={outcome.spec} />
     </div>
   );

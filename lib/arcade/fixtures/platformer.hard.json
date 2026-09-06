@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "platformer",
+  "meta": {
+    "title": "PBot Peaks",
+    "description": "Longer level, wider gaps, one life.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "physics",
+    "character": "pbot",
+    "background": "night"
+  },
+  "scoring": {
+    "pointsPerObstacle": 2,
+    "targetScore": 40
+  },
+  "rules": {
+    "gravity": 2350,
+    "jumpVelocity": -790,
+    "moveSpeed": 230,
+    "platforms": 11,
+    "maxGap": 125,
+    "coins": 12,
+    "lives": 1
+  }
+}

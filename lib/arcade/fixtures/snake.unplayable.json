@@ -1,0 +1,28 @@
+{
+  "specVersion": "2.0",
+  "engine": "snake",
+  "meta": {
+    "title": "Too Much Food",
+    "description": "The target does not fit on the board.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "biology",
+    "character": "nadia",
+    "background": "plain"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 20
+  },
+  "rules": {
+    "gridCols": 8,
+    "gridRows": 8,
+    "startSpeed": 6,
+    "speedUp": 0.2,
+    "wallsKill": true,
+    "foodTarget": 55,
+    "lives": 1
+  }
+}

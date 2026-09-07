@@ -1410,3 +1410,43 @@ keyboard, space strikes and the arrows walk.
 - The duel has no round timer wired in, though `scoring.timeLimit` would work.
 - The stage is one flat plane with a lot of empty sky above it.
 - Power-ups are still flyer-only.
+
+---
+
+## 2026-09-07 — The game was eating the prompt box
+
+Reported by Zul: on `/create`, once a game has been generated you cannot edit
+your prompt any more. Space and Enter do nothing in the textarea.
+
+**Cause, entirely mine.** `GameFrame` listens for keys on **window**, because a
+canvas game has to respond to the keyboard without the player clicking it first.
+It then calls `preventDefault()` on Space, Enter and the arrows. On `/play/arcade`
+that is harmless - nothing else on the page wants those keys. On `/create` the
+game renders directly beneath the prompt box, so every space in the sentence you
+were trying to edit was swallowed before the textarea saw it.
+
+`preventDefault` on a global handler is a promise that nothing else on the page
+needs that key, and `/create` broke that promise the day it was built.
+
+**Fix:** the handler now ignores keystrokes whose target is an `input`,
+`textarea`, `select`, or anything `contenteditable`.
+
+**Verified on the deployed site, both directions** - the second half matters,
+because the obvious fix is to make the game stop listening and quietly break
+every other page:
+
+| Check | Result |
+| --- | --- |
+| Type "a hard duel with Nadia\nat night" after generating | lands intact, spaces and newline |
+| Game stays on its title screen while typing | yes |
+| `/play/arcade` - space still starts the game | yes |
+| `/create` - click the canvas, then space plays | yes |
+
+**A note on the test, not the code.** My first assertion for "did the game
+start?" matched the word *Play* in the page text - which is now a link in the
+site nav on every page, so it matched forever and reported a false failure. The
+tell has to be the title panel's own hint text. Second time this session an
+assertion has been wrong rather than the thing it measured.
+
+**Worth knowing:** nothing in the suite renders a page, so no test would have
+caught this. It needed a person typing, which is exactly what it got.

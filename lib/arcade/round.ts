@@ -67,6 +67,12 @@ export function maxPointsPerSecond(spec: ArcadeSpecInput): number {
       // Plus the bonus, which is worth triple and appears every fourth food.
       return (top / trip) * pts * 1.75;
     }
+    case "duel": {
+      const r = spec.rules;
+      // One hit per strike cycle, every strike landing. A real match spends
+      // most of its time at range, so this is generous by a wide margin.
+      return pts / Math.max(0.1, r.strikeWindup + r.strikeRecovery);
+    }
     case "platformer": {
       const r = spec.rules;
       // Not a rate: a platformer has a fixed purse. Every coin plus the goal

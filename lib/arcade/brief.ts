@@ -51,6 +51,8 @@ const ENGINE_WORDS: { engine: Engine; words: RegExp; weight: number }[] = [
   { engine: "brick-breaker", weight: 1, words: /brick|paddle|\bball\b|\bbata\b/i },
   { engine: "snake", weight: 3, words: /\bsnake\b|nokia|\bular\b/i },
   { engine: "snake", weight: 1, words: /grid|grow longer|eat food/i },
+  { engine: "duel", weight: 3, words: /mortal kombat|street fighter|tekken|fighting game|brawler/i },
+  { engine: "duel", weight: 1, words: /fight|duel|spar|combat|punch|lawan|kick/i },
 ];
 
 /**
@@ -58,7 +60,10 @@ const ENGINE_WORDS: { engine: Engine; words: RegExp; weight: number }[] = [
  * be specific about what was asked for.
  */
 const UNSUPPORTED: { label: string; words: RegExp }[] = [
-  { label: "a fighting game", words: /fight|mortal kombat|street fighter|tekken|combat|brawler/i },
+  // "a fighting game" lived here until 2026-09-07. The reason on record was
+  // that Pandai's avatars are single static PNGs, which is true and was the
+  // wrong conclusion: this renderer already animates static sprites
+  // procedurally. It is the `duel` engine now. See docs/SCOPE.md.
   { label: "a shooter", words: /shooter|shoot.?em|fps|gun|space invaders|galaga/i },
   { label: "a racing game", words: /rac(e|ing)|kart|driving|car game|lumba/i },
   { label: "a puzzle game", words: /tetris|puzzle|match.?3|candy|sudoku|2048|teka.?teki/i },

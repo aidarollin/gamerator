@@ -54,6 +54,25 @@ snake
   foodTarget     3..60
   lives          1..5
 
+duel  (a sparring match, not a fight to the death)
+  moveSpeed         60..320    px/s each fighter walks
+  reach             40..130    px at which a strike connects
+  strikeWindup      0.08..0.6  s a strike telegraphs before it lands
+  strikeRecovery    0.1..0.9   s the striker is open afterwards
+  opponentReaction  0.08..0.9  s before the opponent responds to what it sees
+  opponentAggression 0..1      0 defensive, 1 attacks at every opening
+  hitsToWin         3..12      hits needed to win
+  lives             1..5       hits the player can take
+
+  THE DIAL IS opponentReaction AGAINST strikeWindup. Slower than the windup and
+  the player can land clean hits; faster and every strike is seen and blocked,
+  and the player has to bait a block before the second strike lands. Faster than
+  about half the windup is simply unwinnable and is rejected.
+
+  It is a SPARRING MATCH. Hits score points and knock the loser over; there is
+  no blood, no finisher, and nothing frightening. theme.opponent names the other
+  fighter and defaults to whoever the player is not.
+
 platformer  (Mario-like, one generated level)
   gravity        900..4000
   jumpVelocity   -1300..-350

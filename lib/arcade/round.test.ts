@@ -40,6 +40,10 @@ function specFor(engine: (typeof ENGINES)[number], timeLimit?: number, targetSco
       gravity: 2000, jumpVelocity: -760, moveSpeed: 190,
       platforms: 8, maxGap: 95, coins: 8, lives: 3,
     },
+    duel: {
+      moveSpeed: 150, reach: 88, strikeWindup: 0.3, strikeRecovery: 0.34,
+      opponentReaction: 0.5, opponentAggression: 0.4, hitsToWin: 5, lives: 3,
+    },
   }[engine] as Record<string, unknown>;
   return { ...base, engine, rules } as unknown as ArcadeSpecInput;
 }

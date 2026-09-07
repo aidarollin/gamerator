@@ -3,6 +3,7 @@ import { ACCENT_FAMILIES, SUBJECT_KEYS } from "@/lib/ds/tokens.generated";
 import { flyerPlayability, simulatedObstacles } from "./simulate";
 import { Range } from "./ramp";
 import { roundVerdict } from "./round";
+import { DuelRules, duelPlayability } from "./duel";
 import {
   BrickBreakerRules,
   SnakeRules,
@@ -47,6 +48,12 @@ export const Theme = z.object({
   palette: Palette,
   character: Character,
   background: z.enum(["sky", "night", "forest", "plain"]),
+  /**
+   * The other fighter. Only the duel engine reads it, and it is optional
+   * everywhere so no existing spec changes meaning. When absent the duel picks
+   * whoever the player is not.
+   */
+  opponent: Character.optional(),
 });
 
 export const Scoring = z.object({
@@ -141,12 +148,19 @@ export const Platformer = z.object({
   rules: PlatformerRules,
 });
 
+export const Duel = z.object({
+  ...base,
+  engine: z.literal("duel"),
+  rules: DuelRules,
+});
+
 export const ArcadeSpecShape = z.discriminatedUnion("engine", [
   EndlessFlyer,
   BrickBreaker,
   Snake,
   EndlessRunner,
   Platformer,
+  Duel,
 ]);
 
 /**
@@ -236,7 +250,9 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
         ? snakeVerdict(spec.rules)
         : spec.engine === "endless-runner"
           ? endlessRunnerVerdict(spec.rules, 30)
-          : platformerVerdict(spec.rules);
+          : spec.engine === "duel"
+            ? duelPlayability(spec.rules)
+            : platformerVerdict(spec.rules);
 
   if (!verdict.ok) {
     ctx.addIssue({ code: "custom", path: ["rules"], message: verdict.reason });
@@ -279,6 +295,7 @@ export const ENGINE_SCHEMAS = {
   snake: Snake,
   "endless-runner": EndlessRunner,
   platformer: Platformer,
+  duel: Duel,
 } as const;
 
 export const ENGINES = [
@@ -287,6 +304,7 @@ export const ENGINES = [
   "snake",
   "endless-runner",
   "platformer",
+  "duel",
 ] as const;
 
 /** Nothing left in the catalog is unbuilt. Kept so the no-engine path, which

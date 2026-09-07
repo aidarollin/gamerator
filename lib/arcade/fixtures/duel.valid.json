@@ -1,0 +1,30 @@
+{
+  "specVersion": "2.0",
+  "engine": "duel",
+  "meta": {
+    "title": "PBot Lawan Aidan",
+    "description": "Pilih masa serangan anda dan kalahkan lawan.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "physics",
+    "character": "pbot",
+    "background": "night",
+    "opponent": "aidan"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 5
+  },
+  "rules": {
+    "moveSpeed": 150,
+    "reach": 88,
+    "strikeWindup": 0.26,
+    "strikeRecovery": 0.3,
+    "opponentReaction": 0.38,
+    "opponentAggression": 0.3,
+    "hitsToWin": 5,
+    "lives": 3
+  }
+}

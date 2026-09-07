@@ -1,0 +1,30 @@
+{
+  "specVersion": "2.0",
+  "engine": "duel",
+  "meta": {
+    "title": "Unwinnable duel",
+    "description": "The opponent reads every strike before it lands.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": {
+    "palette": "alert",
+    "character": "aidan",
+    "background": "night",
+    "opponent": "nadia"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 10
+  },
+  "rules": {
+    "moveSpeed": 120,
+    "reach": 70,
+    "strikeWindup": 0.58,
+    "strikeRecovery": 0.85,
+    "opponentReaction": 0.09,
+    "opponentAggression": 0.95,
+    "hitsToWin": 10,
+    "lives": 1
+  }
+}

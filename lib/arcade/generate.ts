@@ -118,6 +118,23 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
         lives: tone.lives,
       };
     }
+    case "duel": {
+      // `s` is the difficulty scalar: 0 easy, 1 normal, 2 hard. The dial that
+      // matters is the opponent's reaction - slower than your windup and you
+      // can hit it, faster and you have to bait the block first.
+      const windup = clamp(0.3 - s * 0.06, 0.08, 0.6);
+      return {
+        moveSpeed: clamp(150 + s * 40, 60, 320),
+        reach: clamp(88 - s * 6, 40, 130),
+        strikeWindup: windup,
+        strikeRecovery: clamp(0.34 - s * 0.05, 0.1, 0.9),
+        // Easy reacts well after your windup lands; hard reacts inside it.
+        opponentReaction: clamp(windup * (1.9 - s * 0.55), 0.08, 0.9),
+        opponentAggression: clamp(0.35 + s * 0.2, 0, 1),
+        hitsToWin: Math.round(clamp(5 + s, 3, 12)),
+        lives: tone.lives,
+      };
+    }
     case "brick-breaker":
       return {
         ballSpeed: clamp(250 + s * 110, 120, 560),
@@ -175,6 +192,7 @@ const NOUN = {
   "brick-breaker": ["Blocks", "Bata"],
   snake: ["Snake", "Ular"],
   platformer: ["Jump", "Lompat"],
+  duel: ["Duel", "Lawan"],
 } as const;
 
 /**
@@ -224,6 +242,7 @@ function describe(engine: Engine, character: string, lang: "ms" | "en") {
     "brick-breaker": `Steer the paddle and clear every brick.`,
     snake: `Grow as long as you can without biting yourself.`,
     platformer: `Run, jump and collect coins to reach the flag.`,
+    duel: `Time your strikes and out-spar your opponent.`,
   };
   const ms: Record<Engine, string> = {
     "endless-flyer": `Ketik untuk terbangkan ${who} melalui celah.`,
@@ -231,6 +250,7 @@ function describe(engine: Engine, character: string, lang: "ms" | "en") {
     "brick-breaker": `Kawal pemukul dan pecahkan semua bata.`,
     snake: `Jadi sepanjang mungkin tanpa menggigit diri sendiri.`,
     platformer: `Berlari, melompat dan kutip syiling ke bendera.`,
+    duel: `Pilih masa serangan dan kalahkan lawan anda.`,
   };
   return (lang === "ms" ? ms : en)[engine];
 }

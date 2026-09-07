@@ -1314,3 +1314,99 @@ app, which is what exposed the seeding flaw above. Worth a human playing
 - Power-ups are flyer-only; the runner has coins but no bubbles.
 - A fighting engine - see SCOPE, which now says what it would take rather than
   refusing.
+
+---
+
+## 2026-09-07 — The fighting game exists
+
+Model still off. A sixth engine, `duel`.
+
+### It was never about assets
+
+The recorded reason for refusing a fighting game was that Pandai's avatars are
+single static PNGs. That fact is true and the conclusion drawn from it was
+wrong: **this renderer already animates static sprites procedurally.** A lunge
+is a translate, a block is a crouch and a lean away, a hit is a recoil, a
+knockdown is a rotation. `drawCharacter` had been doing exactly this for the
+flyer's tilt since the first week, and nobody has ever asked where the frames
+are. The blocker was code, and Zul had to ask twice before I checked instead of
+repeating myself.
+
+### A sparring match, not a fight to the death
+
+The audience is Malaysian schoolchildren and the system prompt already forbids
+anything frightening. Hits score points and knock the loser over. No blood, no
+finisher, and the loser gets up.
+
+### The opponent's reaction time IS the difficulty
+
+An AI that reads inputs frame-perfectly is unbeatable and feels like cheating.
+This one has a stated `opponentReaction` and obeys it: it must SEE a windup
+before it can block, and see an opening before it can punish. Slower than
+`strikeWindup` and the player lands clean hits; faster and every strike is read,
+so the player has to bait a block and hit the gap behind it. Faster than about
+half the windup is simply unwinnable, and rejected.
+
+That design choice is also what makes the engine CHECKABLE, which is why it was
+made: "can a player land a hit?" becomes a question a simulation can answer.
+
+### Getting the check honest took four passes
+
+`duelPlayability` runs a competent player against the specified opponent. The
+first three versions were all wrong in instructive ways:
+
+1. **Too passive.** The player waited for a "punishable" opening a defensive
+   opponent never gives - **84% of legal specs rejected.** A wrong rejection is
+   worse than a missed one, because the rejection is what a person sees.
+2. **No defence.** The player never blocked, so it walked into every aggressive
+   opponent and lost - still 77% rejected. It is credited with a fixed 0.22s
+   human reaction now; fixed, not derived from the spec, or a check that scaled
+   the player's reflexes to match could never reject anything.
+3. **The opponent punished instantly.** `opponentReaction` gated only its
+   blocks, so a slow, supposedly easy opponent still counter-hit flawlessly -
+   and `opponentReaction` was not really the dial it claimed to be.
+4. **The opponent only ever reacted.** Once punishing was gated properly, any
+   opponent slower than the player's recovery never scored at all, so 332 of 348
+   accepted specs came out "trivial". A fighter that only reacts is not a
+   fighter; it takes the initiative on a tempo set by aggression now.
+
+Final spread over 3000 fuzzed legal specs: 406 good, 399 trivial, 1848 lose,
+344 land nothing, **3 stall**. That last branch is rare but real, and its test
+is pinned to an actual fuzz case - my hand-written attempt at a stalling spec
+lost instead, which is precisely why losing and stalling have separate reasons.
+
+The bundled `duel.valid` was rejected on first run, correctly: a competent
+player landed 4 of 5 while taking 3 of 3. Its numbers came from a search for a
+spec the check calls playable AND not trivial, rather than from my judgement.
+
+### And a bug two engines old
+
+Putting two characters side by side finally explained something I had been
+looking at for days. `pbot-dizzy.svg` was exported from an **error modal** in
+Figma and brought the modal with it - a full-bleed dark scrim and a dialog
+border, behind the robot, covering the whole viewBox. Every knocked-out PBot
+appeared on a grey card. I had seen it in the flyer's death frame and read it as
+a particle burst; only a frame with one boxed character and one clean one made
+it obvious. `scripts/clean-character-svgs.mjs` strips the chrome from four
+sprites. `pbot.svg` keeps a dashed Figma frame rect, which is stroke-only with
+every edge outside the viewBox and therefore draws nothing - left alone rather
+than edit a Pandai asset further than the bug required.
+
+### Verified on the deployed site
+
+| Check | Result |
+| --- | --- |
+| `duel.valid` renders and plays | yes, no page errors |
+| "a mortal kombat style fighting game" | **makes a game** - the no-engine message is gone |
+| `duel.unplayable` | rejected, no canvas |
+| Knocked-out PBot | no box, in the duel and the flyer |
+
+Play it: `/play/arcade?game=duel.valid`, or type a fighting prompt into
+`/create`. Tap the top of the stage to strike, left or right to step; on a
+keyboard, space strikes and the arrows walk.
+
+**Not done**
+
+- The duel has no round timer wired in, though `scoring.timeLimit` would work.
+- The stage is one flat plane with a lot of empty sky above it.
+- Power-ups are still flyer-only.

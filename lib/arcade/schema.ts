@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ACCENT_FAMILIES, SUBJECT_KEYS } from "@/lib/ds/tokens.generated";
 import { flyerPlayability, simulatedObstacles } from "./simulate";
 import { Range } from "./ramp";
+import { roundVerdict } from "./round";
 import {
   BrickBreakerRules,
   SnakeRules,
@@ -51,6 +52,16 @@ export const Theme = z.object({
 export const Scoring = z.object({
   pointsPerObstacle: z.number().int().min(1).max(100),
   targetScore: z.number().int().min(5).max(200),
+  /**
+   * Optional round budget, in seconds. The clock is SHARED ACROSS RETRIES -
+   * losing a life does not refill it - which is what makes it a round rather
+   * than a stopwatch, and turns three lives into a resource spent against one
+   * budget. See lib/arcade/round.ts.
+   *
+   * Absent means an endless run, which stays the default: the timer bounds a
+   * session, it is not a win condition.
+   */
+  timeLimit: z.number().int().min(20).max(300).optional(),
 });
 
 /**
@@ -150,6 +161,24 @@ export const ArcadeSpecShape = z.discriminatedUnion("engine", [
  * Schema cannot express any of this) and the server validates `ArcadeSpec`.
  */
 export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
+  // FIRST, before the per-engine branches - several of them `return` early, so
+  // anything appended at the tail of this function silently applies to only the
+  // engines that fall through. That is exactly how the first version of this
+  // check ended up unreachable for the flyer while its own unit test passed.
+  //
+  // A clock the target cannot be reached inside makes "Target beaten" a screen
+  // nobody will ever see. Only the clearly impossible is rejected: the estimate
+  // behind it is a deliberate over-estimate, so it under-fires rather than
+  // turning away winnable games.
+  const round = roundVerdict(spec);
+  if (!round.ok) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["scoring", "timeLimit"],
+      message: round.reason,
+    });
+  }
+
   if (spec.engine === "endless-flyer") {
     const r = spec.rules;
 
@@ -221,9 +250,12 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
         "these settings are trivially easy - the player cannot lose, so there is no game",
     });
   }
+
 });
 
 export type ArcadeSpec = z.infer<typeof ArcadeSpec>;
+/** The shape before cross-field rules - what `roundVerdict` reasons about. */
+export type ArcadeSpecInput = z.infer<typeof ArcadeSpecShape>;
 export type EndlessFlyerSpec = z.infer<typeof EndlessFlyer>;
 export type BrickBreakerSpec = z.infer<typeof BrickBreaker>;
 export type SnakeSpec = z.infer<typeof Snake>;

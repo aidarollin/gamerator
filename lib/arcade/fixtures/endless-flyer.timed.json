@@ -1,0 +1,30 @@
+{
+  "specVersion": "2.0",
+  "engine": "endless-flyer",
+  "meta": {
+    "title": "Dua Minit PBot",
+    "description": "Kutip mata sebanyak mungkin sebelum masa tamat.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": {
+    "palette": "science",
+    "character": "pbot",
+    "background": "sky"
+  },
+  "scoring": {
+    "pointsPerObstacle": 1,
+    "targetScore": 25,
+    "timeLimit": 120
+  },
+  "rules": {
+    "gravity": 1500,
+    "flapVelocity": -430,
+    "scrollSpeed": { "start": 140, "end": 200 },
+    "gapHeight": { "start": 200, "end": 155 },
+    "gapSpacing": { "start": 330, "end": 265 },
+    "gapDrift": { "start": 25, "end": 80 },
+    "rampOverObstacles": 14,
+    "lives": 3
+  }
+}

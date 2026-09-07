@@ -169,3 +169,31 @@
 }
 
 .mute:hover { background: var(--surface-general-default); }
+
+/* The round clock. Beside the mute button rather than top-centre, because
+ * top-centre is where every engine draws its score ON THE CANVAS - the first
+ * version put a 0:09 pill straight through snake's "0/30". Carries its own
+ * contrast for the same reason the hearts do: the scene behind it can be any
+ * colour. */
+.clock {
+  position: absolute;
+  top: var(--spacing-component-sm);
+  left: calc(var(--spacing-component-sm) + 36px);
+  z-index: 2;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  pointer-events: none;
+  color: var(--text-default-heading);
+  background: color-mix(in srgb, var(--surface-general-default) 82%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-default-heading) 26%, transparent);
+}
+
+/* Under ten seconds. A round that ends without warning reads as a bug. */
+.clockLow {
+  color: var(--text-on-color-heading);
+  background: var(--surface-alert-default);
+}

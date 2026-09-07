@@ -1,0 +1,258 @@
+/* The internal deck.
+ *
+ * Every colour is a DS token - `npm run check:ds` applies here exactly as it
+ * does to the product, and a presentation about design-system fidelity that
+ * hard-coded a hex would be a poor advertisement for itself.
+ */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface-general-page);
+  color: var(--text-default-body);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-component-sm);
+  padding: var(--spacing-component-xs) var(--spacing-component-md);
+  border-bottom: 1px solid var(--border-general-default);
+  background: var(--surface-general-default);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-default-heading);
+}
+
+.unlisted {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  color: var(--text-alert-default);
+  background: var(--surface-alert-default-subtle);
+}
+
+.spacer { flex: 1; }
+
+.count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-default-body);
+}
+
+.nav {
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
+  min-width: 34px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-primary-default);
+  background: var(--surface-general-default);
+  color: var(--text-primary-default);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn:hover:not(:disabled) { background: var(--surface-primary-default-subtle); }
+
+/* ------------------------------------------------------------------ slide */
+
+.stage {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-component-lg) var(--spacing-component-md)
+    var(--spacing-component-2xl);
+}
+
+.slide {
+  width: 100%;
+  max-width: 880px;
+  display: grid;
+  gap: var(--spacing-component-md);
+  align-content: start;
+}
+
+.kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary-default);
+}
+
+.title {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text-default-heading);
+  margin: 0;
+}
+
+.lead {
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.points {
+  display: grid;
+  gap: var(--spacing-component-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 66ch;
+}
+
+.point {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.dot { color: var(--text-primary-default); font-weight: 700; }
+
+.point strong { color: var(--text-default-heading); }
+
+.note {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: var(--spacing-component-sm);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-general-default);
+  background: var(--surface-general-default);
+  max-width: 66ch;
+}
+
+.warn {
+  border-color: var(--text-alert-default);
+  background: var(--surface-alert-default-subtle);
+}
+
+/* Two columns once there is room; a demo beside its explanation. */
+.split {
+  display: grid;
+  gap: var(--spacing-component-md);
+  align-items: start;
+}
+
+@media (min-width: 880px) {
+  .split { grid-template-columns: 1fr auto; }
+}
+
+/* ------------------------------------------------------------------- demo */
+
+.demo {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.frame {
+  border: 1px solid var(--border-general-default);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  background: var(--surface-general-default);
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--text-default-heading) 30%, transparent);
+}
+
+.frame iframe {
+  display: block;
+  border: 0;
+}
+
+.caption {
+  font-size: 12px;
+  color: var(--text-default-body);
+  text-align: center;
+  max-width: 34ch;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary-default);
+}
+
+.pip {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--surface-primary-default);
+}
+
+/* ------------------------------------------------------------------ table */
+
+.table {
+  width: 100%;
+  max-width: 66ch;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-general-default);
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--text-default-heading);
+  font-weight: 700;
+}
+
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+}
+
+/* ------------------------------------------------------------------- rail */
+
+.rail {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  padding: var(--spacing-component-xs);
+  border-top: 1px solid var(--border-general-default);
+  background: var(--surface-general-default);
+  flex-wrap: wrap;
+}
+
+.tick {
+  width: 22px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: var(--border-general-default);
+}
+
+.tickOn { background: var(--surface-primary-default); }

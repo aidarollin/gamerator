@@ -64,10 +64,43 @@ duel  (a sparring match, not a fight to the death)
   hitsToWin         3..12      hits needed to win
   lives             1..5       hits the player can take
 
-  THE DIAL IS opponentReaction AGAINST strikeWindup. Slower than the windup and
-  the player can land clean hits; faster and every strike is seen and blocked,
-  and the player has to bait a block before the second strike lands. Faster than
-  about half the windup is simply unwinnable and is rejected.
+  TWO RELATIONSHIPS DECIDE WHETHER THIS IS PLAYABLE, and both are simulated
+  before anyone sees the game.
+
+  1. CAN THE PLAYER HIT? opponentReaction against strikeWindup. Slower than the
+     windup and clean hits land; faster and every strike is seen and blocked,
+     so the player must bait a block first. Much faster is unwinnable.
+
+  2. CAN THE PLAYER SURVIVE? A human needs about 0.22s to see a strike coming.
+     A strikeWindup BELOW that cannot be blocked at all, so every opponent
+     attack lands - and the opponent attacks about every (1.4 - aggression)
+     seconds. With a short windup, high aggression and few lives, the player
+     loses before they can win, and the spec is rejected.
+
+  THE PLAYABLE REGION, MEASURED BY RUNNING THE SIMULATION OVER THOUSANDS OF
+  COMBINATIONS. These are not guidelines, they are where the check accepts:
+
+    strikeWindup        0.25 - 0.32   below 0.22 the player cannot block at all
+    opponentReaction    SLIGHTLY ABOVE strikeWindup, about +0.03
+    strikeRecovery      0.25 - 0.35
+    opponentAggression  0.3 - 0.55    above 0.6 almost nothing is winnable
+    reach               80 - 95
+    lives               3 - 5
+
+  A worked example that passes: windup 0.25, reaction 0.28, recovery 0.28,
+  aggression 0.5, reach 85, hitsToWin 6, lives 4. The player lands 6 and takes 2.
+
+  HARD RULE: hitsToWin MUST BE LESS THAN OR EQUAL TO lives. Both fighters land
+  at about the same rate, so the duel is a race and whoever needs fewer hits
+  wins it. Needing more hits than you can take is losing by arithmetic, not by
+  skill. And scoring.targetScore must equal hitsToWin x pointsPerObstacle,
+  because the match ENDS on the winning hit and there is nothing to score after.
+
+  MAKE IT HARDER WITH A TIGHTER REACTION, NOT WITH AGGRESSION. Raising hitsToWin makes
+  the match longer and the mistakes costlier, and it stays winnable. Raising
+  aggression past 0.6, or dropping opponentReaction below strikeWindup, makes
+  the opponent win the race regardless of skill - the simulation rejects it and
+  nobody gets a game.
 
   It is a SPARRING MATCH. Hits score points and knock the loser over; there is
   no blood, no finisher, and nothing frightening. theme.opponent names the other

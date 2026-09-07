@@ -33,7 +33,9 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/duel.ts` | The fighting engine's rules and its simulated match |
 | `components/arcade/duel-engine.tsx` | The duel renderer, kept out of `engines.tsx` |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
-| `lib/arcade/live.ts` | The model provider. **Wired but unreachable** — see below |
+| `lib/arcade/live.ts` | The model provider. Strict tool use |
+| `lib/arcade/live-generate.ts` | guard → cache → model → validate → repair → validate |
+| `lib/arcade/guard.ts` | **The spending wall.** Nothing paid runs without it |
 | `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
 | `components/arcade/` | `GameFrame` (shell) + `engines.tsx` (five factories) |
 | `components/arcade/paint.ts` | Shared drawing: sky, parallax, blocks, ground |
@@ -43,31 +45,47 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens. **Generated** |
 | `lib/spec/`, `components/game/` | The **legacy learning templates**. Still work, not the product |
 
-## The model is OFF, deliberately
+## The model is ON, behind a wall
 
-Zul asked for it to stay off until he says otherwise. It is off three ways:
+Zul switched it on. `lib/arcade/live-generate.ts` is the path:
 
-1. Nothing imports `lib/arcade/live.ts`.
-2. `providerMode()` returns `"stub"` unless `GAMERATOR_PROVIDER=live`.
-3. The paid spec `lib/arcade/live-once.spec.ts` is excluded from `npm test` —
-   the default include is `lib/**/*.test.ts` and it is `.spec.ts`. Running it
-   needs `vitest.live.mts` named explicitly.
+    guard -> cache -> model -> VALIDATE -> repair once -> VALIDATE -> give up
 
-**Do not turn it on without being asked.** When asked, it also needs a spend
-ceiling and a rate limit first (Phase 7), or a loop runs up a real bill.
+**`lib/arcade/guard.ts` is the only thing between a bug and a real bill.**
+Nothing may reach a paid model without passing it. It counts CALLS and TOKENS,
+not dollars, because a ceiling built on a guessed per-token price fails in
+whichever direction the guess was wrong. Defaults: 120 generations a day, 12 per
+client per hour, `MAX_OUTPUT_TOKENS` 2500.
+
+**It is a speed bump, not a guarantee.** A Worker has no shared memory, so each
+isolate holds its own counters. The real ceiling has to be a hard credit limit
+on the OpenRouter key, which lives in their dashboard and not in this repo.
+
+**The cache is a cost control, not an optimisation.** `/create` reads its brief
+from the QUERY STRING, so a refresh, a shared link, the back button or a preview
+crawler each re-render it - every one of those was a fresh paid call until
+identical briefs started returning the identical spec.
+
+**Production is still stub** unless a Worker secret and `GAMERATOR_PROVIDER=live`
+are both set. Deploying this code does not spend anything.
+
+**The model never sees three fields.** Strict tool use requires every property,
+so an "optional" field becomes one the model is compelled to invent - a gentle
+snake game for Year 1 came back with a countdown nobody asked for. So
+`contentTwist`, `theme.opponent` and `scoring.timeLimit` are dropped from its
+schema and derived in code.
+
+**Where a relationship keeps getting missed, enforce it rather than explain
+it.** Three paid repair turns went on "a brutal two minute duel" before
+`playableDuel` clamped the numbers into the region the simulation accepts. The
+model chooses the character of a game; code enforces what makes it winnable.
+Same idea as `lib/arcade/level.ts`.
 
 Provider is **OpenRouter**. Two settings move together and the base URL stops at
-`/api` — the SDK appends `/v1/messages` itself. And **`output_config.format` is
-NOT enforced through OpenRouter**; generation uses **strict tool use**. See
-[docs/STATUS.md](docs/STATUS.md) for how that was found out the expensive way.
+`/api` - the SDK appends `/v1/messages` itself. And **`output_config.format` is
+NOT enforced through OpenRouter**; generation uses **strict tool use**.
 
 ## Things that will bite you
-
-**Arrive the way a visitor does.** Every check for six sessions started at a
-deep link, so nobody noticed that `/` was still the Phase 1 skeleton - "it has
-no features and is not supposed to" - and that no page linked to any other. Zul
-opened the site and found a build plan. Before shipping, load `/` and try to
-reach the thing you built without touching the URL bar.
 
 **Verify by LOOKING, not just by HTTP.** Three real bugs shipped past checks
 that returned 200 with the right strings: a white box around the Nadia and Aidan

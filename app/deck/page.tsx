@@ -149,7 +149,10 @@ const slides: Slide[] = [
       </Fragment>,
     ],
     demo: {
-      src: "/create?prompt=a+hard+flappy+bird+with+PBot+through+chemistry+pink+pipes",
+      // NO PROMPT IN THIS URL, deliberately. `/create` generates from its
+      // query string, so a prompt here would bill a model call every single
+      // time anyone opened this slide - including a preview crawler.
+      src: "/create",
       caption: "The live /create page. Type in it - it works.",
       width: 380,
       height: 560,

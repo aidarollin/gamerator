@@ -1450,3 +1450,63 @@ assertion has been wrong rather than the thing it measured.
 
 **Worth knowing:** nothing in the suite renders a page, so no test would have
 caught this. It needed a person typing, which is exactly what it got.
+
+---
+
+## 2026-09-07 — An internal walkthrough deck
+
+Zul asked for a slide presentation inside the site, not for users, coherent with
+the AI FDE syllabus, with working demos embedded.
+
+### There is no syllabus to be coherent with
+
+`training-ai-fde/week-01` through `week-12` are all still placeholder READMEs -
+"Deliverables for Week N will be committed here." The only published program
+material is week-00 (environment setup and a diagnostic) and the program's
+`CLAUDE.md`.
+
+So the deck is anchored to the rules the program has **actually stated** -
+submit by pushing and sharing a link, assume everything committed is public,
+credentials from the environment only, Python by default, one folder per week -
+and it names the two places this project **diverges** rather than implying a fit
+that has not been agreed. Inventing week titles to map onto would have been the
+easy option and a lie.
+
+### `/deck` - fourteen slides, six live demos
+
+Every demo is a **real iframe of a live route**, built from the fixtures the
+suite already validates - `/create`, `/ds`, a rejected spec on `/play/arcade`,
+and three games through `/embed`. Not screenshots. A picture of a working demo
+is not a working demo, which is a lesson this project paid for twice.
+
+Arrow keys and PageUp/PageDown drive it. It never calls `preventDefault` on
+Space or Enter, and it ignores keys once a demo iframe has focus - both directly
+because of the `/create` bug from earlier today.
+
+**Unlisted, not private**, and the last slide says so. It is out of `SiteNav`,
+marked `noindex, nofollow`, and linked from nowhere - but this site has no
+authentication and the repo is public, so anyone with the URL can open it.
+Calling it "internal" is a signal, not a control.
+
+### Building it surfaced a real bug in /create
+
+`ExportPanel` computed its origin as `typeof window !== "undefined" ?
+window.location.origin : PROD` - a different string on the server than on the
+client, any time you are not on the production domain. React was **throwing that
+subtree away and rebuilding it on every load** of `/create` from localhost or a
+preview. It matched in production, which is exactly why it went unseen for days;
+embedding `/create` in an iframe is what made it visible.
+
+Now a `useSyncExternalStore` with a server snapshot - the same pattern the mute
+toggle uses, and for the same reason.
+
+### Also caught while building
+
+- **48 fragments in an array literal with no keys.** React validates keys at
+  element CREATION, so keying the `<li>` around them was not enough.
+- The scripted fix nearly corrupted the file: `"z.infer<>"` is a **string**, not
+  JSX, and a blind swap of `<>` would have rewritten it. The balance assertion
+  caught it - 49 opens against 48 closes.
+
+**Verified on the deployed site:** 14 slides, all six demos load and render,
+`noindex` present, no site nav, not linked from the homepage, no console errors.

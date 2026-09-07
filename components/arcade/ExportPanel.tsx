@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { ArcadeSpec } from "@/lib/arcade/schema";
 import { encodeSpec } from "@/lib/arcade/embed";
 import e from "./export.module.css";
@@ -15,14 +15,33 @@ import e from "./export.module.css";
 
 type Tab = "iframe" | "blade" | "json";
 
+/** Where an export points when it is rendered on the server. */
+const PROD_ORIGIN = "https://gamerator.aidaasofiah.workers.dev";
+const NO_SUBSCRIBE = () => () => {};
+
 export function ExportPanel({ spec }: { spec: ArcadeSpec }) {
   const [tab, setTab] = useState<Tab>("iframe");
   const [copied, setCopied] = useState<string | null>(null);
 
-  const origin =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://gamerator.aidaasofiah.workers.dev";
+  /**
+   * The origin, without a hydration mismatch.
+   *
+   * This was `typeof window !== "undefined" ? window.location.origin : PROD`,
+   * which renders one string on the server and a different one on the client
+   * the moment you are not on the production domain - so React threw this
+   * subtree away and rebuilt it on every load of `/create` from localhost or a
+   * preview. It matched in production, which is exactly why nobody noticed; it
+   * surfaced when the walkthrough deck embedded `/create` in an iframe.
+   *
+   * `useSyncExternalStore` is the sanctioned way to read a client-only value:
+   * it renders the server snapshot on the server AND on the hydrating client,
+   * then swaps. The subscribe is a no-op because an origin never changes.
+   */
+  const origin = useSyncExternalStore(
+    NO_SUBSCRIBE,
+    () => window.location.origin,
+    () => PROD_ORIGIN,
+  );
   const url = `${origin}/embed?s=${encodeSpec(spec)}`;
   const json = JSON.stringify(spec, null, 2);
 

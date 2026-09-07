@@ -25,9 +25,13 @@ const LINKS = [
 
 export function SiteNav() {
   const path = usePathname() ?? "/";
-  // The embed route is pasted into other people's pages. Chrome would be
-  // someone else's chrome appearing inside their layout.
-  if (path.startsWith("/embed")) return null;
+  // Two routes render without site chrome:
+  //   /embed is pasted into other people's pages - our nav would appear inside
+  //   their layout.
+  //   /deck is a presentation. A nav bar above a title slide reads as a website
+  //   someone is scrolling, not as a deck, and it also invites the audience to
+  //   click away mid-talk.
+  if (path.startsWith("/embed") || path.startsWith("/deck")) return null;
 
   return (
     <header

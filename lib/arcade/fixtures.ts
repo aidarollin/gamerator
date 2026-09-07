@@ -8,6 +8,8 @@
 import f_brick_breaker_hard from "./fixtures/brick-breaker.hard.json";
 import f_brick_breaker_unplayable from "./fixtures/brick-breaker.unplayable.json";
 import f_brick_breaker_valid from "./fixtures/brick-breaker.valid.json";
+import f_duel_unplayable from "./fixtures/duel.unplayable.json";
+import f_duel_valid from "./fixtures/duel.valid.json";
 import f_endless_flyer_easy from "./fixtures/endless-flyer.easy.json";
 import f_endless_flyer_edge from "./fixtures/endless-flyer.edge.json";
 import f_endless_flyer_hard from "./fixtures/endless-flyer.hard.json";
@@ -33,6 +35,8 @@ export const ARCADE_FIXTURES: Record<string, unknown> = {
   "brick-breaker.hard": f_brick_breaker_hard,
   "brick-breaker.unplayable": f_brick_breaker_unplayable,
   "brick-breaker.valid": f_brick_breaker_valid,
+  "duel.unplayable": f_duel_unplayable,
+  "duel.valid": f_duel_valid,
   "endless-flyer.easy": f_endless_flyer_easy,
   "endless-flyer.edge": f_endless_flyer_edge,
   "endless-flyer.hard": f_endless_flyer_hard,
@@ -63,6 +67,7 @@ export const ARCADE_FIXTURE_NAMES = Object.keys(ARCADE_FIXTURES);
 export const ARCADE_ACCEPTED = [
   "brick-breaker.hard",
   "brick-breaker.valid",
+  "duel.valid",
   "endless-flyer.easy",
   "endless-flyer.edge",
   "endless-flyer.hard",

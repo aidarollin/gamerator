@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="pbot" width="60" height="36" viewBox="2.02 5.04 60.76 37.19" fill="none"><g id="Pbot Illustration">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="pbot" width="60" height="36" viewBox="2.02 5.04 60.76 37.19" fill="none">
+<g id="Pbot Illustration">
 <g id="Group">
 <g id="Layer 1">
 <g id="Group_2">
@@ -100,11 +101,5 @@
 </g>
 </g>
 </g>
-</g><defs>
-<clipPath id="clip0_3_50905">
-<path d="M-742.1 -836C-742.1 -842.627 -736.727 -848 -730.1 -848H686.9C693.528 -848 698.9 -842.627 698.9 -836V40C698.9 46.6274 693.528 52 686.9 52H-730.1C-736.727 52 -742.1 46.6274 -742.1 40V-836Z" fill="white"/>
-</clipPath>
-<clipPath id="clip1_3_50905">
-<path d="M-682.1 24C-682.1 10.7452 -671.354 0 -658.1 0H614.9C628.155 0 638.9 10.7452 638.9 24V52H-682.1V24Z" fill="white"/>
-</clipPath>
-</defs></svg>
+</g>
+</svg>

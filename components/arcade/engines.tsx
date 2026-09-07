@@ -4,6 +4,7 @@ import { WORLD, type ArcadeSpec } from "@/lib/arcade/schema";
 import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
 import { buildLevel, LEVEL, type Plat } from "@/lib/arcade/level";
 import { runnerAt, runnerObstacleX } from "@/lib/arcade/engines";
+import { duelFactory } from "./duel-engine";
 import {
   activate,
   initPowers,
@@ -795,7 +796,7 @@ export const platformerFactory: EngineFactory = (h, spec) => {
 
 /* ------------------------------------------------------------------ shared */
 
-function drawCharacter(
+export function drawCharacter(
   h: EngineHost,
   spec: ArcadeSpec,
   cx: number,
@@ -842,6 +843,7 @@ export const FACTORIES: Record<ArcadeSpec["engine"], EngineFactory> = {
   snake: snakeFactory,
   "endless-runner": runnerFactory,
   platformer: platformerFactory,
+  duel: duelFactory,
 };
 
 export const HINTS: Record<ArcadeSpec["engine"], string> = {
@@ -850,6 +852,7 @@ export const HINTS: Record<ArcadeSpec["engine"], string> = {
   snake: "Tap the side you want to turn towards",
   "endless-runner": "Tap to jump",
   platformer: "Tap left or right to move, tap the top to jump",
+  duel: "Tap the top to strike, left or right to step",
 };
 
 export type { Engine };

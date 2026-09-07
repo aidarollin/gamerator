@@ -22,7 +22,7 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 
 | Path | What |
 | --- | --- |
-| `lib/arcade/schema.ts` | `ArcadeSpec` 2.0, five engines, all validation |
+| `lib/arcade/schema.ts` | `ArcadeSpec` 2.0, six engines, all validation |
 | `lib/arcade/simulate.ts` | The **playability simulation** for the flyer |
 | `lib/arcade/engines.ts` | Playability checks for the other four engines |
 | `lib/arcade/ramp.ts` | Ranged physics — `{start, end}` over obstacles |
@@ -30,6 +30,8 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/level.ts` | Platformer levels, built reachable **by construction** |
 | `lib/arcade/round.ts` | The round budget, **shared across retries** |
 | `lib/arcade/powerups.ts` | Magnet and Power Rush. **May only make a run easier** |
+| `lib/arcade/duel.ts` | The fighting engine's rules and its simulated match |
+| `components/arcade/duel-engine.tsx` | The duel renderer, kept out of `engines.tsx` |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. **Wired but unreachable** — see below |
 | `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
@@ -105,6 +107,13 @@ flyer into one altitude band; if that band misses the coin line it misses
 like a coin nobody wanted, so a broken collectible ships silently. That is why
 the geometry moved out of the closure into `lib/arcade/collect.ts` — a rule
 trapped in a closure cannot be measured, only played and watched.
+
+**A wrong rejection is worse than a missed one.** The person sees the
+rejection. `duelPlayability` went through three versions that turned away 84%,
+then 77%, then most-as-trivial of perfectly legal specs, each because the
+SIMULATED PLAYER was modelled badly - too passive, then defenceless, then facing
+an opponent that only reacted. When a check rejects most of its own bounds,
+suspect the agent before the spec.
 
 **A power-up may only ever make a run EASIER.** `flyerPlayability` proves a
 perfect player survives *the spec's own* physics. Anything that speeds the world

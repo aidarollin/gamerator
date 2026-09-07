@@ -1,5 +1,6 @@
 import { ArcadeSpec, type Engine } from "./schema";
 import { chooseEngine, renderArcadeBrief, type ArcadeBrief } from "./brief";
+import { generateArcadeLive } from "./live-generate";
 import { providerMode } from "@/lib/config";
 
 /**
@@ -14,7 +15,18 @@ import { providerMode } from "@/lib/config";
 export type Issue = { path: string; message: string };
 
 export type ArcadeOutcome =
-  | { status: "ok"; spec: ArcadeSpec; guessed: boolean; note?: string }
+  | {
+      status: "ok";
+      spec: ArcadeSpec;
+      guessed: boolean;
+      note?: string;
+      /**
+       * Where the numbers came from. Surfaced to the reader, because "a model
+       * chose this" and "a keyword table chose this" are different claims and
+       * conflating them would make the whole product a lie.
+       */
+      source?: "tuner" | "model" | "model-repaired" | "cache";
+    }
   | { status: "invalid"; issues: Issue[] }
   /** No engine exists for the genre asked for, and none is planned. */
   | { status: "no-engine"; requested: string; nearest: string }
@@ -203,6 +215,26 @@ const NOUN = {
  * into a test. Bahasa is matched alongside English - "dua minit", "seminit" -
  * because the audience types in both, often in one sentence.
  */
+/**
+ * Which language a request is written in, when the author did not say.
+ *
+ * The audience writes in both, often in one sentence, and the form's language
+ * select defaults to English - so "permainan lari yang laju untuk Tahun 4" came
+ * back from the model with an English title and description. Matching a few
+ * unmistakable Malay function words is enough, and it cannot be fooled by an
+ * English sentence that happens to contain the word "game".
+ *
+ * Returns undefined rather than "en" so a caller can tell "detected English"
+ * from "could not tell" - only an explicit choice by the author should override
+ * a detection, and a non-detection should not override anything.
+ */
+const MALAY =
+  /\b(permainan|yang|untuk|dengan|tanpa|saya|anda|kita|boleh|tahun|lawan|senang|susah|laju|cepat|perlahan|ular|terbang|lari|lompat|bata|main)\b/i;
+
+export function readLanguage(prompt: string): "ms" | undefined {
+  return MALAY.test(prompt) ? "ms" : undefined;
+}
+
 export function readTimeLimit(prompt: string): number | undefined {
   const p = prompt.toLowerCase();
 
@@ -212,9 +244,12 @@ export function readTimeLimit(prompt: string): number | undefined {
   const secs = p.match(/(\d+)\s*(?:seconds?|secs?|saat)\b/);
   if (secs) return clampRound(Number(secs[1]));
 
-  if (/\b(?:one|a)\s+minute\b|\bseminit\b/.test(p)) return 60;
-  if (/\btwo\s+minutes\b|\bdua\s+minit\b/.test(p)) return 120;
-  if (/\bthree\s+minutes\b|\btiga\s+minit\b/.test(p)) return 180;
+  // The trailing "s" is optional, because "a two minute duel" is how people
+  // write it. The plural-only version produced a live game whose own title
+  // promised two minutes and whose clock was never there.
+  if (/\b(?:one|a)\s+minutes?\b|\bseminit\b/.test(p)) return 60;
+  if (/\btwo\s+minutes?\b|\bdua\s+minit\b/.test(p)) return 120;
+  if (/\bthree\s+minutes?\b|\btiga\s+minit\b/.test(p)) return 180;
 
   // Asking for a bounded session without naming a number.
   if (/\btimed\b|\btimer\b|\bcountdown\b|\bagainst the clock\b|\bbermasa\b/.test(p)) return 120;
@@ -255,7 +290,11 @@ function describe(engine: Engine, character: string, lang: "ms" | "en") {
   return (lang === "ms" ? ms : en)[engine];
 }
 
-export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome> {
+export async function generateArcade(
+  brief: ArcadeBrief,
+  /** Identifies the caller for rate limiting. Ignored by the free tuner. */
+  client = "anonymous",
+): Promise<ArcadeOutcome> {
   const choice = chooseEngine(brief.prompt);
 
   // Answered before any generation happens: there is nothing to generate for a
@@ -266,12 +305,27 @@ export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome>
   }
 
   if (providerMode() === "live") {
-    return {
-      status: "error",
-      code: "live_arcade_not_wired",
-      message:
-        "Live arcade generation is not wired yet. Unset GAMERATOR_PROVIDER to use the stub.",
-    };
+    // Guarded, cached and validated inside - see live-generate.ts. A failure
+    // here falls through to nothing: the stub is not a silent fallback, because
+    // silently serving a keyword-tuned game while claiming the model made it is
+    // the one dishonesty this whole design exists to avoid.
+    const live = await generateArcadeLive(brief, choice.engine, client);
+    switch (live.status) {
+      case "ok":
+        return {
+          status: "ok",
+          spec: live.spec,
+          guessed: !choice.confident,
+          note: renderArcadeBrief(brief),
+          source: live.cached ? "cache" : live.repaired ? "model-repaired" : "model",
+        };
+      case "invalid":
+        return { status: "invalid", issues: live.issues };
+      case "refused":
+        return { status: "error", code: "refused", message: live.reason };
+      case "error":
+        return { status: "error", code: live.code, message: live.message };
+    }
   }
 
   const p = brief.prompt.toLowerCase();
@@ -311,6 +365,7 @@ export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome>
       spec: parsed.data,
       guessed: !choice.confident,
       note: renderArcadeBrief(brief),
+      source: "tuner",
     };
   }
 

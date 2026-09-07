@@ -51,8 +51,8 @@ const ENGINE_WORDS: { engine: Engine; words: RegExp; weight: number }[] = [
   { engine: "brick-breaker", weight: 1, words: /brick|paddle|\bball\b|\bbata\b/i },
   { engine: "snake", weight: 3, words: /\bsnake\b|nokia|\bular\b/i },
   { engine: "snake", weight: 1, words: /grid|grow longer|eat food/i },
-  { engine: "duel", weight: 3, words: /mortal kombat|street fighter|tekken|fighting game|brawler/i },
-  { engine: "duel", weight: 1, words: /fight|duel|spar|combat|punch|lawan|kick/i },
+  { engine: "duel", weight: 3, words: /mortal kombat|street fighter|tekken|fighting game|\bbrawler\b/i },
+  { engine: "duel", weight: 1, words: /\bfight|\bduel\b|\bspar|combat|\bpunch|\blawan\b|\bkick\b/i },
 ];
 
 /**

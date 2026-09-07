@@ -73,8 +73,27 @@ export async function generateLive(
           name: "emit_game_spec",
           description: `Emit the specification for a ${engine} game. Always call this tool.`,
           strict: true,
+          /**
+           * Three fields are hidden from the model, not left optional.
+           *
+           * Strict tool use requires EVERY property to be present, so an
+           * "optional" field becomes a field the model is compelled to invent.
+           * The first live run proved it: a gentle snake game for Year 1 came
+           * back with a 120-second countdown nobody had asked for, and a flyer
+           * came back naming an `opponent` that only the duel engine reads.
+           *
+           * So `contentTwist` and `theme.opponent` are dropped - both have
+           * sensible defaults in code - and `scoring.timeLimit` is derived from
+           * the words in the request instead, where "two minute" already means
+           * something. See live-generate.ts.
+           */
           input_schema: toStrictJsonSchema(
-            ENGINE_SCHEMAS[engine].omit({ contentTwist: true }),
+            ENGINE_SCHEMAS[engine]
+              .omit({ contentTwist: true })
+              .extend({
+                theme: ENGINE_SCHEMAS[engine].shape.theme.omit({ opponent: true }),
+                scoring: ENGINE_SCHEMAS[engine].shape.scoring.omit({ timeLimit: true }),
+              }),
           ) as Anthropic.Tool.InputSchema,
         },
       ],

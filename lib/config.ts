@@ -39,8 +39,17 @@ export function baseUrl(): string | undefined {
   return process.env.ANTHROPIC_BASE_URL;
 }
 
-/** Output tokens dominate the bill, so this is the real cost control. */
-export const MAX_OUTPUT_TOKENS = 8000;
+/**
+ * Output tokens dominate the bill, so this is the real per-call cost control.
+ *
+ * Lowered from 8000 when the model was actually switched on. An ArcadeSpec is
+ * about 600 bytes - a couple of hundred tokens - so 8000 was six thousand
+ * tokens of headroom that existed only to be billed for if something went
+ * wrong. The remaining room is for adaptive thinking, which is genuinely useful
+ * here: choosing physics that survive the playability simulation is the hard
+ * part of the job, and it is reasoning, not typing.
+ */
+export const MAX_OUTPUT_TOKENS = 2500;
 
 /** One repair turn. Not a loop - see lib/generate/index.ts for why. */
 export const MAX_REPAIR_ATTEMPTS = 1;

@@ -1510,3 +1510,103 @@ toggle uses, and for the same reason.
 
 **Verified on the deployed site:** 14 slides, all six demos load and render,
 `noindex` present, no site nav, not linked from the homepage, no console errors.
+
+---
+
+## 2026-09-07 — The model is on
+
+Zul: "right now you can use the openrouter. now let the system build games based
+on the prompt." `CLAUDE.md` has said since week one that this needs a spend
+ceiling and a rate limit FIRST, so those were built first.
+
+### The wall, before the wire
+
+`lib/arcade/guard.ts`. Nothing may reach a paid model without passing it.
+
+It counts **calls and tokens, not dollars** - deliberately. I do not know this
+account's per-token price, and a ceiling built on a guessed rate fails in
+whichever direction the guess was wrong. 120 generations a day, 12 per client
+per hour, and `MAX_OUTPUT_TOKENS` cut from 8000 to 2500 (a spec is ~600 bytes;
+the rest was headroom that existed only to be billed for).
+
+**Stated plainly in the file and here: it is a speed bump, not a guarantee.** A
+Worker has no shared memory, so each isolate holds its own counters. The only
+real ceiling is a hard credit limit on the OpenRouter key, which lives in a
+dashboard rather than in this repo.
+
+**The cache is a cost control.** `/create` reads its brief from the query
+string, so a refresh, the back button, a shared link or a preview crawler each
+re-render it - and each was a fresh paid call. My own deck embedded
+`/create?prompt=...`, which would have billed on every view of that slide.
+
+### Five bugs the first real calls exposed
+
+Every one of these was invisible to 181 passing tests.
+
+1. **Routing was dead for the duel.** `/\bduel\b/` had been written by a shell
+   heredoc that turned `\b` into a literal BACKSPACE byte (0x08), so it matched
+   nothing and every fighting prompt fell through to the flyer. **This is the
+   second time that exact corruption has shipped**, in the same file. There is
+   now a routing test per engine, plus one that fails on any control character
+   in the source - and a scan of every tracked file found no others.
+2. **Optional fields were compelled.** Strict tool use requires every property,
+   so `theme.opponent` and `scoring.timeLimit` became fields the model had to
+   invent: a gentle snake game for Year 1 came back with a 120-second countdown
+   nobody asked for, and a flyer named an opponent only the duel reads. Both are
+   dropped from the model's schema and derived in code now.
+3. **"a brutal two minute duel" had no clock.** `readTimeLimit` demanded
+   "minutes"; the title promised two minutes and the game had no timer.
+4. **A Malay prompt came back in English.** The form's language select defaults
+   to English and nothing read the words. It detects Malay now.
+5. **A duel target that could never be reached.** The match ends at `hitsToWin`,
+   so that IS the purse - 3 hits at 10 points against a target of 100. The
+   schema refuses it now.
+
+### The duel needed enforcing, not explaining
+
+Three paid attempts at "a brutal two minute duel" were each rejected, each for
+the same reason: the model reached for aggression and a long target, because
+that is what "brutal" means in English, and that combination loses the race
+however well you play.
+
+Measured over 500 legal specs per rule, after the other clamps:
+
+| Rule | Playable | A real contest |
+| --- | --- | --- |
+| `hitsToWin <= lives` | **99%** | **97%** |
+| `hitsToWin <= lives + 1` | 74% | 72% |
+| `hitsToWin <= lives + 2` | 60% | 59% |
+| `hitsToWin <= lives + 3` | 48% | 47% |
+
+Both fighters land at the same rate, so the duel is a race and whoever needs
+fewer hits wins it. `playableDuel` enforces that and the other relationships,
+the same way `level.ts` builds reachable platformer levels - fixed by
+construction rather than by rejection. The prompt states the rule too, so the
+clamp usually does not fire.
+
+**One thing I got wrong twice on the way:** I told the model to put
+`opponentReaction` just UNDER `strikeWindup`. Measurement said just ABOVE. And a
+"more correct" simulated player that backed out of range instead of trading made
+the check worse - good specs fell 406 to 358 - so it was reverted with the
+numbers recorded.
+
+### Verified with real calls
+
+| Prompt | Result |
+| --- | --- |
+| a hard flappy bird with PBot through chemistry pink pipes | playable, first try |
+| a gentle snake game for Year 1 in Bahasa, forest green | playable, Malay, no spurious timer |
+| permainan lari yang laju untuk Tahun 4 | playable, **Malay title and description** |
+| a brutal two minute duel against Nadia at night | playable, 2:00 clock, 5 hits vs 5 lives |
+| the same brief again | **served from cache in 0.07s, no second call** |
+
+**Production is still stub.** Neither the Worker secret nor
+`GAMERATOR_PROVIDER=live` is set on the deployment, so this code deploys without
+spending anything. Turning it on there is two `wrangler` commands and a decision
+that is Zul's, because `/create` is public and unauthenticated - see the note in
+the next section.
+
+**Before the deployed site is allowed to spend**
+
+1. A hard credit limit on the OpenRouter key. That is the only guarantee.
+2. A decision about the public endpoint. Anyone with the URL can generate.

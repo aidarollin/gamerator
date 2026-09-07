@@ -184,6 +184,24 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
   // nobody will ever see. Only the clearly impossible is rejected: the estimate
   // behind it is a deliberate over-estimate, so it under-fires rather than
   // turning away winnable games.
+  /**
+   * A duel ends the moment `hitsToWin` lands, so that is the entire purse.
+   * A target above it is a screen nobody can ever reach - and a live run
+   * produced exactly that: 3 hits at 10 points against a target of 100.
+   */
+  if (spec.engine === "duel") {
+    const purse = spec.rules.hitsToWin * spec.scoring.pointsPerObstacle;
+    if (spec.scoring.targetScore > purse) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["scoring", "targetScore"],
+        message:
+          `the match ends after ${spec.rules.hitsToWin} hits, so ${purse} points is all there is - ` +
+          `a target of ${spec.scoring.targetScore} can never be reached`,
+      });
+    }
+  }
+
   const round = roundVerdict(spec);
   if (!round.ok) {
     ctx.addIssue({

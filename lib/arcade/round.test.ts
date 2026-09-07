@@ -25,8 +25,11 @@ function specFor(engine: (typeof ENGINES)[number], timeLimit?: number, targetSco
       gapSpacing: { start: 320, end: 280 }, gapDrift: { start: 30, end: 70 },
     },
     "endless-runner": {
-      gravity: 2200, jumpVelocity: -720, scrollSpeed: 190,
-      spacing: 300, obstacleHeight: 38, lives: 3,
+      gravity: 2200, jumpVelocity: -720,
+      scrollSpeed: { start: 190, end: 255 },
+      spacing: { start: 320, end: 255 },
+      obstacleHeight: { start: 34, end: 44 },
+      rampOverObstacles: 16, lives: 3,
     },
     "brick-breaker": { ballSpeed: 260, paddleWidth: 100, paddleSpeed: 620, rows: 4, cols: 7, lives: 3 },
     snake: {

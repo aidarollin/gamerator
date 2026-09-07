@@ -27,16 +27,27 @@ import { makeRng } from "@/lib/game/random";
 
 type Bounds = Record<string, [number, number] | boolean[] | number[]>;
 
-function sampleFrom(bounds: Bounds, rng: () => number) {
-  const out: Record<string, number | boolean> = {};
+/**
+ * `ranged` names the fields that are `{start, end}` rather than a scalar.
+ *
+ * Both ends are drawn INDEPENDENTLY, on purpose: the worst combination a ramp
+ * produces - the tallest obstacle against the shortest spacing - can sit in the
+ * middle rather than at either end, and a fuzz that only ever drew matched
+ * pairs would never build one.
+ */
+function sampleFrom(bounds: Bounds, rng: () => number, ranged: string[] = []) {
+  const out: Record<string, unknown> = {};
+  const draw = (lo: number, hi: number) => {
+    const v = lo + rng() * (hi - lo);
+    return Number.isInteger(lo) && Number.isInteger(hi) ? Math.round(v) : v;
+  };
   for (const [key, spec] of Object.entries(bounds)) {
     if (Array.isArray(spec) && typeof spec[0] === "boolean") {
       out[key] = rng() > 0.5;
-    } else {
-      const [lo, hi] = spec as [number, number];
-      const v = lo + rng() * (hi - lo);
-      out[key] = Number.isInteger(lo) && Number.isInteger(hi) ? Math.round(v) : v;
+      continue;
     }
+    const [lo, hi] = spec as [number, number];
+    out[key] = ranged.includes(key) ? { start: draw(lo, hi), end: draw(lo, hi) } : draw(lo, hi);
   }
   return out;
 }
@@ -46,12 +57,13 @@ function fuzz(
   bounds: Bounds,
   parse: (v: unknown) => { success: boolean; data?: unknown },
   verdict: (r: never) => { ok: boolean },
+  ranged: string[] = [],
 ) {
   const rng = makeRng(4242);
   let accepted = 0;
   let rejected = 0;
   for (let i = 0; i < 800; i++) {
-    const candidate = sampleFrom(bounds, rng);
+    const candidate = sampleFrom(bounds, rng, ranged);
     const parsed = parse(candidate);
     if (!parsed.success) continue;
     const v = verdict(parsed.data as never);
@@ -84,9 +96,14 @@ describe("every check can reject something in bounds", () => {
   );
   fuzz(
     "endless-runner",
-    { gravity: [800, 4000], jumpVelocity: [-1200, -300], scrollSpeed: [80, 460], spacing: [120, 600], obstacleHeight: [18, 90], lives: [1, 5] },
+    {
+      gravity: [800, 4000], jumpVelocity: [-1200, -300],
+      scrollSpeed: [80, 460], spacing: [120, 600], obstacleHeight: [18, 90],
+      rampOverObstacles: [1, 60], lives: [1, 5],
+    },
     (v) => EndlessRunnerRules.safeParse(v),
     (r) => endlessRunnerVerdict(r, 30),
+    ["scrollSpeed", "spacing", "obstacleHeight"],
   );
   fuzz(
     "platformer",
@@ -99,7 +116,13 @@ describe("every check can reject something in bounds", () => {
 describe("reasons are actionable", () => {
   it("names the numbers that conflict", () => {
     const v = endlessRunnerVerdict(
-      { gravity: 4000, jumpVelocity: -400, scrollSpeed: 300, spacing: 200, obstacleHeight: 90, lives: 1 },
+      {
+        gravity: 4000, jumpVelocity: -400,
+        scrollSpeed: { start: 300, end: 300 },
+        spacing: { start: 200, end: 200 },
+        obstacleHeight: { start: 90, end: 90 },
+        rampOverObstacles: 10, lives: 1,
+      },
       30,
     );
     expect(v.ok).toBe(false);
@@ -107,5 +130,66 @@ describe("reasons are actionable", () => {
     // A repair turn can only act on a reason that says which fields to change.
     expect(v.reason).toMatch(/\d/);
     expect(v.reason.length).toBeGreaterThan(30);
+  });
+});
+
+describe("the runner's ramp is checked at its hardest point", () => {
+  /**
+   * The flyer's lesson, transplanted: a spec that opens gently and ends
+   * impossible must be rejected, or the check is verifying only the tutorial.
+   */
+  const base = {
+    gravity: 2000,
+    jumpVelocity: -700,
+    rampOverObstacles: 14,
+    lives: 3,
+  };
+
+  it("accepts a run that stays clearable all the way", () => {
+    const v = endlessRunnerVerdict(
+      {
+        ...base,
+        scrollSpeed: { start: 180, end: 250 },
+        spacing: { start: 320, end: 260 },
+        obstacleHeight: { start: 34, end: 46 },
+      },
+      30,
+    );
+    expect(v.ok).toBe(true);
+  });
+
+  it("rejects a run that is fine at the start and impossible at the end", () => {
+    const v = endlessRunnerVerdict(
+      {
+        ...base,
+        // Heavier gravity, so the jump peaks at 700^2/(2*2600) = 94px. The
+        // schema caps obstacleHeight at 90, so with `base` gravity NO legal
+        // height is unclearable - the first version of this test asserted a
+        // rejection that arithmetic says cannot happen, and arithmetic won.
+        gravity: 2600,
+        scrollSpeed: { start: 180, end: 250 },
+        spacing: { start: 320, end: 260 },
+        // 34px leaves 60px of clearance; 90px leaves 4px, which is under the
+        // 6px floor. Only the END of this ramp is impossible.
+        obstacleHeight: { start: 34, end: 90 },
+      },
+      30,
+    );
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.reason).toMatch(/into the ramp/);
+  });
+
+  it("rejects a run whose spacing closes faster than a jump can land", () => {
+    const v = endlessRunnerVerdict(
+      {
+        ...base,
+        scrollSpeed: { start: 180, end: 460 },
+        spacing: { start: 320, end: 120 },
+        obstacleHeight: { start: 30, end: 34 },
+      },
+      30,
+    );
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.reason).toMatch(/still airborne/);
   });
 });

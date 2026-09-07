@@ -121,3 +121,41 @@ is still pure DS. `check:ds` still holds every other file to the token layer;
 This also closes the open question about the two DS Figma files. It no longer
 decides anything urgent: a hand-built Pandai game and a generated one were never
 going to share a palette once generated games got their own art direction.
+
+### 2026-09-07 — A fighting game: what it would actually take
+
+Zul asked what he needs to PROVIDE for a Mortal Kombat-style game, having hit
+the honest no-engine answer twice. The short version: **nothing.** No assets are
+needed. The blocker recorded above was mine, and it was wrong.
+
+**What the old reason said:** "Needs animation states, hitboxes and opponent AI,
+and Pandai's avatars are single static PNGs by their own audit."
+
+**What is actually true.** The asset claim is accurate — `public/characters` has
+six PBot expression SVGs and two single-pose avatar PNGs, no fighting frames.
+But the conclusion drawn from it does not follow, because this renderer already
+animates static sprites procedurally: `drawCharacter` translates, rotates and
+squashes them, and the flyer's tilt and the runner's gait are convincing enough
+that nobody has asked where the frames are. A lunge, a block, a recoil and a KO
+are all the same class of transform. PBot even ships real reaction art -
+`dizzy` for a knockdown, `mastery` for a win.
+
+So a fighter here is **code, not art**:
+
+| Piece | Effort | Notes |
+| --- | --- | --- |
+| A second character on screen | Schema change: `theme.opponent` | Everything else assumes one |
+| Animation states | Procedural, ~100 lines | idle / advance / strike / block / hit / KO, tweened |
+| Hitboxes | Trivial | Two positions on a line, a reach and a timing window - simpler than the platformer's collision |
+| Opponent AI | A state machine with a reaction delay | Difficulty maps to reaction time and aggression |
+| Playability check | Real and simulatable | Can a player land a hit before the counter, given both reaction times? Must be able to reject, like every other check |
+
+**One constraint that is not technical.** The audience is Malaysian
+schoolchildren and the system prompt already says nothing frightening. So this
+would be a *duel* - a timed sparring match won on points, with bumps and stars,
+not blood or fatalities. That is a design decision worth making deliberately
+rather than discovering in review.
+
+**Status: still not built, but no longer "not building".** It is a real engine's
+worth of work - roughly the size of the platformer plus its level generator -
+and it needs Zul to say go. The entry above is superseded by this one.

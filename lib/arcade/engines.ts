@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { lerp, Range, rampT } from "./ramp";
 
 /**
  * Per-engine rules and their playability checks.
@@ -90,38 +91,97 @@ export function snakeVerdict(r: SnakeRules): Verdict {
 /* ------------------------------------------------------------ endless-runner */
 
 export const EndlessRunnerRules = z.object({
+  /** Constant: gravity and jump are the feel of the character, not the ramp. */
   gravity: z.number().min(800).max(4000),
   jumpVelocity: z.number().min(-1200).max(-300),
-  scrollSpeed: z.number().min(80).max(460),
+  /** Ranged, like the flyer: a run that repeats is the commonest way to bore. */
+  scrollSpeed: Range(80, 460),
   /** px between obstacles. */
-  spacing: z.number().min(120).max(600),
-  /** px tall; the runner must be able to clear it. */
-  obstacleHeight: z.number().min(18).max(90),
+  spacing: Range(120, 600),
+  /** px tall; the runner must be able to clear it at every point of the ramp. */
+  obstacleHeight: Range(18, 90),
+  /** Obstacles until every range reaches its end value. */
+  rampOverObstacles: z.number().int().min(1).max(60),
   lives: z.number().int().min(1).max(5),
 });
+
+/**
+ * The runner's physics at a given obstacle. The renderer and the check both
+ * call this - if the renderer ramped any other way the check would be
+ * describing a game nobody plays, which is the mistake this repo keeps
+ * catching itself making.
+ */
+export function runnerAt(r: EndlessRunnerRules, obstacleIndex: number) {
+  const t = rampT(obstacleIndex, r.rampOverObstacles);
+  return {
+    scrollSpeed: lerp(r.scrollSpeed, t),
+    spacing: lerp(r.spacing, t),
+    obstacleHeight: lerp(r.obstacleHeight, t),
+  };
+}
 export type EndlessRunnerRules = z.infer<typeof EndlessRunnerRules>;
 
+/**
+ * Distance from the start to obstacle `n`, accumulating the ramped spacing.
+ *
+ * A running sum, not `n * spacing`: once spacing ramps, the two disagree and
+ * the renderer would place obstacles somewhere the check never looked. Same
+ * shape as the flyer's `obstacleX`, for the same reason.
+ */
+export function runnerObstacleX(r: EndlessRunnerRules, n: number): number {
+  let d = 0;
+  for (let i = 1; i <= n; i++) d += runnerAt(r, i - 1).spacing;
+  return d;
+}
+
 export function endlessRunnerVerdict(r: EndlessRunnerRules, runnerHeight: number): Verdict {
-  // Peak of a jump, and how long it lasts.
+  // The jump is constant, so it is computed once.
   const peak = (r.jumpVelocity * r.jumpVelocity) / (2 * r.gravity);
   const airTime = (2 * -r.jumpVelocity) / r.gravity;
-  const clearance = peak - r.obstacleHeight;
-  if (clearance < 6) {
-    return {
-      ok: false,
-      reason: `a jump peaks at ${Math.round(peak)}px and the obstacle is ${Math.round(r.obstacleHeight)}px - the runner cannot get over it`,
-    };
+
+  /**
+   * The whole ramp is walked, not just its opening.
+   *
+   * The flyer taught the important half: a fixed window sampled only the gentle
+   * start and passed specs that became impossible later.
+   *
+   * Being accurate about the other half - for THESE two quantities the extreme
+   * is provably at an end, not in the middle. `obstacleHeight` is linear in t,
+   * and `spacing / scrollSpeed` is a ratio of two linear functions, which is
+   * monotonic. So sampling the ends would be sufficient today.
+   *
+   * It is walked anyway for two reasons that are not about correctness now:
+   * the failure message can say HOW FAR into the ramp it breaks, which is what
+   * a repair turn acts on; and the day someone adds a field that is not linear
+   * in t, this keeps working instead of silently sampling the wrong points.
+   */
+  const steps = Math.max(2, Math.min(60, r.rampOverObstacles + 4));
+  for (let i = 0; i <= steps; i++) {
+    const at = runnerAt(r, i);
+    const clearance = peak - at.obstacleHeight;
+    if (clearance < 6) {
+      const pct = Math.round(rampT(i, r.rampOverObstacles) * 100);
+      return {
+        ok: false,
+        reason: `a jump peaks at ${Math.round(peak)}px but ${pct}% into the ramp the obstacle is ${Math.round(at.obstacleHeight)}px - the runner cannot get over it`,
+      };
+    }
+    const timeBetween = at.spacing / at.scrollSpeed;
+    if (airTime > timeBetween * 1.6) {
+      const pct = Math.round(rampT(i, r.rampOverObstacles) * 100);
+      return {
+        ok: false,
+        reason: `a jump lasts ${airTime.toFixed(2)}s but ${pct}% into the ramp obstacles arrive every ${timeBetween.toFixed(2)}s - the runner is still airborne when the next one hits`,
+      };
+    }
   }
-  // Landing must happen before the next obstacle arrives, or a jump commits the
-  // player to a collision they cannot avoid.
-  const timeBetween = r.spacing / r.scrollSpeed;
-  if (airTime > timeBetween * 1.6) {
-    return {
-      ok: false,
-      reason: `a jump lasts ${airTime.toFixed(2)}s but obstacles arrive every ${timeBetween.toFixed(2)}s - the runner is still airborne when the next one hits`,
-    };
-  }
-  const trivial = clearance > runnerHeight * 3 && timeBetween > 2.2;
+
+  // Trivial is judged at the HARDEST point the ramp reaches: a run that ends
+  // easy is easy, however it started.
+  const worstHeight = Math.max(r.obstacleHeight.start, r.obstacleHeight.end);
+  const tightest =
+    Math.min(r.spacing.start, r.spacing.end) / Math.max(r.scrollSpeed.start, r.scrollSpeed.end);
+  const trivial = peak - worstHeight > runnerHeight * 3 && tightest > 2.2;
   return { ok: true, trivial };
 }
 

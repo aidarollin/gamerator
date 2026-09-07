@@ -45,7 +45,11 @@ export function maxPointsPerSecond(spec: ArcadeSpecInput): number {
     }
     case "endless-runner": {
       const r = spec.rules;
-      return (r.scrollSpeed / r.spacing) * pts * 2;
+      // Fastest scroll against the tightest spacing the ramp reaches - the same
+      // best case the flyer is measured at.
+      const fastest = Math.max(r.scrollSpeed.start, r.scrollSpeed.end);
+      const tightest = Math.min(r.spacing.start, r.spacing.end);
+      return (fastest / tightest) * pts * 2;
     }
     case "brick-breaker": {
       const r = spec.rules;

@@ -1145,3 +1145,86 @@ photographed standing on the final platform of a short probe level.
 - No round timer, no power-ups. The runner and snake still have flat physics.
 - The pit floor is pale sky; it reads as empty but a darker void would read as
   danger.
+
+---
+
+## 2026-09-07 (later still) — A round timer, and a barrel that lied
+
+Model still off. Item 3 on the adopt list.
+
+### The clock is shared across retries — that is the whole feature
+
+Flying Sushi runs three minutes with the budget shared across continues: each
+retry starts with whatever time is left. That one detail is what makes it a
+**round** rather than a stopwatch. Three lives stop being three fresh chances
+and become a resource spent against one budget.
+
+It also suits what these are for. A break between lessons wants an ending, and
+an endless run has none.
+
+`scoring.timeLimit` is **optional**, 20–300s, and absent by default: it bounds a
+session, it is not a win condition. A round that ends on the clock still shows
+what you scored against the target — the panel says **"Time!"** rather than
+"Game over", because a game that stops without saying why reads as a crash.
+
+The countdown is ticked inside the **fixed timestep**, not from wall clock, so a
+round lasts the same number of simulated seconds on every machine — the same
+reason the physics live there. `setLeft` fires only when the displayed second
+changes; the first version re-rendered the component sixty times a second to
+paint a number that changes once.
+
+The free tuner reads time words in both languages — "two minutes", "90 seconds",
+"a quick round", "dua minit", "bermasa" — and only when asked. "Quick" alone is
+about pace, not length, so it has to say *what* is quick.
+
+### The check was unreachable, and its own unit test passed
+
+`roundVerdict` rejects a target nobody could score inside the budget. Wired at
+the tail of the union's `superRefine`, it was dead for the flyer — **several
+engine branches `return` early**, so anything appended at the bottom silently
+applies only to the engines that fall through. `roundVerdict`'s own test passed
+the whole time; only the test that parsed a full spec caught it. Moved ahead of
+the branches.
+
+The estimate behind it is a deliberate **over-estimate** — fastest world speed,
+every collectible taken, no mistakes. That direction is chosen: an over-estimate
+only fails to reject something borderline, while an under-estimate turns away
+winnable games, and the rejection is what a person sees. A test pins the
+direction by asserting no bundled fixture is refused a three-minute round.
+
+### The fixture barrel said "GENERATED" and was not
+
+`lib/arcade/fixtures.ts` carried `GENERATED - do not hand-edit. Regenerate: npm
+run fixtures` while that command only ever wrote the legacy `lib/spec` barrel.
+Adding an arcade fixture looked like one command and was a silent no-op followed
+by a confusing 404. The generator now writes both, and derives `ARCADE_ACCEPTED`
+from the filename — `.invalid`, `.unplayable` and `.trivial` exist to be
+rejected — instead of a second hand-maintained list. Regenerating reproduced the
+hand-written file exactly, which is what says the derivation is right.
+
+### Verified on the deployed site
+
+| Check | Result |
+| --- | --- |
+| Clock counts down while playing | 2:00 → 1:53 |
+| **Losing a life never refills it** | 3 deaths, monotonic, never once refilled |
+| Under ten seconds turns urgent | captured at 0:09 |
+| Round ends on the clock | panel reads **Time!** |
+| Panel reports time left when lives run out first | "0:06 left on the clock" |
+
+Also fixed by looking: the clock was top-centre, straight through the canvas
+score every engine draws there — a 0:09 pill across snake's "0/30". It sits
+beside the mute button now.
+
+**Pending, written down rather than remembered**
+
+Before this repo is ever made public, a **deliberate scrub pass**: the two Figma
+file keys (8 places, incl. `app/ds/tokens.css`, `lib/ds/tokens.generated.ts`,
+`lib/ds/tokens.raw.json`, `docs/`), and the internal notes and names throughout
+`docs/`. The 336 DS colour values are a separate decision and need Pandai's
+sign-off, not a redaction. Repo is being made private first; nothing is pushed
+until it is.
+
+**Not done**
+
+- Power-ups. The runner and snake still have flat physics.

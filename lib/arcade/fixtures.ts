@@ -1,4 +1,9 @@
-/* GENERATED - do not hand-edit. Regenerate: npm run fixtures */
+/* GENERATED - do not hand-edit.
+ * Regenerate: node scripts/generate-fixture-index.mjs (npm run fixtures)
+ *
+ * Static imports, not a directory read: a Cloudflare Worker has no filesystem,
+ * so readdirSync works in dev and fails in production.
+ */
 
 import f_brick_breaker_hard from "./fixtures/brick-breaker.hard.json";
 import f_brick_breaker_unplayable from "./fixtures/brick-breaker.unplayable.json";
@@ -7,6 +12,7 @@ import f_endless_flyer_easy from "./fixtures/endless-flyer.easy.json";
 import f_endless_flyer_edge from "./fixtures/endless-flyer.edge.json";
 import f_endless_flyer_hard from "./fixtures/endless-flyer.hard.json";
 import f_endless_flyer_invalid from "./fixtures/endless-flyer.invalid.json";
+import f_endless_flyer_timed from "./fixtures/endless-flyer.timed.json";
 import f_endless_flyer_trivial from "./fixtures/endless-flyer.trivial.json";
 import f_endless_flyer_twist from "./fixtures/endless-flyer.twist.json";
 import f_endless_flyer_unplayable from "./fixtures/endless-flyer.unplayable.json";
@@ -22,6 +28,7 @@ import f_snake_easy from "./fixtures/snake.easy.json";
 import f_snake_unplayable from "./fixtures/snake.unplayable.json";
 import f_snake_valid from "./fixtures/snake.valid.json";
 
+/** Raw, unvalidated fixture JSON. Callers must parse - that is the point. */
 export const ARCADE_FIXTURES: Record<string, unknown> = {
   "brick-breaker.hard": f_brick_breaker_hard,
   "brick-breaker.unplayable": f_brick_breaker_unplayable,
@@ -30,6 +37,7 @@ export const ARCADE_FIXTURES: Record<string, unknown> = {
   "endless-flyer.edge": f_endless_flyer_edge,
   "endless-flyer.hard": f_endless_flyer_hard,
   "endless-flyer.invalid": f_endless_flyer_invalid,
+  "endless-flyer.timed": f_endless_flyer_timed,
   "endless-flyer.trivial": f_endless_flyer_trivial,
   "endless-flyer.twist": f_endless_flyer_twist,
   "endless-flyer.unplayable": f_endless_flyer_unplayable,
@@ -48,13 +56,17 @@ export const ARCADE_FIXTURES: Record<string, unknown> = {
 
 export const ARCADE_FIXTURE_NAMES = Object.keys(ARCADE_FIXTURES);
 
-/** Fixtures the schema must ACCEPT. Everything else must be rejected. */
+/**
+ * Fixtures the schema must ACCEPT. Everything else must be rejected.
+ * Derived from the filename: .invalid, .unplayable and .trivial exist to fail.
+ */
 export const ARCADE_ACCEPTED = [
   "brick-breaker.hard",
   "brick-breaker.valid",
   "endless-flyer.easy",
   "endless-flyer.edge",
   "endless-flyer.hard",
+  "endless-flyer.timed",
   "endless-flyer.twist",
   "endless-flyer.valid",
   "endless-runner.hard",

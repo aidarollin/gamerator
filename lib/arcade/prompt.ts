@@ -106,6 +106,13 @@ ${[...SUBJECT_KEYS, ...ACCENT_FAMILIES].map((k) => `     ${k}`).join("\n")}
 7. contentTwist is OPTIONAL and usually absent. Include it only if the request
    asks for learning content. Arcade first.
 
+7b. scoring.timeLimit is OPTIONAL, 20..300 seconds, and usually ABSENT. Include
+   it only when the request asks for a round, a timer, a countdown or a length
+   ("two minutes", "a quick round", "bermasa"). The clock is shared across
+   retries - losing a life does not refill it - so it makes a session finite
+   rather than making the game harder. A target nobody could score inside the
+   budget is rejected.
+
 8. The audience is Malaysian schoolchildren on phones. Nothing frightening, no
    real named people, no personal data.
 `.trim();

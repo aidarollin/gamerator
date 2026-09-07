@@ -19,6 +19,7 @@ import { loadCharacter, CHARACTERS, type Mood } from "./characters";
 import { loadArt } from "./art";
 import { shade, type Palette } from "./paint";
 import { sceneFor } from "@/lib/arcade/palettes";
+import { formatClock } from "@/lib/arcade/round";
 import * as sound from "./sound";
 import a from "./arcade.module.css";
 
@@ -97,12 +98,17 @@ export function GameFrame({
 
   const art = CHARACTERS[spec.theme.character];
   const sprites = useRef<Record<Mood, HTMLImageElement> | null>(null);
+  const [left, setLeft] = useState(spec.scoring.timeLimit ?? 0);
   const state = useRef({
     phase: "ready" as Phase,
     score: 0,
     lives: spec.rules.lives,
     shake: 0,
     combo: 0,
+    // The round budget, in seconds. Deliberately NOT reset by loseLife: the
+    // clock is shared across retries, which is what makes three lives a
+    // resource spent against one budget rather than three fresh chances.
+    left: spec.scoring.timeLimit ?? 0,
   });
   const engineRef = useRef<Engine | null>(null);
   const pending = useRef<{ kind: "press" | "release"; where?: { x: number; y: number } }[]>([]);
@@ -120,9 +126,18 @@ export function GameFrame({
     sound.unlock();
 
     if (state.current.phase === "dead") {
-      state.current = { phase: "ready", score: 0, lives: spec.rules.lives, shake: 0, combo: 0 };
+      // A full restart is the ONLY thing that refills the clock.
+      state.current = {
+        phase: "ready",
+        score: 0,
+        lives: spec.rules.lives,
+        shake: 0,
+        combo: 0,
+        left: spec.scoring.timeLimit ?? 0,
+      };
       setScore(0);
       setLives(spec.rules.lives);
+      setLeft(spec.scoring.timeLimit ?? 0);
       engineRef.current?.reset();
       enter("ready");
       return;
@@ -132,7 +147,7 @@ export function GameFrame({
       sound.startMusic(spec.meta.difficulty === "hard");
       enter("playing");
     }
-  }, [enter, spec.rules.lives, spec.meta.difficulty]);
+  }, [enter, spec.rules.lives, spec.meta.difficulty, spec.scoring.timeLimit]);
 
   useEffect(() => {
     let live = true;
@@ -234,6 +249,8 @@ export function GameFrame({
       sfx: (name) => sound.play(name),
     };
 
+    const timed = spec.scoring.timeLimit !== undefined;
+    let lastShown = Math.ceil(state.current.left);
     const engine = factory(hostApi, spec);
     engineRef.current = engine;
     engine.reset();
@@ -250,8 +267,32 @@ export function GameFrame({
         for (const ev of pending.current) engine.input(ev.kind, ev.where);
         pending.current = [];
         state.current.shake = Math.max(0, state.current.shake - STEP * 3);
-        if (state.current.phase === "playing") engine.step(STEP);
+        if (state.current.phase === "playing") {
+          engine.step(STEP);
+          // Counted in the fixed timestep rather than from wall clock, so the
+          // round lasts the same number of simulated seconds on every machine -
+          // the same reason the physics live here.
+          if (timed) {
+            state.current.left -= STEP;
+            if (state.current.left <= 0) {
+              state.current.left = 0;
+              sound.play(state.current.score >= spec.scoring.targetScore ? "win" : "die");
+              sound.stopMusic();
+              enter("dead");
+            }
+          }
+        }
         acc -= STEP;
+      }
+      // Only when the displayed SECOND changes. Calling setLeft every frame
+      // would re-render the whole component sixty times a second to paint a
+      // number that changes once.
+      if (timed) {
+        const shown = Math.ceil(state.current.left);
+        if (shown !== lastShown) {
+          lastShown = shown;
+          setLeft(shown);
+        }
       }
       ctx.save();
       if (state.current.shake > 0) {
@@ -310,6 +351,7 @@ export function GameFrame({
   }, [start]);
 
   const beat = score >= spec.scoring.targetScore;
+  const outOfTime = spec.scoring.timeLimit !== undefined && left <= 0;
 
   return (
     <div className={a.frame} ref={hostRef}>
@@ -321,6 +363,15 @@ export function GameFrame({
           className={a.canvas}
           aria-label={spec.meta.description || spec.meta.title}
         />
+
+        {spec.scoring.timeLimit !== undefined && (
+          <div
+            className={left <= 10 ? `${a.clock} ${a.clockLow}` : a.clock}
+            aria-label={`${left} seconds left in the round`}
+          >
+            {formatClock(left)}
+          </div>
+        )}
 
         <div className={a.lives} aria-label={`${lives} lives left`}>
           {Array.from({ length: spec.rules.lives }).map((_, i) => (
@@ -366,14 +417,27 @@ export function GameFrame({
                   <span className={a.panelTitle}>{spec.meta.title}</span>
                   <span className={a.panelBody}>{spec.meta.description}</span>
                   <span className={a.panelHint}>{hint}</span>
+                  {spec.scoring.timeLimit !== undefined && (
+                    <span className={a.panelHint}>
+                      {formatClock(spec.scoring.timeLimit)} for the whole round -
+                      the clock keeps running when you lose a life
+                    </span>
+                  )}
                 </>
               ) : (
                 <>
-                  <span className={a.panelTitle}>{beat ? "Target beaten!" : "Game over"}</span>
+                  <span className={a.panelTitle}>
+                    {beat ? "Target beaten!" : outOfTime ? "Time!" : "Game over"}
+                  </span>
                   <span className={a.bigScore}>{score}</span>
                   <span className={a.panelBody}>
                     best {best} · target {spec.scoring.targetScore}
                   </span>
+                  {spec.scoring.timeLimit !== undefined && !outOfTime && (
+                    <span className={a.panelHint}>
+                      {formatClock(left)} left on the clock
+                    </span>
+                  )}
                 </>
               )}
               <button className={a.cta} onClick={start} autoFocus>

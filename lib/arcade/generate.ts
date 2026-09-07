@@ -162,6 +162,40 @@ const NOUN = {
   platformer: ["Jump", "Lompat"],
 } as const;
 
+/**
+ * A round budget, in seconds, if the words asked for one.
+ *
+ * ONLY when asked. An endless run stays the default, because that is what most
+ * of these engines are and a clock nobody requested turns an idle-minute game
+ * into a test. Bahasa is matched alongside English - "dua minit", "seminit" -
+ * because the audience types in both, often in one sentence.
+ */
+export function readTimeLimit(prompt: string): number | undefined {
+  const p = prompt.toLowerCase();
+
+  // An explicit duration wins: "90 seconds", "2 minutes", "3 minit".
+  const mins = p.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?|minit)\b/);
+  if (mins) return clampRound(Number(mins[1]) * 60);
+  const secs = p.match(/(\d+)\s*(?:seconds?|secs?|saat)\b/);
+  if (secs) return clampRound(Number(secs[1]));
+
+  if (/\b(?:one|a)\s+minute\b|\bseminit\b/.test(p)) return 60;
+  if (/\btwo\s+minutes\b|\bdua\s+minit\b/.test(p)) return 120;
+  if (/\bthree\s+minutes\b|\btiga\s+minit\b/.test(p)) return 180;
+
+  // Asking for a bounded session without naming a number.
+  if (/\btimed\b|\btimer\b|\bcountdown\b|\bagainst the clock\b|\bbermasa\b/.test(p)) return 120;
+  // "quick" alone is about pace, not length - it has to say what is quick.
+  if (/\b(?:quick|short)\s+(?:round|game|break|match|session)\b/.test(p)) return 60;
+
+  return undefined;
+}
+
+/** The schema allows 20..300; outside that is a typo, not an instruction. */
+function clampRound(seconds: number): number {
+  return Math.max(20, Math.min(300, Math.round(seconds)));
+}
+
 function titleFor(engine: Engine, character: string, lang: "ms" | "en") {
   const who = character === "pbot" ? "PBot" : character[0].toUpperCase() + character.slice(1);
   return `${who} ${NOUN[engine][lang === "ms" ? 1 : 0]}`.slice(0, 40);
@@ -207,6 +241,7 @@ export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome>
 
   const p = brief.prompt.toLowerCase();
   const tone = readTone(p, brief.difficulty);
+  const timeLimit = readTimeLimit(p);
   const character =
     brief.character ?? (/aidan/i.test(p) ? "aidan" : /nadia/i.test(p) ? "nadia" : "pbot");
   const engine = choice.engine;
@@ -228,6 +263,7 @@ export async function generateArcade(brief: ArcadeBrief): Promise<ArcadeOutcome>
     scoring: {
       pointsPerObstacle: tone.difficulty === "hard" ? 2 : 1,
       targetScore: tone.difficulty === "hard" ? 40 : tone.difficulty === "easy" ? 15 : 25,
+      ...(timeLimit !== undefined ? { timeLimit } : {}),
     },
     rules: rulesFor(engine, p, tone),
   };

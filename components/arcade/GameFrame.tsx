@@ -316,7 +316,33 @@ export function GameFrame({
   };
 
   useEffect(() => {
+    /**
+     * Is the person typing rather than playing?
+     *
+     * The listener below is on WINDOW, because a canvas game has to respond to
+     * the keyboard without the player first clicking on it. The cost is that it
+     * sees every keystroke on the page - and on `/create` the game renders
+     * directly beneath the prompt box, so Space and Enter were being swallowed
+     * before the textarea ever saw them. Type a prompt, get a game, and you
+     * could no longer put a space in your own sentence to edit it.
+     *
+     * Reported by Zul, and entirely my doing: `preventDefault` on a global
+     * handler is a promise that nothing else on the page needs that key.
+     */
+    const typing = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      if (!el || !el.tagName) return false;
+      const tag = el.tagName.toUpperCase();
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        el.isContentEditable === true
+      );
+    };
+
     const down = (e: KeyboardEvent) => {
+      if (typing(e.target)) return;
       if (["Space", "ArrowUp", "Enter", "ArrowLeft", "ArrowRight", "ArrowDown"].includes(e.code)) {
         e.preventDefault();
         if (state.current.phase !== "playing") return start();
@@ -339,6 +365,7 @@ export function GameFrame({
      * ignore `release` entirely, which is why it went unnoticed for so long.
      */
     const up = (e: KeyboardEvent) => {
+      if (typing(e.target)) return;
       if (["ArrowLeft", "ArrowRight", "ArrowDown"].includes(e.code))
         pending.current.push({ kind: "release" });
     };

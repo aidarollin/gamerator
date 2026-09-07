@@ -1228,3 +1228,89 @@ until it is.
 **Not done**
 
 - Power-ups. The runner and snake still have flat physics.
+
+---
+
+## 2026-09-07 (later again) — Ranged runner physics, and power-ups
+
+Model still off. The last two items on the adopt list.
+
+### The runner ramps now
+
+`scrollSpeed`, `spacing` and `obstacleHeight` are `{start, end}` over
+`rampOverObstacles`, like the flyer. Obstacle positions became a **running sum**
+rather than `index * spacing`, because once spacing ramps the two disagree and
+the renderer would place obstacles somewhere the check never looked.
+
+The check walks the whole ramp. Being accurate about why: for these two
+quantities the extreme is provably at an END - `obstacleHeight` is linear in t,
+and `spacing / scrollSpeed` is a ratio of linear functions, so monotonic - so
+sampling the ends would be enough today. It is walked anyway so the failure can
+say HOW FAR into the ramp it breaks, and so a future non-linear field does not
+silently go unsampled. The first draft of that comment claimed the middle could
+be worse, which is false; corrected rather than left to mislead.
+
+Three runner fixtures migrated, the tuner reads the same escalation words as the
+flyer, and the fuzz harness learned to draw `{start, end}` pairs with the two
+ends drawn INDEPENDENTLY - a fuzz that only drew matched pairs would never build
+the worst combination.
+
+**One test of mine was wrong, not the code.** I asserted a 90px obstacle was
+unclearable against a 700 flap under gravity 2000. That jump peaks at 122px, so
+it clears comfortably; and since the schema caps height at 90, no legal height
+is unclearable at that gravity. Fixed the test's physics, not the check.
+
+### Power-ups: magnet and Power Rush
+
+`lib/arcade/powerups.ts`, wired into the flyer. Rolls every 8s at 70%, one at a
+time, deterministic from the spec.
+
+**The rule the design rests on: a power-up may only ever make a run EASIER.**
+That is not taste, it is what keeps the playability guarantee true.
+`flyerPlayability` proves a perfect player survives *these* physics; a power-up
+that sped the world up would leave that proof describing a game that no longer
+exists - the exact failure this repo has now caught itself in four times. So
+Power Rush **retracts obstacles** rather than accelerating the world, unlike the
+reference, which has no such guarantee to protect. A test asserts there is no
+speed multiplier anywhere in the module.
+
+Three things fixed by measuring rather than assuming:
+
+1. **The bubble spawned three and a half gaps ahead** - about eleven seconds of
+   travel. Most rolls were spent on a bubble the run ended before reaching, and
+   a player never saw it coming. Now just over one gap out.
+2. **The HUD was dark ink on a night sky.** Same bug as the hearts, same cause:
+   the canvas can be any colour now, so anything drawn on it carries its own
+   contrast. It goes through the score painter, which strokes white behind ink.
+3. **The seed was `JSON.stringify(rules)`.** Key order in a parsed Zod object
+   follows the schema definition, so reordering two fields would have silently
+   changed the power-up sequence of every game ever generated. Now
+   `engine:title` - distinctive, and stable under refactors that change nothing.
+
+A power-up also got its own sound, a rising four-note run at 1568Hz, because it
+is a different KIND of thing from a coin - and because a unique pitch is what
+made pickups countable in a probe.
+
+### Verified on the deployed site
+
+| Check | Result |
+| --- | --- |
+| Power-ups collected in play (1568Hz, unique) | **6** |
+| Magnet drags coins to the player | photographed |
+| HUD legible on a night scene | photographed |
+| Ranged runner renders and plays | yes |
+| Round clock still shared across deaths | 2:00 -> 1:52, never refilled |
+
+**Not verified, and worth saying plainly:** the rush's obstacle-retraction was
+not photographed in play. Its state is unit-tested and the renderer reads that
+flag, but a scripted pilot has to fly into one specific bubble and kept missing.
+I tried to predict a rush seed and got that wrong twice - the second time
+because `JSON.stringify` of a parsed object was not reproducible outside the
+app, which is what exposed the seeding flaw above. Worth a human playing
+`/play/arcade?game=endless-flyer.valid` for a minute.
+
+**Not done**
+
+- Power-ups are flyer-only; the runner has coins but no bubbles.
+- A fighting engine - see SCOPE, which now says what it would take rather than
+  refusing.

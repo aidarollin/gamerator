@@ -94,15 +94,30 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
         lives: tone.lives,
       };
     }
-    case "endless-runner":
+    case "endless-runner": {
+      // The runner ramps now, read from the same words as the flyer so the two
+      // answer a request the same way.
+      const builds = /build|escalat|ramp|get.*harder|tense|intense|makin/.test(p);
+      const steady = /steady|constant|same|flat|consistent/.test(p);
+      const climb = steady ? 0.25 : builds ? 1.6 : 1;
+
+      const startSpeed = clamp(180 + s * 70, 80, 460);
+      const startSpacing = clamp(320 - s * 50, 120, 600);
+      const startHeight = clamp(34 + s * 12, 18, 90);
+
       return {
         gravity: clamp(2200 + s * 400, 800, 4000),
         jumpVelocity: clamp(-720 - s * 40, -1200, -300),
-        scrollSpeed: clamp(190 + s * 90, 80, 460),
-        spacing: clamp(300 - s * 60, 120, 600),
-        obstacleHeight: clamp(38 + s * 14, 18, 90),
+        scrollSpeed: { start: startSpeed, end: clamp(startSpeed + 70 * climb, 80, 460) },
+        spacing: { start: startSpacing, end: clamp(startSpacing - 70 * climb, 120, 600) },
+        // Obstacles grow, but far more gently than the speed: a jump has to
+        // keep clearing them at every point of the ramp, and height is the
+        // field most likely to make that impossible.
+        obstacleHeight: { start: startHeight, end: clamp(startHeight + 10 * climb, 18, 90) },
+        rampOverObstacles: steady ? 30 : builds ? 12 : 16,
         lives: tone.lives,
       };
+    }
     case "brick-breaker":
       return {
         ballSpeed: clamp(250 + s * 110, 120, 560),

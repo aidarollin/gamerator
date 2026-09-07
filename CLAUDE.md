@@ -28,6 +28,8 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/ramp.ts` | Ranged physics — `{start, end}` over obstacles |
 | `lib/arcade/collect.ts` | Collectible geometry, **outside the closure so it can be tested** |
 | `lib/arcade/level.ts` | Platformer levels, built reachable **by construction** |
+| `lib/arcade/round.ts` | The round budget, **shared across retries** |
+| `lib/arcade/powerups.ts` | Magnet and Power Rush. **May only make a run easier** |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. **Wired but unreachable** — see below |
 | `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
@@ -103,6 +105,16 @@ flyer into one altitude band; if that band misses the coin line it misses
 like a coin nobody wanted, so a broken collectible ships silently. That is why
 the geometry moved out of the closure into `lib/arcade/collect.ts` — a rule
 trapped in a closure cannot be measured, only played and watched.
+
+**A power-up may only ever make a run EASIER.** `flyerPlayability` proves a
+perfect player survives *the spec's own* physics. Anything that speeds the world
+up or narrows a gap mid-run leaves that proof describing a game that no longer
+exists. It is why Power Rush retracts obstacles instead of accelerating, unlike
+the reference it was adopted from.
+
+**Do not seed from `JSON.stringify` of a parsed object.** Key order follows the
+Zod schema's field order, so reordering two fields silently changes every seed
+derived from it. Seed from something explicit and stable - `engine:title`.
 
 **A check on one axis is not a check.** `platformerVerdict` compared a running
 jump against the horizontal gap and passed levels that climbed 150px against a

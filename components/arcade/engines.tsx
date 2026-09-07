@@ -3,6 +3,16 @@
 import { WORLD, type ArcadeSpec } from "@/lib/arcade/schema";
 import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
 import { buildLevel, LEVEL, type Plat } from "@/lib/arcade/level";
+import { runnerAt, runnerObstacleX } from "@/lib/arcade/engines";
+import {
+  activate,
+  initPowers,
+  magnetPull,
+  obstaclesRetracted,
+  POWER,
+  powerRng,
+  stepPowers,
+} from "@/lib/arcade/powerups";
 import {
   coinOffsets as flyerCoinOffsets,
   coinPos as flyerCoinPos,
@@ -58,6 +68,32 @@ export const flyerFactory: EngineFactory = (h, spec) => {
   const coinOffsets = flyerCoinOffsets(400);
   const taken = new Set<number>();
 
+  /**
+   * Power-ups. They may only ever make the run EASIER - see
+   * lib/arcade/powerups.ts - because the playability simulation proved a
+   * perfect player survives THESE physics, and a power-up that sped the world
+   * up would leave that proof describing a game that no longer exists.
+   *
+   * `pulled` holds coins the magnet has dragged off their generated position.
+   * The geometry stays pure; this is the displacement on top of it.
+   */
+  const powers = initPowers();
+  /**
+   * Seeded from the spec's IDENTITY, not from `JSON.stringify(rules)`.
+   *
+   * The stringify version worked and was quietly fragile: key order in a parsed
+   * Zod object follows the schema definition, so reordering two fields in
+   * `EndlessFlyer` would have silently changed the power-up sequence of every
+   * game ever generated. A seed has to be stable under refactors that do not
+   * change meaning.
+   *
+   * Engine plus title: distinctive per game, stable forever, and readable.
+   */
+  const pRng = powerRng(`${spec.engine}:${spec.meta.title}`);
+  const pulled = new Map<number, { x: number; y: number }>();
+  let rushCoins: { x: number; y: number; got: boolean }[] = [];
+  const coinNow = (i: number) => pulled.get(i) ?? coinPos(i);
+
   // The physics in force RIGHT NOW, from the same function the validator
   // simulates. If the renderer ramped any other way the playability check would
   // be verifying a game nobody plays.
@@ -85,7 +121,11 @@ export const flyerFactory: EngineFactory = (h, spec) => {
   };
 
   return {
-    reset() { y = H / 2; vy = 0; dist = 0; passed = 0; dead = false; parts = []; taken.clear(); },
+    reset() {
+      y = H / 2; vy = 0; dist = 0; passed = 0; dead = false; parts = [];
+      taken.clear(); pulled.clear(); rushCoins = [];
+      Object.assign(powers, initPowers());
+    },
     input(kind) {
       if (kind === "press" && !dead && h.phase() === "playing") {
         vy = r.flapVelocity;
@@ -108,10 +148,69 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       if (y - art.radius <= 0) { y = art.radius; vy = 0; }
       if (y + art.radius >= floor) { y = floor - art.radius; die(); return; }
 
+      /**
+       * Power-ups. A bubble is placed a few gaps ahead, on the flight line, so
+       * it is reachable without abandoning the run - the whole point is a
+       * reward for playing well, not a detour that kills you.
+       */
+      stepPowers(powers, dt, pRng, () => {
+        // Just over a gap ahead - roughly a screen and a half - so it enters
+        // view within a couple of seconds and can be LINED UP FOR. The first
+        // version spawned three and a half gaps out, about eleven seconds of
+        // travel: far enough that most rolls were spent on a bubble the run
+        // ended before reaching, and a player never saw it coming.
+        const c = coinPos(passed + 1);
+        return { x: c.x + at().gapSpacing * 0.5, y: c.y };
+      });
+
+      if (powers.pending) {
+        const bx = SIM.birdX + powers.pending.x - dist;
+        if (Math.hypot(bx - SIM.birdX, powers.pending.y - y) < COIN_REACH + 10) {
+          const kind = powers.pending.kind;
+          activate(powers, kind);
+          h.sfx("power");
+          spawnBurst(parts, bx, powers.pending?.y ?? y, 14);
+          if (kind === "rush") {
+            // The frenzy: a sine wave of coins along the flight line, in the
+            // stretch the retracted obstacles have just cleared.
+            rushCoins = Array.from({ length: 26 }, (_, k) => ({
+              x: dist + 120 + k * 26,
+              y: H / 2 + Math.sin(k * 0.5) * 110,
+              got: false,
+            }));
+          }
+        } else if (powers.pending.x < dist - 60) {
+          powers.pending = null; // missed, and gone
+        }
+      }
+
+      // The magnet drags nearby coins toward the player.
+      if (powers.active === "magnet") {
+        for (let i = passed - 1; i <= passed + 4; i++) {
+          if (i <= 0 || taken.has(i)) continue;
+          pulled.set(i, magnetPull(powers, coinNow(i), { x: dist, y }, dt));
+        }
+        for (const c of rushCoins) {
+          if (c.got) continue;
+          const moved = magnetPull(powers, c, { x: dist, y }, dt);
+          c.x = moved.x; c.y = moved.y;
+        }
+      }
+
+      for (const c of rushCoins) {
+        if (c.got) continue;
+        if (Math.hypot(c.x - dist, c.y - y) < COIN_REACH) {
+          c.got = true; pop = 1;
+          spawnBurst(parts, SIM.birdX + c.x - dist, c.y, 5);
+          h.sfx("coin");
+          h.addScore(spec.scoring.pointsPerObstacle);
+        }
+      }
+
       // Collect any coin the player is overlapping.
       for (let i = passed; i <= passed + 3; i++) {
         if (i <= 0 || taken.has(i)) continue;
-        const c = coinPos(i);
+        const c = coinNow(i);
         const cx = SIM.birdX + c.x - dist;
         if (Math.hypot(c.x - dist, c.y - y) < COIN_REACH) {
           taken.add(i);
@@ -128,7 +227,11 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       if (nextX - dist <= 0) {
         const c = centres[(passed + 1) % centres.length];
         const half = flyerAt(r, passed + 1).gapHeight / 2;
-        if (y - art.radius < c - half || y + art.radius > c + half) return die();
+        // Power Rush retracts the obstacles instead of speeding the world up.
+        // Retracting can only ever make a run easier, which is what keeps the
+        // playability proof true; speeding it up would invalidate it.
+        const clear = obstaclesRetracted(powers);
+        if (!clear && (y - art.radius < c - half || y + art.radius > c + half)) return die();
         passed += 1;
         pop = 1;
         h.addScore(spec.scoring.pointsPerObstacle);
@@ -145,12 +248,29 @@ export const flyerFactory: EngineFactory = (h, spec) => {
       // Coins are drawn behind the pipes so a pipe edge never hides one.
       for (let i = passed; i <= passed + 5; i++) {
         if (i <= 0 || taken.has(i)) continue;
-        const c = coinPos(i);
+        const c = coinNow(i);
         const cx = SIM.birdX + c.x - dist;
         if (cx < -30 || cx > W + 30) continue;
         p.coin(palette, cx, c.y, 22, Math.abs(Math.cos(t * 3 + i)) * 0.8 + 0.2);
       }
+      for (const c of rushCoins) {
+        if (c.got) continue;
+        const cx = SIM.birdX + c.x - dist;
+        if (cx < -30 || cx > W + 30) continue;
+        p.coin(palette, cx, c.y, 20, Math.abs(Math.cos(t * 4 + c.x)) * 0.8 + 0.2);
+      }
+      if (powers.pending) {
+        const bx = SIM.birdX + powers.pending.x - dist;
+        if (bx > -40 && bx < W + 40)
+          p.bubble(palette, bx, powers.pending.y, 17, powers.pending.kind, t);
+      }
 
+      // Obstacles SLIDE out of frame during a rush rather than vanishing: a
+      // pipe that blinks out reads as a glitch, one that retracts reads as the
+      // power-up doing something.
+      const retract = obstaclesRetracted(powers)
+        ? Math.min(1, (POWER.rush.duration - powers.left) / 0.5)
+        : 0;
       for (let i = passed; i <= passed + 5; i++) {
         if (i <= 0) continue;
         const c = centres[i % centres.length];
@@ -158,10 +278,11 @@ export const flyerFactory: EngineFactory = (h, spec) => {
         const x = SIM.birdX + obstacleX(i) - dist;
         if (x < -80 || x > W + 80) continue;
         const w = 54;
-        p.block(palette, x - w / 2, -30, w, c - half + 30, 8);
-        p.block(palette, x - w / 2, c + half, w, floor - (c + half), 8);
-        p.cap(palette, x - w / 2, c - half - 18, w, 18);
-        p.cap(palette, x - w / 2, c + half, w, 18);
+        const lift = retract * (H * 0.75);
+        p.block(palette, x - w / 2, -30 - lift, w, c - half + 30, 8);
+        p.block(palette, x - w / 2, c + half + lift, w, floor - (c + half), 8);
+        p.cap(palette, x - w / 2, c - half - 18 - lift, w, 18);
+        p.cap(palette, x - w / 2, c + half + lift, w, 18);
       }
       p.ground(palette, W, floor, GROUND, dist);
       p.burst(palette, parts);
@@ -173,6 +294,19 @@ export const flyerFactory: EngineFactory = (h, spec) => {
         dead,
       });
       if (h.phase() === "playing") p.score(palette, String(h.score()), W / 2, 76, 50, pop);
+      if (powers.active && h.phase() === "playing") {
+        // Drawn through the score painter, which strokes white behind an ink
+        // fill. Plain ink text was invisible on a night scene - the same bug
+        // the hearts had, and for the same reason: the canvas can be any
+        // colour, so anything on it carries its own contrast.
+        p.score(
+          palette,
+          `${powers.active === "magnet" ? "MAGNET" : "RUSH"}  ${powers.left.toFixed(1)}s`,
+          W / 2,
+          120,
+          17,
+        );
+      }
     },
   };
 };
@@ -441,17 +575,22 @@ export const runnerFactory: EngineFactory = (h, spec) => {
   const r = spec.rules;
   const GROUND = 64, floor = H - GROUND, RX = 76, RH = 30;
   let y = floor - RH, vy = 0, dist = 0, onGround = true, dead = false;
-  let parts: Particle[] = [], pop = 0, t = 0;
+  let parts: Particle[] = [], pop = 0, t = 0, passed = 0;
 
   /**
-   * Coins between obstacles, adopted from the flyer for the same reason: with
-   * nothing to aim at you survive rather than play.
-   *
-   * Roughly half sit at running height and cost nothing. The rest sit inside
-   * the jump arc, so taking one means leaving the ground - which is also where
-   * the obstacles are, so a coin buys points with risk rather than with
-   * patience. The arc is derived from the SAME numbers the playability check
-   * uses, so a reachable-looking coin is a reachable coin.
+   * The runner ramps now, so obstacle positions are a RUNNING SUM of the
+   * ramped spacing rather than `index * spacing`, and each obstacle has its own
+   * height. Both come from `runnerAt`, the same function the playability check
+   * walks - if the renderer spaced them any other way the check would be
+   * describing a game nobody plays.
+   */
+  const at = (n: number) => runnerAt(r, n);
+  const obstacleX = (n: number) => runnerObstacleX(r, n);
+
+  /**
+   * Coins between obstacles. Roughly half sit at running height and cost
+   * nothing; the rest sit inside the jump arc, so taking one means leaving the
+   * ground - which is also where the obstacles are.
    *
    * Deterministic, and OPTIONAL: they never gate progress, so the simulation
    * does not need to know they exist.
@@ -462,14 +601,14 @@ export const runnerFactory: EngineFactory = (h, spec) => {
   const apex = (r.jumpVelocity * r.jumpVelocity) / (2 * r.gravity);
   const hasCoin = (i: number) => coinPlan[i % coinPlan.length] < 0.8;
   const coinAt = (i: number) => ({
-    x: (i + 1) * r.spacing + r.spacing / 2,
+    x: obstacleX(i) + at(i).spacing / 2,
     y: coinPlan[i % coinPlan.length] < 0.45 ? floor - RH / 2 : floor - RH / 2 - apex * 0.55,
   });
 
   return {
     reset() {
       y = floor - RH; vy = 0; dist = 0; onGround = true; dead = false;
-      parts = []; taken.clear();
+      parts = []; taken.clear(); passed = 0;
     },
     input(kind) {
       if (kind === "press" && onGround && !dead && h.phase() === "playing") {
@@ -480,25 +619,29 @@ export const runnerFactory: EngineFactory = (h, spec) => {
       t += dt; pop = Math.max(0, pop - dt * 4);
       parts = stepParticles(parts, dt);
       if (dead) return;
-      vy += r.gravity * dt; y += vy * dt; dist += r.scrollSpeed * dt;
+      const now = at(passed);
+      vy += r.gravity * dt; y += vy * dt; dist += now.scrollSpeed * dt;
       if (y >= floor - RH) { y = floor - RH; vy = 0; onGround = true; }
-      const i = Math.floor(dist / r.spacing);
-      const ox = RX + (i + 1) * r.spacing - dist;
-      if (ox < RX + 22 && ox > RX - 22 && y + RH > floor - r.obstacleHeight) {
+
+      // The obstacle currently arriving is the next one, `passed + 1`.
+      const nextIndex = passed + 1;
+      const nx = RX + obstacleX(nextIndex) - dist;
+      const nh = at(nextIndex).obstacleHeight;
+      if (nx < RX + 22 && nx > RX - 22 && y + RH > floor - nh) {
         dead = true; h.shake(1); spawnBurst(parts, RX, y); h.loseLife();
-        if (h.phase() === "playing") window.setTimeout(() => { dead = false; dist += r.spacing * 0.6; }, 600);
+        if (h.phase() === "playing")
+          window.setTimeout(() => { dead = false; dist += now.spacing * 0.6; }, 600);
         return;
       }
-      if (dist - i * r.spacing < r.scrollSpeed * dt && i > 0) {
-        pop = 1; h.addScore(spec.scoring.pointsPerObstacle);
+      if (nx <= RX - 22) {
+        passed = nextIndex;
+        pop = 1;
+        h.addScore(spec.scoring.pointsPerObstacle);
       }
 
-      // From i - 1, not i. Obstacle `i` is a full spacing AHEAD of the player
-      // - `i` is derived from dist, and obstacle i sits at (i + 1) * spacing -
-      // so the coin the player is currently passing through belongs to the
-      // obstacle BEFORE it. Starting at i meant the coins were drawn ahead and
-      // never collected: the loop and the player were never in the same place.
-      for (let k = i - 1; k <= i + 2; k++) {
+      // From passed - 1: the coin the player is currently passing through
+      // belongs to the obstacle BEFORE the one arriving.
+      for (let k = passed - 1; k <= passed + 2; k++) {
         if (k < 0 || taken.has(k) || !hasCoin(k)) continue;
         const c = coinAt(k);
         const cx = RX + c.x - dist;
@@ -516,19 +659,20 @@ export const runnerFactory: EngineFactory = (h, spec) => {
       p.clouds(palette, W, H, dist);
       p.hills(palette, W, floor, dist);
       p.bushes(palette, W, floor, dist);
-      const first = Math.floor(dist / r.spacing);
       // Coins behind the obstacles, so an obstacle edge never hides one.
-      for (let k = first - 1; k <= first + 4; k++) {
+      for (let k = passed - 1; k <= passed + 4; k++) {
         if (k < 0 || taken.has(k) || !hasCoin(k)) continue;
         const c = coinAt(k);
         const cx = RX + c.x - dist;
         if (cx < -30 || cx > W + 30) continue;
         p.coin(palette, cx, c.y, 22, Math.abs(Math.cos(t * 3 + k)) * 0.8 + 0.2);
       }
-      for (let i = first; i <= first + 4; i++) {
-        const x = RX + (i + 1) * r.spacing - dist;
+      for (let i = passed; i <= passed + 5; i++) {
+        if (i <= 0) continue;
+        const x = RX + obstacleX(i) - dist;
         if (x < -60 || x > W + 60) continue;
-        p.block(palette, x - 16, floor - r.obstacleHeight, 32, r.obstacleHeight, 6);
+        const oh = at(i).obstacleHeight;
+        p.block(palette, x - 16, floor - oh, 32, oh, 6);
       }
       p.ground(palette, W, floor, GROUND, dist);
       p.burst(palette, parts);

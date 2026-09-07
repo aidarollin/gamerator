@@ -161,7 +161,7 @@ function noise(dur = 0.18, gain = 0.25) {
   src.start();
 }
 
-export type Sfx = "flap" | "score" | "coin" | "hit" | "die" | "win" | "start";
+export type Sfx = "flap" | "score" | "coin" | "hit" | "die" | "win" | "start" | "power";
 
 /**
  * `combo` rises with the score so consecutive points climb a scale instead of
@@ -183,6 +183,14 @@ export function play(name: Sfx, combo = 0) {
       case "coin":
         note(988, { dur: 0.06, type: "square", gain: 0.14 });
         note(1319, { at: 0.06, dur: 0.11, type: "square", gain: 0.14 });
+        break;
+      case "power":
+        // Deliberately unlike a coin: a rising four-note run, so a power-up is
+        // audibly a different KIND of thing rather than a bigger coin. 1568 is
+        // unique to it, which is also what makes pickups countable in a probe.
+        [784, 1047, 1319, 1568].forEach((f, i) =>
+          note(f, { at: i * 0.05, dur: 0.14, type: "triangle", gain: 0.15 }),
+        );
         break;
       case "hit":
         noise(0.16, 0.3);

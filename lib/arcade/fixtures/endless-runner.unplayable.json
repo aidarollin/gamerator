@@ -19,9 +19,19 @@
   "rules": {
     "gravity": 4000,
     "jumpVelocity": -400,
-    "scrollSpeed": 300,
-    "spacing": 200,
-    "obstacleHeight": 90,
+    "scrollSpeed": {
+      "start": 300,
+      "end": 300
+    },
+    "spacing": {
+      "start": 200,
+      "end": 200
+    },
+    "obstacleHeight": {
+      "start": 90,
+      "end": 90
+    },
+    "rampOverObstacles": 10,
     "lives": 1
   }
 }

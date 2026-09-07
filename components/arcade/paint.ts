@@ -154,6 +154,53 @@ export function shade(ctx: CanvasRenderingContext2D) {
       ctx.restore();
     },
 
+    /**
+     * A power-up bubble.
+     *
+     * Deliberately unlike a coin: bigger, translucent, and carrying a glyph, so
+     * a player can tell at a glance whether the thing ahead is worth points or
+     * changes the rules. Two collectibles that look alike teach nothing.
+     */
+    bubble(p: Palette, x: number, y: number, r: number, kind: "magnet" | "rush", t = 0) {
+      const pulse = 1 + Math.sin(t * 5) * 0.06;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(pulse, pulse);
+
+      ctx.globalAlpha = 0.9;
+      const g = ctx.createRadialGradient(0, -r * 0.3, r * 0.2, 0, 0, r);
+      g.addColorStop(0, p.white);
+      g.addColorStop(1, kind === "rush" ? p.gold : p.mid);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = p.white;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.fillStyle = p.ink;
+      ctx.strokeStyle = p.ink;
+      ctx.lineWidth = 3.5;
+      if (kind === "magnet") {
+        // A horseshoe: an arc with two legs.
+        ctx.beginPath();
+        ctx.arc(0, 1, r * 0.42, Math.PI, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.42, 1); ctx.lineTo(-r * 0.42, r * 0.45);
+        ctx.moveTo(r * 0.42, 1); ctx.lineTo(r * 0.42, r * 0.45);
+        ctx.stroke();
+      } else if (!drawArt(ctx, "sparkle", p.ink, 0, 0, r * 1.2, r * 1.2)) {
+        // A chevron, if the asset has not loaded.
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.3, -r * 0.4); ctx.lineTo(r * 0.3, 0); ctx.lineTo(-r * 0.3, r * 0.4);
+        ctx.stroke();
+      }
+      ctx.restore();
+    },
+
     /** A collectible. */
     coin(p: Palette, x: number, y: number, size: number, spin = 1) {
       const w = Math.max(4, size * spin);

@@ -1,0 +1,25 @@
+{
+  "specVersion": "2.0",
+  "engine": "maze-chase",
+  "meta": {
+    "title": "Cornered",
+    "description": "Four chasers faster than you, no pellets, one life.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": { "palette": "rbt", "character": "aidan", "background": "night" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 40 },
+  "rules": {
+    "gridCols": 15,
+    "gridRows": 15,
+    "playerSpeed": 3,
+    "chaserSpeed": 8,
+    "chasers": 4,
+    "chaserSmarts": 0.95,
+    "dotTarget": 40,
+    "powerPellets": 0,
+    "scaredSeconds": 2,
+    "mazeSeed": 7,
+    "lives": 1
+  }
+}

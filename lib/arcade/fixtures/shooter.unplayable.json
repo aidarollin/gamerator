@@ -1,0 +1,24 @@
+{
+  "specVersion": "2.0",
+  "engine": "shooter",
+  "meta": {
+    "title": "Doomed Fleet",
+    "description": "Forty aliens, one slow gun, and a fleet already on top of you.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": { "palette": "science", "character": "pbot", "background": "night" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 40 },
+  "rules": {
+    "playerSpeed": 300,
+    "shotSpeed": 400,
+    "fireCooldown": 1.0,
+    "fleetCols": 8,
+    "fleetRows": 5,
+    "fleetSpeed": 120,
+    "fleetDescent": 40,
+    "enemyFireRate": 1.2,
+    "enemyShotSpeed": 300,
+    "lives": 1
+  }
+}

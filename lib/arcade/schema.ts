@@ -4,6 +4,10 @@ import { flyerPlayability, simulatedObstacles } from "./simulate";
 import { Range } from "./ramp";
 import { roundVerdict } from "./round";
 import { DuelRules, duelPlayability } from "./duel";
+import { ShooterRules, shooterVerdict } from "./shooter";
+import { MazeRules, mazeVerdict } from "./maze";
+import { BlocksRules, blocksVerdict } from "./blocks";
+import { MatchThreeRules, match3Verdict } from "./match3";
 import {
   BrickBreakerRules,
   SnakeRules,
@@ -154,6 +158,30 @@ export const Duel = z.object({
   rules: DuelRules,
 });
 
+export const Shooter = z.object({
+  ...base,
+  engine: z.literal("shooter"),
+  rules: ShooterRules,
+});
+
+export const MazeChase = z.object({
+  ...base,
+  engine: z.literal("maze-chase"),
+  rules: MazeRules,
+});
+
+export const FallingBlocks = z.object({
+  ...base,
+  engine: z.literal("falling-blocks"),
+  rules: BlocksRules,
+});
+
+export const MatchThree = z.object({
+  ...base,
+  engine: z.literal("match-3"),
+  rules: MatchThreeRules,
+});
+
 export const ArcadeSpecShape = z.discriminatedUnion("engine", [
   EndlessFlyer,
   BrickBreaker,
@@ -161,6 +189,10 @@ export const ArcadeSpecShape = z.discriminatedUnion("engine", [
   EndlessRunner,
   Platformer,
   Duel,
+  Shooter,
+  MazeChase,
+  FallingBlocks,
+  MatchThree,
 ]);
 
 /**
@@ -270,7 +302,15 @@ export const ArcadeSpec = ArcadeSpecShape.superRefine((spec, ctx) => {
           ? endlessRunnerVerdict(spec.rules, 30)
           : spec.engine === "duel"
             ? duelPlayability(spec.rules)
-            : platformerVerdict(spec.rules);
+            : spec.engine === "shooter"
+              ? shooterVerdict(spec.rules, WORLD.width)
+              : spec.engine === "maze-chase"
+                ? mazeVerdict(spec.rules)
+                : spec.engine === "falling-blocks"
+                  ? blocksVerdict(spec.rules)
+                  : spec.engine === "match-3"
+                    ? match3Verdict(spec.rules)
+                    : platformerVerdict(spec.rules);
 
   if (!verdict.ok) {
     ctx.addIssue({ code: "custom", path: ["rules"], message: verdict.reason });
@@ -314,6 +354,10 @@ export const ENGINE_SCHEMAS = {
   "endless-runner": EndlessRunner,
   platformer: Platformer,
   duel: Duel,
+  shooter: Shooter,
+  "maze-chase": MazeChase,
+  "falling-blocks": FallingBlocks,
+  "match-3": MatchThree,
 } as const;
 
 export const ENGINES = [
@@ -323,6 +367,10 @@ export const ENGINES = [
   "endless-runner",
   "platformer",
   "duel",
+  "shooter",
+  "maze-chase",
+  "falling-blocks",
+  "match-3",
 ] as const;
 
 /** Nothing left in the catalog is unbuilt. Kept so the no-engine path, which

@@ -40,7 +40,7 @@ export default async function ArcadePage({
           Pandai arcade
         </h1>
         <p style={{ ...text, maxWidth: "68ch" }}>
-          Five engines, each playing different numbers. Change the physics and
+          Ten engines, each playing different numbers. Change the physics and
           the palette and you have a different game &mdash; that is the whole
           idea.
         </p>

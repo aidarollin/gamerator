@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { chooseEngine } from "./brief";
-import { ENGINES } from "./schema";
 
 /**
  * Engine routing has now been broken TWICE by the same accident, and both times
@@ -55,8 +54,9 @@ describe("engine routing", () => {
     ["motorcycle racing game", "endless-runner", "racing"],
     ["a racing game with karts", "endless-runner", "racing"],
     ["permainan lumba kereta", "endless-runner", "racing"],
-    ["a space invaders shooter", "brick-breaker", "shooter"],
     ["an open world adventure", "platformer", "adventure"],
+    ["a doodle jump style game", "platformer", "climbing"],
+    ["a pong game", "brick-breaker", "pong"],
   ])("adapts %j to %s, and says so", (prompt, engine, label) => {
     const choice = chooseEngine(prompt);
     expect(choice.kind).toBe("engine");
@@ -79,9 +79,21 @@ describe("engine routing", () => {
     }
   });
 
+  /**
+   * "a space invaders shooter" was an ADAPTATION to brick-breaker until
+   * 2026-09-08, and "a tetris puzzle" was a refusal. Both now have engines of
+   * their own, and the assertions that pinned the old answers are gone rather
+   * than relaxed - a test that still demanded a refusal for tetris would be
+   * arguing for a worse product.
+   *
+   * The routing table itself moved to `catalogue.ts`, and `catalogue.test.ts`
+   * asserts every genre in it - including these - routes as declared. What
+   * stays here is the behaviour of the DECISION PROCEDURE rather than of any
+   * one entry.
+   */
   it("still refuses genres whose verbs match nothing, by name", () => {
     for (const [prompt, label] of [
-      ["a tetris puzzle", "puzzle"],
+      ["a sudoku game", "logic puzzle"],
       ["a tower defence game", "tower defence"],
       ["a chess board game", "card or board"],
     ] as const) {
@@ -89,23 +101,6 @@ describe("engine routing", () => {
       expect(choice.kind, prompt).toBe("no-engine");
       if (choice.kind === "no-engine") expect(choice.requested).toMatch(label);
     }
-  });
-
-  it("every engine is reachable from some prompt", () => {
-    const reached = new Set(
-      [
-        "a flappy bird",
-        "an endless runner",
-        "a mario platformer",
-        "a breakout paddle game",
-        "a snake on a grid",
-        "a fighting game",
-      ]
-        .map((p) => chooseEngine(p))
-        .flatMap((c) => (c.kind === "engine" ? [c.engine] : [])),
-    );
-    // An engine nothing routes to is an engine nobody can ask for.
-    expect([...reached].sort()).toEqual([...ENGINES].sort());
   });
 
   /**

@@ -1,0 +1,25 @@
+{
+  "specVersion": "2.0",
+  "engine": "maze-chase",
+  "meta": {
+    "title": "Nadia Sesat",
+    "description": "Kutip semua titik tanpa ditangkap.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": { "palette": "b-melayu", "character": "nadia", "background": "plain" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 28 },
+  "rules": {
+    "gridCols": 15,
+    "gridRows": 15,
+    "playerSpeed": 6,
+    "chaserSpeed": 3.9,
+    "chasers": 2,
+    "chaserSmarts": 0.4,
+    "dotTarget": 28,
+    "powerPellets": 2,
+    "scaredSeconds": 6,
+    "mazeSeed": 42,
+    "lives": 3
+  }
+}

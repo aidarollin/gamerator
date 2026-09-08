@@ -1,4 +1,5 @@
 import type { ArcadeSpecInput } from "./schema";
+import { perSwap } from "./match3";
 
 /**
  * The round budget.
@@ -80,6 +81,28 @@ export function maxPointsPerSecond(spec: ArcadeSpecInput): number {
       const purse = r.coins * pts + 5 * pts;
       const shortest = (r.platforms * 140) / r.moveSpeed;
       return purse / Math.max(1, shortest);
+    }
+    case "shooter": {
+      const r = spec.rules;
+      // One alien per shot, every shot landing, cooldown-limited.
+      return pts / Math.max(0.05, r.fireCooldown);
+    }
+    case "maze-chase": {
+      const r = spec.rules;
+      // A dot every cell travelled is the absolute best case: dots are laid
+      // along the corridors, so a perfect route eats one per step.
+      return r.playerSpeed * pts;
+    }
+    case "falling-blocks": {
+      const r = spec.rules;
+      // A line per few pieces, and a piece can be hard-dropped in about a
+      // second. Generous by a wide margin - real play is nowhere near this.
+      return (pts * r.cols) / 4;
+    }
+    case "match-3": {
+      const r = spec.rules;
+      // A swap a second, every one clearing the estimated tiles.
+      return perSwap(r.colours) * pts;
     }
   }
 }

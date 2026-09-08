@@ -1610,3 +1610,43 @@ the next section.
 
 1. A hard credit limit on the OpenRouter key. That is the only guarantee.
 2. A decision about the public endpoint. Anyone with the URL can generate.
+
+---
+
+## 2026-09-08 — Other genres can be asked for now
+
+Zul typed "motorcycle racing game" into the live page and got the honest refusal.
+The refusal was working exactly as designed and it was still the wrong answer:
+a race IS an endless runner in everything but the name.
+
+`chooseEngine` has a third outcome now - **adaptation**. Racing becomes the
+runner, a shooter becomes brick-breaker, an adventure becomes the platformer,
+and each one SAYS SO, to the reader and to the model. Puzzles, tower defence,
+card games and rhythm games are still refused, because nothing in the catalogue
+shares a verb with them. Full reasoning in [SCOPE.md](SCOPE.md).
+
+Told to the model as well as the reader, which turned out to matter:
+
+| Prompt | Before | After |
+| --- | --- | --- |
+| motorcycle racing game | refused | *"Speed Rider - ride your motorcycle down the track and jump over every obstacle in your lane."* |
+| a space invaders shooter | refused | *"Star Blaster - bounce your energy shot off the launcher to knock out every alien in the fleet above."* |
+| a tetris puzzle | refused | refused, in 0.1s and with no model call |
+
+An explicitly named engine still beats a genre mapping: "a racing game like
+flappy bird" is a flyer, because the author said so.
+
+### Also today
+
+`npm run dev:live` - the dev server with the model on. A separate command rather
+than `GAMERATOR_PROVIDER=live` in `.env.local`, so going live is deliberate every
+time; an env line means every future `npm run dev` quietly bills, including one
+started months later by someone who has forgotten.
+
+The launcher had to run Next's JS entry point directly with `process.execPath`.
+Spawning `npx.cmd` throws `EINVAL` on Node 20+, and `shell: true` would have
+sent the port through a command-line parser for no reason.
+
+**And `/create` was lying.** Under the button it still said "Nothing here calls a
+paid model yet" - printed directly beneath the button that now spends the money.
+It reports the mode it is actually in.

@@ -26,6 +26,12 @@ export type ArcadeOutcome =
        * conflating them would make the whole product a lie.
        */
       source?: "tuner" | "model" | "model-repaired" | "cache";
+      /**
+       * Set when this engine is standing in for a genre it is not. Shown to the
+       * reader: handing someone a runner when they asked for a race and saying
+       * nothing is the failure this whole routing layer exists to avoid.
+       */
+      adapted?: { requested: string; how: string };
     }
   | { status: "invalid"; issues: Issue[] }
   /** No engine exists for the genre asked for, and none is planned. */
@@ -309,7 +315,7 @@ export async function generateArcade(
     // here falls through to nothing: the stub is not a silent fallback, because
     // silently serving a keyword-tuned game while claiming the model made it is
     // the one dishonesty this whole design exists to avoid.
-    const live = await generateArcadeLive(brief, choice.engine, client);
+    const live = await generateArcadeLive(brief, choice.engine, client, choice.adapted);
     switch (live.status) {
       case "ok":
         return {
@@ -318,6 +324,7 @@ export async function generateArcade(
           guessed: !choice.confident,
           note: renderArcadeBrief(brief),
           source: live.cached ? "cache" : live.repaired ? "model-repaired" : "model",
+          adapted: choice.adapted,
         };
       case "invalid":
         return { status: "invalid", issues: live.issues };
@@ -366,6 +373,7 @@ export async function generateArcade(
       guessed: !choice.confident,
       note: renderArcadeBrief(brief),
       source: "tuner",
+      adapted: choice.adapted,
     };
   }
 

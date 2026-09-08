@@ -46,11 +46,44 @@ describe("engine routing", () => {
     if (choice.kind === "engine") expect(choice.confident).toBe(false);
   });
 
-  it("still refuses genres with no engine, by name", () => {
+  /**
+   * Zul asked for "motorcycle racing game" and got a refusal, which was a bad
+   * answer: a race IS an endless runner in everything but the name. Genres
+   * whose VERBS match an existing engine are adapted; the rest stay refused.
+   */
+  it.each([
+    ["motorcycle racing game", "endless-runner", "racing"],
+    ["a racing game with karts", "endless-runner", "racing"],
+    ["permainan lumba kereta", "endless-runner", "racing"],
+    ["a space invaders shooter", "brick-breaker", "shooter"],
+    ["an open world adventure", "platformer", "adventure"],
+  ])("adapts %j to %s, and says so", (prompt, engine, label) => {
+    const choice = chooseEngine(prompt);
+    expect(choice.kind).toBe("engine");
+    if (choice.kind !== "engine") return;
+    expect(choice.engine).toBe(engine);
+    expect(choice.adapted?.requested).toMatch(label);
+    // The sentence shown to the reader has to explain the substitution, not
+    // merely admit it.
+    expect(choice.adapted?.how.length ?? 0).toBeGreaterThan(20);
+  });
+
+  it("lets an explicitly named engine beat a genre mapping", () => {
+    // The author said flappy bird. They know what they want better than a
+    // keyword table does.
+    const choice = chooseEngine("a racing game like flappy bird");
+    expect(choice.kind).toBe("engine");
+    if (choice.kind === "engine") {
+      expect(choice.engine).toBe("endless-flyer");
+      expect(choice.adapted).toBeUndefined();
+    }
+  });
+
+  it("still refuses genres whose verbs match nothing, by name", () => {
     for (const [prompt, label] of [
-      ["a racing game with karts", "racing"],
-      ["a space invaders shooter", "shooter"],
       ["a tetris puzzle", "puzzle"],
+      ["a tower defence game", "tower defence"],
+      ["a chess board game", "card or board"],
     ] as const) {
       const choice = chooseEngine(prompt);
       expect(choice.kind, prompt).toBe("no-engine");

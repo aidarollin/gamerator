@@ -39,6 +39,8 @@ export async function generateLive(
   brief: ArcadeBrief,
   engine: Engine,
   repair?: { previous: unknown; issues: { path: string; message: string }[] },
+  /** Set when this engine is standing in for a genre it does not have. */
+  adapted?: { requested: string; how: string },
 ): Promise<LiveResult> {
   const client = new Anthropic();
   const model = configuredModel();
@@ -46,7 +48,18 @@ export async function generateLive(
   const messages: Anthropic.MessageParam[] = [
     {
       role: "user",
-      content: `${renderArcadeBrief(brief)}\nEngine: ${engine}`,
+      // The adaptation is told to the model as well as to the reader. Without
+      // it a request for a racing game comes back titled "Jump the Blocks" -
+      // mechanically correct, and answering a question nobody asked.
+      content: [
+        renderArcadeBrief(brief),
+        `Engine: ${engine}`,
+        adapted
+          ? `The author asked for ${adapted.requested}. There is no engine for that, so this one is being dressed as one: ${adapted.how}. Write meta.title and meta.description as ${adapted.requested}, and pick physics that suit it.`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
     },
   ];
   if (repair) {

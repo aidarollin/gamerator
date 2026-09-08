@@ -36,7 +36,7 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/live.ts` | The model provider. Strict tool use |
 | `lib/arcade/live-generate.ts` | guard → cache → model → validate → repair → validate |
 | `lib/arcade/guard.ts` | **The spending wall.** Nothing paid runs without it |
-| `lib/arcade/brief.ts` | Engine routing, including the honest no-engine answer |
+| `lib/arcade/brief.ts` | Engine routing: an engine, an **adaptation**, or an honest no |
 | `components/arcade/` | `GameFrame` (shell) + `engines.tsx` (five factories) |
 | `components/arcade/paint.ts` | Shared drawing: sky, parallax, blocks, ground |
 | `components/arcade/art.ts` | Authored SVGs, tinted from the palette at draw time |
@@ -175,6 +175,12 @@ hold colour, by Zul's decision on 2026-09-06, and `scripts/check-ds.mjs` names
 it explicitly. Everything else - all chrome, every component - is still held to
 tokens. `check:tokens` catches dangling `var(--…)`.
 
+**Three answers to "what game is this?", not two.** An engine, an ADAPTATION
+(a racing game is the runner wearing a different name - said out loud, to the
+reader and to the model), or an honest no. A mapping earns a place only if the
+VERBS match: racing and running are both "go forward, avoid things"; tetris and
+snake share only a grid. An explicitly named engine always wins over a mapping.
+
 **Anything drawn OVER the canvas needs its own contrast.** The hearts are DS
 pink and were invisible on a chemistry game, which is pink. The canvas can be
 any colour now; DOM overlays cannot assume a DS surface behind them.
@@ -198,6 +204,8 @@ failing gate looks green. That happened, and a broken typecheck was committed.
 ## Commands
 
 ```bash
+npm run dev       # free - physics derived from your words in code
+npm run dev:live  # the model ON. Real money. See lib/arcade/guard.ts
 npm run check     # typecheck + lint + check:ds + check:tokens + tests
 npm run build     # opennextjs-cloudflare build (stop the dev server first)
 npx wrangler deploy

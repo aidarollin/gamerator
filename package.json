@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:live": "node scripts/dev-live.mjs",
     "build": "opennextjs-cloudflare build",
     "build:next": "next build",
     "preview": "opennextjs-cloudflare preview",

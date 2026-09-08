@@ -56,24 +56,70 @@ const ENGINE_WORDS: { engine: Engine; words: RegExp; weight: number }[] = [
 ];
 
 /**
- * Genres with no engine and no plan for one. Named explicitly so the answer can
- * be specific about what was asked for.
+ * Genres with no engine of their own that an existing engine can honestly WEAR.
+ *
+ * Zul asked for "motorcycle racing game" and got a refusal, which was a bad
+ * answer: a racing game IS an endless runner in everything but the name. You
+ * move forward, the track speeds up, and hitting something ends the run. The
+ * engine was already there; only the label was missing.
+ *
+ * The rule that keeps this honest is that the ADAPTATION IS SAID OUT LOUD.
+ * Silently handing someone a runner when they asked for a race is the exact
+ * failure `chooseEngine` was written to avoid; telling them "there is no racing
+ * engine, so this is the runner dressed as a race, and here is why that works"
+ * is a different thing entirely. `how` is that sentence.
+ *
+ * A mapping earns a place here only if the VERBS match. Racing and running are
+ * both "go forward, avoid things". Tetris and snake are both on a grid and have
+ * nothing else in common, so a puzzle stays refused.
+ */
+const ADAPTED: { label: string; words: RegExp; engine: Engine; how: string }[] = [
+  {
+    label: "a racing game",
+    words: /\brac(e|es|ing)\b|\bkart\b|driving|car game|motorbike|motorcycle|\bbike\b|\blumba\b/i,
+    engine: "endless-runner",
+    how: "you ride forward, the track gets faster as you go, and clipping an obstacle ends the run",
+  },
+  {
+    label: "a shooter",
+    words: /shooter|shoot.?em|\bfps\b|space invaders|galaga|asteroids/i,
+    engine: "brick-breaker",
+    how: "you fire from the bottom of the screen and clear the formation above you, one hit at a time",
+  },
+  {
+    label: "an adventure game",
+    words: /\brpg\b|role.?play|adventure|open world|minecraft|roblox|quest/i,
+    engine: "platformer",
+    how: "a level to cross - run, jump the gaps, collect what you find and reach the flag",
+  },
+];
+
+/**
+ * Genres with no engine and no honest adaptation. Named explicitly so the
+ * answer can be specific about what was asked for.
  */
 const UNSUPPORTED: { label: string; words: RegExp }[] = [
   // "a fighting game" lived here until 2026-09-07. The reason on record was
   // that Pandai's avatars are single static PNGs, which is true and was the
   // wrong conclusion: this renderer already animates static sprites
   // procedurally. It is the `duel` engine now. See docs/SCOPE.md.
-  { label: "a shooter", words: /shooter|shoot.?em|fps|gun|space invaders|galaga/i },
-  { label: "a racing game", words: /rac(e|ing)|kart|driving|car game|lumba/i },
-  { label: "a puzzle game", words: /tetris|puzzle|match.?3|candy|sudoku|2048|teka.?teki/i },
-  { label: "a tower defence game", words: /tower defen[cs]e|td game/i },
-  { label: "an RPG", words: /\brpg\b|role.?play|adventure game|open world|minecraft|roblox/i },
-  { label: "a card or board game", words: /card game|board game|chess|checkers|catur|poker/i },
+  //
+  // Racing, shooters and adventures moved to ADAPTED on 2026-09-08. What is
+  // left is what genuinely has no shared verb with anything in the catalogue.
+  { label: "a puzzle game", words: /tetris|puzzle|match.?3|candy crush|sudoku|2048|teka.?teki/i },
+  { label: "a tower defence game", words: /tower defen[cs]e|\btd game\b/i },
+  { label: "a card or board game", words: /card game|board game|chess|checkers|catur|poker|domino/i },
+  { label: "a typing or music game", words: /typing game|rhythm game|guitar hero|osu\b/i },
 ];
 
 export type EngineChoice =
-  | { kind: "engine"; engine: Engine; confident: boolean }
+  | {
+      kind: "engine";
+      engine: Engine;
+      confident: boolean;
+      /** Present when this engine is standing in for a genre of its own. */
+      adapted?: { requested: string; how: string };
+    }
   | { kind: "no-engine"; requested: string; nearest: Engine };
 
 /**
@@ -93,6 +139,26 @@ export function chooseEngine(prompt: string): EngineChoice {
   const scores = new Map<Engine, number>();
   for (const { engine, words, weight } of ENGINE_WORDS) {
     if (words.test(prompt)) scores.set(engine, (scores.get(engine) ?? 0) + weight);
+  }
+
+  /**
+   * An adaptation only applies when nothing NAMED an engine.
+   *
+   * "a racing game like flappy bird" names one, and the person who wrote it
+   * knows what they want better than a keyword table does. Checking the scores
+   * first means an explicit request always wins over a genre mapping.
+   */
+  if (scores.size === 0) {
+    for (const a of ADAPTED) {
+      if (a.words.test(prompt)) {
+        return {
+          kind: "engine",
+          engine: a.engine,
+          confident: true,
+          adapted: { requested: a.label, how: a.how },
+        };
+      }
+    }
   }
 
   if (scores.size === 0) {

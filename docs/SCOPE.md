@@ -159,3 +159,39 @@ rather than discovering in review.
 **Status: still not built, but no longer "not building".** It is a real engine's
 worth of work - roughly the size of the platformer plus its level generator -
 and it needs Zul to say go. The entry above is superseded by this one.
+
+### 2026-09-08 — Adaptation: a third answer between yes and no
+
+Zul typed "motorcycle racing game" and got a refusal. That was a bad answer. A
+racing game **is** an endless runner in everything but the name: you go forward,
+the track speeds up, and hitting something ends the run. The engine already
+existed; only the label was missing.
+
+So there are now three outcomes instead of two:
+
+| Outcome | When | Example |
+| --- | --- | --- |
+| **An engine** | the prompt names one | "a flappy bird" |
+| **An adaptation** | no engine of its own, but an existing one shares the VERBS | "a racing game" → endless-runner |
+| **No engine** | nothing shares a verb | "a tetris puzzle" |
+
+Adapted today: **racing → endless-runner**, **shooter → brick-breaker**,
+**adventure/RPG → platformer**. Still refused: puzzle, tower defence, card and
+board games, rhythm and typing games.
+
+**The rule that keeps this honest: the adaptation is said out loud, to the
+reader and to the model.** Silently handing someone a runner when they asked for
+a race is exactly the failure `chooseEngine` was written to prevent - the whole
+point of that file is that "none of them" is a real answer. Announcing it is a
+different thing: "there is no racing engine, so this is the runner wearing it,
+and here is why that works."
+
+Telling the MODEL matters too. Without it a racing request came back titled
+"Jump the Blocks" - mechanically right and answering a question nobody asked.
+With it: *"Speed Rider - ride your motorcycle down the track and jump over every
+obstacle in your lane."*
+
+**A mapping earns a place only if the verbs match.** Racing and running are both
+"go forward, avoid things". Tetris and snake are both on a grid and have nothing
+else in common. An explicitly named engine always beats a genre mapping - "a
+racing game like flappy bird" is a flyer, because the author said so.

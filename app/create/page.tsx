@@ -4,6 +4,7 @@ import { ArcadeGame } from "@/components/arcade/ArcadeGame";
 import { ExportPanel } from "@/components/arcade/ExportPanel";
 import { headers } from "next/headers";
 import { generateArcade, readLanguage } from "@/lib/arcade/generate";
+import { providerMode } from "@/lib/config";
 import { ArcadeBrief } from "@/lib/arcade/brief";
 import { ENGINES } from "@/lib/arcade/schema";
 import { CHARACTERS } from "@/components/arcade/characters";
@@ -69,11 +70,24 @@ export default async function CreatePage({
           <button className={s.submit} type="submit">
             Make it
           </button>
-          <p className={s.note}>
-            Free. Nothing here calls a paid model yet &mdash; the physics are
-            derived from your words in code. See{" "}
-            <code>lib/arcade/generate.ts</code>.
-          </p>
+          {/* This said "nothing here calls a paid model yet" for weeks, and the
+              hour the model was switched on it became a lie printed under the
+              button that spends the money. The page reports the mode it is
+              actually in. */}
+          {providerMode() === "live" ? (
+            <p className={s.note}>
+              A model writes the physics for each game, so this costs real money
+              per new prompt. Asking the same thing twice is free &mdash; it is
+              cached. Every game is still checked by simulation before you see
+              it. See <code>lib/arcade/guard.ts</code> for the limits.
+            </p>
+          ) : (
+            <p className={s.note}>
+              Free. Nothing here calls a paid model &mdash; the physics are
+              derived from your words in code. See{" "}
+              <code>lib/arcade/generate.ts</code>.
+            </p>
+          )}
         </form>
 
         <div className={s.examples}>
@@ -219,6 +233,17 @@ async function Result({ params }: { params: Record<string, string | undefined> }
           "a keyword table chose this" are different claims, and letting a
           reader assume the first while the second is true would undo the point
           of the whole project. */}
+      {/* An adaptation is announced, never silent. Handing someone a runner
+          when they asked for a race and saying nothing is precisely the failure
+          the routing layer exists to avoid - the difference between a default
+          and a silent one. */}
+      {outcome.adapted && (
+        <p className={s.guess}>
+          There is no engine for <strong>{outcome.adapted.requested}</strong> yet,
+          so this is the closest one wearing it: {outcome.adapted.how}. If that is
+          not what you meant, name a genre &mdash; {ENGINES.join(", ")}.
+        </p>
+      )}
       {outcome.source && outcome.source !== "tuner" && (
         <p className={s.guess}>
           {outcome.source === "cache"

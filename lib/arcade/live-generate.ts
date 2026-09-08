@@ -39,6 +39,8 @@ export async function generateArcadeLive(
   brief: ArcadeBrief,
   engine: Engine,
   client: string,
+  /** Set when this engine is dressed as a genre it is not. */
+  adapted?: { requested: string; how: string },
 ): Promise<LiveOutcome> {
   // The same brief must not be billed twice. `/create` reads its brief from the
   // query string, so refreshes, shared links and the back button all re-render
@@ -50,6 +52,7 @@ export async function generateArcadeLive(
     palette: brief.palette,
     difficulty: brief.difficulty,
     language: brief.language,
+    adapted: adapted?.requested,
   });
   const hit = cached<ArcadeSpec>(key);
   if (hit) return { status: "ok", spec: hit, repaired: false, cached: true };
@@ -102,7 +105,7 @@ export async function generateArcadeLive(
 
   const prepare = (raw: unknown) => withBudget(shape(raw));
 
-  const first = await generateLive(brief, engine);
+  const first = await generateLive(brief, engine, undefined, adapted);
   if (first.kind === "refusal") return { status: "refused", reason: first.reason };
   if (first.kind === "error") {
     return { status: "error", code: first.code, message: first.message };
@@ -118,7 +121,7 @@ export async function generateArcadeLive(
   // reasons - which are facts about numbers, not opinions - and asked again.
   const issues = issuesOf(parsed.error);
 
-  const second = await generateLive(brief, engine, { previous: first.raw, issues });
+  const second = await generateLive(brief, engine, { previous: first.raw, issues }, adapted);
   if (second.kind === "refusal") return { status: "refused", reason: second.reason };
   if (second.kind === "error") {
     return { status: "error", code: second.code, message: second.message };

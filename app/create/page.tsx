@@ -8,6 +8,8 @@ import { providerMode } from "@/lib/config";
 import { ArcadeBrief } from "@/lib/arcade/brief";
 import { ENGINES } from "@/lib/arcade/schema";
 import { CHARACTERS } from "@/components/arcade/characters";
+import { GameGallery } from "@/components/arcade/GameGallery";
+import { GALLERY } from "@/lib/arcade/gallery";
 import s from "./create.module.css";
 
 export const metadata = {
@@ -16,17 +18,14 @@ export const metadata = {
 };
 
 /**
- * The examples are the only place most people find out what this can do, so
- * they cover the RANGE rather than five variations of the first engine built.
- * Four of the ten engines had shipped without ever appearing here.
+ * Prompts that show what the box UNDERSTANDS, rather than what it can build -
+ * the gallery below answers that far better than a list of strings can. These
+ * are the things a card cannot show: a difficulty, a character, a colour, a
+ * genre with no engine that gets adapted, and a request written in Malay.
  */
 const EXAMPLES = [
   "a hard flappy bird with PBot through chemistry pink pipes",
-  "a pac man style maze chase with ghosts",
-  "a tetris puzzle that speeds up",
-  "a candy crush style match 3 for Year 3",
-  "a space invaders game with PBot",
-  "a mortal kombat style fighting game",
+  "an easy gentle maze chase for Year 1, Nadia, forest green",
   "motorcycle racing game",
   "permainan terbang yang senang untuk Tahun 2",
 ];
@@ -108,7 +107,16 @@ export default async function CreatePage({
         </div>
       </Card>
 
+      {/* The gallery goes ABOVE the result when there is one, and directly
+          under the box when there is not. A blank text box is the least
+          informative thing this product could have led with, and it led with it
+          for every engine ever built - four of the ten had shipped without once
+          being named on this page. */}
       {submitted && <Result params={sp} />}
+
+      <Card>
+        <GameGallery games={GALLERY} />
+      </Card>
     </main>
   );
 }

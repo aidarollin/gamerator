@@ -1762,3 +1762,64 @@ Four brand-new renderers, all green, all returning 200, all drawing:
   without ever appearing there.
 
 `npm run check` green: typecheck, lint, `check:ds`, `check:tokens`, 339 tests.
+
+---
+
+## 2026-09-08 (later still) — The games are visible now
+
+Zul: *"the available game is not clear, list all the available games with
+preview so user could choose."*
+
+He was right, and it had been true since the first engine. `/create` was a text
+box. The only way to discover that a maze chase existed was to guess the word
+"maze" — and **ten engines is worse than five for that**, not better: the more
+it can do, the less a blank box tells you. Four of the ten had shipped without
+ever being named on the page that makes them.
+
+### A gallery of ten cards, each really running
+
+`components/arcade/EnginePreview.tsx` mounts the **real factory** against the
+**real spec** through the **real palette**, in a small canvas, driven by an
+arcade cabinet's attract mode. Not a screenshot: a picture committed to the repo
+is a picture of a game that may not exist any more, and this one cannot drift
+from what `/play` shows because it is the same code.
+
+`paletteFor` came out of `GameFrame` so the two cannot disagree about colour —
+a preview painting a different palette from the game it previews is a preview
+that lies, and that is exactly the copy that rots quietly.
+
+Each card carries the engine's name and **its verbs** — "run a maze, clear every
+dot, stay away from what is chasing you". That sentence is the same one the
+router uses to decide whether a new genre can wear this engine, and showing the
+reader the actual decision rule turns out to be more useful than the engine's id
+ever was.
+
+`lib/arcade/gallery.ts` derives every field: name and verbs from `catalogue.ts`,
+the prompt from that entry's own first example — the string `catalogue.test.ts`
+already proves routes there, so **clicking a card gives you the game on the
+card** — and the spec from the engine's `.valid` fixture. A hand-kept gallery
+would be a second list that agrees on the day it is written.
+
+### What the screenshots caught, again
+
+1. **Eight of the ten previews were empty grey boxes.** The IntersectionObserver
+   that keeps off-screen cards from burning battery also meant a card below the
+   fold had never painted a single frame. Every preview now plays eight seconds
+   on mount and draws once, before visibility is considered at all.
+2. **Match-3 sat perfectly still through eighty taps.** Its board only moves
+   when a swap actually matches, and the attract driver cycled through the same
+   twenty cells — a closed loop: nothing matched, so nothing collapsed, so the
+   board could never become one where those swaps would work. It sweeps the
+   whole board a cell at a time now. 21 of 70 cleared in the warm-up.
+3. **Every score read 0.** The preview host stubbed `addScore`, so the engines
+   that draw their own score drew a permanent zero — a game that looks frozen,
+   which is the one thing these cards exist to disprove.
+4. **47ms of main-thread jank.** Each canvas allocated 720x1080 to display in a
+   110px box, roughly ten times the pixels it shows. Sizing the backing store to
+   the card and scaling world coordinates onto it took it to **19ms**.
+
+Also honoured: `prefers-reduced-motion` stops the loops and keeps the warm-up
+frame, because ten looping canvases is precisely what that setting is for and
+CSS cannot reach inside a canvas.
+
+`npm run check` green: typecheck, lint, `check:ds`, `check:tokens`, 339 tests.

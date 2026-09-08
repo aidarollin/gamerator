@@ -37,6 +37,9 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/blocks.ts` | Tetris: the seven pieces and the placement-time check |
 | `lib/arcade/match3.ts` | Match-3: board, matches, collapse, "is there a move" |
 | `components/arcade/*-engine.tsx` | One renderer per newer engine, out of `engines.tsx` |
+| `lib/arcade/gallery.ts` | The ten cards on `/create`, **derived** from the catalogue |
+| `components/arcade/EnginePreview.tsx` | A card playing itself. Real engine, attract mode |
+| `components/arcade/palette-for.ts` | Scene-then-DS colour, shared by the game and its preview |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. Strict tool use |
 | `lib/arcade/live-generate.ts` | guard → cache → model → validate → repair → validate |

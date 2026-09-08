@@ -1,0 +1,102 @@
+.wrap {
+  display: grid;
+  gap: var(--spacing-component-sm);
+}
+
+.head {
+  display: grid;
+  gap: var(--spacing-component-3xs);
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-default-heading);
+}
+
+.lede {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-default-body);
+}
+
+/*
+ * Two across on a phone, wider as there is room. Ten cards in one column is a
+ * list nobody scrolls to the end of, and the whole point is seeing the range.
+ */
+.grid {
+  display: grid;
+  /*
+   * `auto-fill` rather than a fixed count, because ten cards divide badly: at
+   * three across the last row held a single card with two empty slots beside
+   * it. Letting the column count follow the width gives 2 on a phone and 4 on
+   * a wide screen, and both of those divide ten evenly enough to look composed.
+   */
+  grid-template-columns: repeat(auto-fill, minmax(122px, 1fr));
+  gap: var(--spacing-component-xs);
+}
+
+.card {
+  display: grid;
+  gap: var(--spacing-component-3xs);
+  padding: var(--spacing-component-2xs);
+  border-radius: var(--radius-xl);
+  border: var(--border-width-xs) solid var(--border-general-default);
+  background: var(--surface-general-default);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.card:hover,
+.card:focus-visible {
+  border-color: var(--border-primary-default);
+  transform: translateY(-2px);
+}
+
+.card:focus-visible {
+  outline: var(--border-width-s) solid var(--border-primary-focus);
+  outline-offset: 2px;
+}
+
+/*
+ * The canvas sits in a fixed 2:3 box - the world's own aspect - so the previews
+ * line up in a grid instead of each card being a different height.
+ */
+.screen {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--surface-general-page-secondary);
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-default-heading);
+  line-height: 1.3;
+}
+
+.verbs {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-default-caption);
+}
+
+/*
+ * No animation for anyone who has asked for none. Ten looping canvases is
+ * exactly the kind of motion that setting exists for, so the previews hold
+ * their first frame instead.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: none;
+  }
+}

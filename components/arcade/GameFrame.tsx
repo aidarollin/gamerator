@@ -9,16 +9,10 @@ import {
 } from "react";
 import type { ArcadeSpec } from "@/lib/arcade/schema";
 import { WORLD } from "@/lib/arcade/schema";
-import {
-  subjectRamp,
-  accentRamp,
-  SUBJECT_KEYS,
-  VAR_VALUES,
-} from "@/lib/ds/tokens.generated";
 import { loadCharacter, CHARACTERS, type Mood } from "./characters";
 import { loadArt } from "./art";
 import { shade, type Palette } from "./paint";
-import { sceneFor } from "@/lib/arcade/palettes";
+import { paletteFor } from "./palette-for";
 import { formatClock } from "@/lib/arcade/round";
 import * as sound from "./sound";
 import a from "./arcade.module.css";
@@ -65,13 +59,6 @@ export type Engine = {
 };
 
 export type EngineFactory = (host: EngineHost, spec: ArcadeSpec) => Engine;
-
-function readToken(el: HTMLElement, cssVar: string) {
-  const name = cssVar.startsWith("var(")
-    ? cssVar.slice(4, -1).split(",")[0].trim()
-    : cssVar;
-  return getComputedStyle(el).getPropertyValue(name).trim() || VAR_VALUES[name] || "transparent";
-}
 
 export function GameFrame({
   spec,
@@ -173,39 +160,9 @@ export function GameFrame({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    /**
-     * Colour, in the order Zul settled on: the game's own scene first, the
-     * design system as the backup.
-     *
-     * The DS branch is not dead code kept for sentiment - it is what any
-     * palette key without a scene renders through, which is what happens the
-     * day the DS gains a subject and `palettes.ts` has not caught up. A new
-     * subject then looks a little flat instead of throwing.
-     */
-    // An arrow bound after the null guard, not a hoisted declaration: a
-    // function statement can be called before `host` is proven non-null, so TS
-    // refuses to carry the narrowing into it.
-    const dsPalette = (): Palette => {
-      const isSubject = (SUBJECT_KEYS as readonly string[]).includes(spec.theme.palette);
-      const ramp = isSubject
-        ? subjectRamp(spec.theme.palette as (typeof SUBJECT_KEYS)[number])
-        : accentRamp(spec.theme.palette as never);
-
-      // The saturated end of the ramp, not the pale end. This one choice is
-      // most of the difference between "a game" and "a component demo".
-      return {
-        deep: readToken(host, ramp.focus),
-        mid: readToken(host, ramp.default),
-        light: readToken(host, ramp.subtleHover),
-        edge: readToken(host, ramp.hover),
-        ink: readToken(host, "--text-default-heading"),
-        white: readToken(host, "--surface-general-default"),
-        gold: readToken(host, "--status-coins-default"),
-        danger: readToken(host, "--surface-warning-default"),
-      };
-    };
-
-    const palette: Palette = sceneFor(spec.theme.palette, spec.theme.background) ?? dsPalette();
+    // Colour: the game's own scene first, the design system as the backup.
+    // Shared with the gallery's previews - see ./palette-for.ts.
+    const palette: Palette = paletteFor(host, spec);
 
     const hostApi: EngineHost = {
       ctx,

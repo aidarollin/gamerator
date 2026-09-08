@@ -1,0 +1,21 @@
+{
+  "specVersion": "2.0",
+  "engine": "falling-blocks",
+  "meta": {
+    "title": "Aidan Stack",
+    "description": "Turn each falling piece and complete a row.",
+    "language": "en",
+    "difficulty": "normal"
+  },
+  "theme": { "palette": "chemistry", "character": "aidan", "background": "plain" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 25 },
+  "rules": {
+    "cols": 8,
+    "rows": 16,
+    "dropSpeed": 2.4,
+    "speedUp": 0.1,
+    "linesToWin": 10,
+    "easyPieces": true,
+    "lives": 3
+  }
+}

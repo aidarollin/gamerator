@@ -5,6 +5,10 @@ import { gapCentres, flyerAt, SIM } from "@/lib/arcade/simulate";
 import { buildLevel, LEVEL, type Plat } from "@/lib/arcade/level";
 import { runnerAt, runnerObstacleX } from "@/lib/arcade/engines";
 import { duelFactory } from "./duel-engine";
+import { shooterFactory } from "./shooter-engine";
+import { mazeFactory } from "./maze-engine";
+import { blocksFactory } from "./blocks-engine";
+import { match3Factory } from "./match3-engine";
 import {
   activate,
   initPowers,
@@ -27,7 +31,7 @@ import { makeRng as rngFor } from "@/lib/game/random";
 import type { Engine, EngineFactory, EngineHost } from "./GameFrame";
 
 /**
- * The five engines. Each is only its own logic - the canvas, palette, loop,
+ * The ten engines. Each is only its own logic - the canvas, palette, loop,
  * input and screens all live in GameFrame.
  *
  * Every one of them generates its level from a seeded RNG so the same spec
@@ -844,6 +848,10 @@ export const FACTORIES: Record<ArcadeSpec["engine"], EngineFactory> = {
   "endless-runner": runnerFactory,
   platformer: platformerFactory,
   duel: duelFactory,
+  shooter: shooterFactory,
+  "maze-chase": mazeFactory,
+  "falling-blocks": blocksFactory,
+  "match-3": match3Factory,
 };
 
 export const HINTS: Record<ArcadeSpec["engine"], string> = {
@@ -853,6 +861,10 @@ export const HINTS: Record<ArcadeSpec["engine"], string> = {
   "endless-runner": "Tap to jump",
   platformer: "Tap left or right to move, tap the top to jump",
   duel: "Tap the top to strike, left or right to step",
+  shooter: "Drag to steer - you fire on your own",
+  "maze-chase": "Tap the side you want to turn towards",
+  "falling-blocks": "Tap the top to turn, the sides to move, the bottom to drop",
+  "match-3": "Tap a piece, then tap a neighbour to swap",
 };
 
 export type { Engine };

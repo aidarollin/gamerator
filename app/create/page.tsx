@@ -15,12 +15,20 @@ export const metadata = {
   description: "Describe a game and play it.",
 };
 
+/**
+ * The examples are the only place most people find out what this can do, so
+ * they cover the RANGE rather than five variations of the first engine built.
+ * Four of the ten engines had shipped without ever appearing here.
+ */
 const EXAMPLES = [
   "a hard flappy bird with PBot through chemistry pink pipes",
-  "an easy gentle flyer for Year 1, Nadia, forest green",
-  "fast and brutal, tight gaps, one life, Aidan at night",
-  "permainan terbang yang senang untuk Tahun 2",
+  "a pac man style maze chase with ghosts",
+  "a tetris puzzle that speeds up",
+  "a candy crush style match 3 for Year 3",
+  "a space invaders game with PBot",
   "a mortal kombat style fighting game",
+  "motorcycle racing game",
+  "permainan terbang yang senang untuk Tahun 2",
 ];
 
 export default async function CreatePage({
@@ -180,12 +188,24 @@ async function Result({ params }: { params: Record<string, string | undefined> }
           wonder why it is not what you asked for: the catalog has{" "}
           {ENGINES.join(", ")}.
         </p>
+        {/* WHY, not just no. A refusal that only says "not yet" gives the
+            reader nothing to act on and nothing to disagree with - and every
+            one of these reasons has been wrong before. "A fighting game" was
+            refused for a year on a reason that turned out to be false, and it
+            is the duel engine now. */}
+        {outcome.why && (
+          <p className={s.body}>
+            The specific reason: {outcome.why}.
+          </p>
+        )}
         <p className={s.body}>
           An engine is code, tests and a design review &mdash; a change to this
           repository, not something a prompt can conjure. Try{" "}
           <Link href="/create?prompt=a+flappy+bird+with+PBot">a flyer</Link>,{" "}
-          <Link href="/create?prompt=a+brick+breaker+game">breakout</Link> or{" "}
-          <Link href="/create?prompt=a+snake+game">snake</Link> instead.
+          <Link href="/create?prompt=a+pac+man+style+game">a maze chase</Link>,{" "}
+          <Link href="/create?prompt=a+tetris+puzzle">falling blocks</Link> or{" "}
+          <Link href="/create?prompt=a+space+invaders+game">a space shooter</Link>{" "}
+          instead.
         </p>
       </Card>
     );

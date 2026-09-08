@@ -99,6 +99,13 @@ export async function generateLive(
            * sensible defaults in code - and `scoring.timeLimit` is derived from
            * the words in the request instead, where "two minute" already means
            * something. See live-generate.ts.
+           *
+           * The two BOARD SEEDS are hidden for a different reason and it is the
+           * same shape of mistake. `mazeSeed` and `boardSeed` decide which maze
+           * and which opening board a spec gets; they are not a design choice
+           * anyone could make well, and asking a model for a number between 1
+           * and 999 spends tokens on a dice roll. They are derived from the
+           * prompt in code, which also makes the same words give the same board.
            */
           input_schema: toStrictJsonSchema(
             ENGINE_SCHEMAS[engine]
@@ -106,6 +113,12 @@ export async function generateLive(
               .extend({
                 theme: ENGINE_SCHEMAS[engine].shape.theme.omit({ opponent: true }),
                 scoring: ENGINE_SCHEMAS[engine].shape.scoring.omit({ timeLimit: true }),
+                ...(engine === "maze-chase"
+                  ? { rules: ENGINE_SCHEMAS[engine].shape.rules.omit({ mazeSeed: true }) }
+                  : {}),
+                ...(engine === "match-3"
+                  ? { rules: ENGINE_SCHEMAS[engine].shape.rules.omit({ boardSeed: true }) }
+                  : {}),
               }),
           ) as Anthropic.Tool.InputSchema,
         },

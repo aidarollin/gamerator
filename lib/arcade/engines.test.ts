@@ -9,6 +9,10 @@ import {
   endlessRunnerVerdict,
   platformerVerdict,
 } from "./engines";
+import { ShooterRules, shooterVerdict } from "./shooter";
+import { MazeRules, mazeVerdict } from "./maze";
+import { BlocksRules, blocksVerdict } from "./blocks";
+import { MatchThreeRules, match3Verdict } from "./match3";
 import { WORLD } from "./schema";
 import { makeRng } from "@/lib/game/random";
 
@@ -58,11 +62,17 @@ function fuzz(
   parse: (v: unknown) => { success: boolean; data?: unknown },
   verdict: (r: never) => { ok: boolean },
   ranged: string[] = [],
+  /**
+   * `maze-chase` runs a full simulation per candidate rather than arithmetic,
+   * so it gets fewer draws. Still hundreds of boards, and it still has to both
+   * accept and reject somewhere in them.
+   */
+  runs = 800,
 ) {
   const rng = makeRng(4242);
   let accepted = 0;
   let rejected = 0;
-  for (let i = 0; i < 800; i++) {
+  for (let i = 0; i < runs; i++) {
     const candidate = sampleFrom(bounds, rng, ranged);
     const parsed = parse(candidate);
     if (!parsed.success) continue;
@@ -110,6 +120,46 @@ describe("every check can reject something in bounds", () => {
     { gravity: [900, 4000], jumpVelocity: [-1300, -350], moveSpeed: [80, 340], platforms: [4, 14], maxGap: [40, 220], coins: [0, 20], lives: [1, 5] },
     (v) => PlatformerRules.safeParse(v),
     (r) => platformerVerdict(r),
+  );
+  fuzz(
+    "shooter",
+    {
+      playerSpeed: [120, 520], shotSpeed: [200, 800], fireCooldown: [0.12, 1.2],
+      fleetCols: [3, 8], fleetRows: [2, 5], fleetSpeed: [10, 140], fleetDescent: [4, 44],
+      enemyFireRate: [0, 2], enemyShotSpeed: [80, 420], lives: [1, 5],
+    },
+    (v) => ShooterRules.safeParse(v),
+    (r) => shooterVerdict(r, WORLD.width),
+  );
+  fuzz(
+    "maze-chase",
+    {
+      gridCols: [9, 21], gridRows: [9, 21], playerSpeed: [2, 10], chaserSpeed: [1, 9],
+      chasers: [1, 4], chaserSmarts: [0, 1], dotTarget: [5, 120], powerPellets: [0, 4],
+      scaredSeconds: [2, 10], mazeSeed: [1, 999], lives: [1, 5],
+    },
+    (v) => MazeRules.safeParse(v),
+    (r) => mazeVerdict(r),
+    [],
+    150,
+  );
+  fuzz(
+    "falling-blocks",
+    {
+      cols: [6, 12], rows: [10, 20], dropSpeed: [0.6, 8], speedUp: [0, 0.35],
+      linesToWin: [3, 40], easyPieces: [true, false], lives: [1, 5],
+    },
+    (v) => BlocksRules.safeParse(v),
+    (r) => blocksVerdict(r),
+  );
+  fuzz(
+    "match-3",
+    {
+      cols: [5, 8], rows: [5, 8], colours: [3, 6], moveLimit: [8, 60],
+      clearTarget: [10, 120], boardSeed: [1, 999], lives: [1, 5],
+    },
+    (v) => MatchThreeRules.safeParse(v),
+    (r) => match3Verdict(r),
   );
 });
 

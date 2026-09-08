@@ -5,6 +5,7 @@ import { generateLive } from "./live";
 import { DuelRules, playableDuel } from "./duel";
 import { allowGeneration, cacheKey, cached, recordCall, remember } from "./guard";
 import type { ArcadeBrief } from "./brief";
+import { hashString } from "@/lib/game/random";
 import { readTimeLimit } from "./generate";
 
 /**
@@ -103,7 +104,21 @@ export async function generateArcadeLive(
     return { ...r, scoring: { ...r.scoring, timeLimit } };
   };
 
-  const prepare = (raw: unknown) => withBudget(shape(raw));
+  /**
+   * The board seeds, derived rather than asked for. See live.ts for why they
+   * are hidden from the model: a seed is a dice roll, not a design decision,
+   * and deriving it from the prompt means the same words give the same maze.
+   */
+  const withSeed = (raw: unknown): unknown => {
+    const field =
+      engine === "maze-chase" ? "mazeSeed" : engine === "match-3" ? "boardSeed" : null;
+    if (!field || typeof raw !== "object" || raw === null) return raw;
+    const r = raw as { rules?: Record<string, unknown> };
+    if (!r.rules) return raw;
+    return { ...r, rules: { ...r.rules, [field]: (hashString(brief.prompt) % 999) + 1 } };
+  };
+
+  const prepare = (raw: unknown) => withSeed(withBudget(shape(raw)));
 
   const first = await generateLive(brief, engine, undefined, adapted);
   if (first.kind === "refusal") return { status: "refused", reason: first.reason };

@@ -22,10 +22,18 @@ import f_endless_flyer_valid from "./fixtures/endless-flyer.valid.json";
 import f_endless_runner_hard from "./fixtures/endless-runner.hard.json";
 import f_endless_runner_unplayable from "./fixtures/endless-runner.unplayable.json";
 import f_endless_runner_valid from "./fixtures/endless-runner.valid.json";
+import f_falling_blocks_unplayable from "./fixtures/falling-blocks.unplayable.json";
+import f_falling_blocks_valid from "./fixtures/falling-blocks.valid.json";
+import f_match_3_unplayable from "./fixtures/match-3.unplayable.json";
+import f_match_3_valid from "./fixtures/match-3.valid.json";
+import f_maze_chase_unplayable from "./fixtures/maze-chase.unplayable.json";
+import f_maze_chase_valid from "./fixtures/maze-chase.valid.json";
 import f_model_generated from "./fixtures/model-generated.json";
 import f_platformer_hard from "./fixtures/platformer.hard.json";
 import f_platformer_unplayable from "./fixtures/platformer.unplayable.json";
 import f_platformer_valid from "./fixtures/platformer.valid.json";
+import f_shooter_unplayable from "./fixtures/shooter.unplayable.json";
+import f_shooter_valid from "./fixtures/shooter.valid.json";
 import f_snake_easy from "./fixtures/snake.easy.json";
 import f_snake_unplayable from "./fixtures/snake.unplayable.json";
 import f_snake_valid from "./fixtures/snake.valid.json";
@@ -49,10 +57,18 @@ export const ARCADE_FIXTURES: Record<string, unknown> = {
   "endless-runner.hard": f_endless_runner_hard,
   "endless-runner.unplayable": f_endless_runner_unplayable,
   "endless-runner.valid": f_endless_runner_valid,
+  "falling-blocks.unplayable": f_falling_blocks_unplayable,
+  "falling-blocks.valid": f_falling_blocks_valid,
+  "match-3.unplayable": f_match_3_unplayable,
+  "match-3.valid": f_match_3_valid,
+  "maze-chase.unplayable": f_maze_chase_unplayable,
+  "maze-chase.valid": f_maze_chase_valid,
   "model-generated": f_model_generated,
   "platformer.hard": f_platformer_hard,
   "platformer.unplayable": f_platformer_unplayable,
   "platformer.valid": f_platformer_valid,
+  "shooter.unplayable": f_shooter_unplayable,
+  "shooter.valid": f_shooter_valid,
   "snake.easy": f_snake_easy,
   "snake.unplayable": f_snake_unplayable,
   "snake.valid": f_snake_valid,
@@ -76,9 +92,13 @@ export const ARCADE_ACCEPTED = [
   "endless-flyer.valid",
   "endless-runner.hard",
   "endless-runner.valid",
+  "falling-blocks.valid",
+  "match-3.valid",
+  "maze-chase.valid",
   "model-generated",
   "platformer.hard",
   "platformer.valid",
+  "shooter.valid",
   "snake.easy",
   "snake.valid",
 ];

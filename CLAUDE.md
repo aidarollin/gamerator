@@ -22,7 +22,8 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 
 | Path | What |
 | --- | --- |
-| `lib/arcade/schema.ts` | `ArcadeSpec` 2.0, six engines, all validation |
+| `lib/arcade/catalogue.ts` | **Every game somebody might prompt**, and what happens to it |
+| `lib/arcade/schema.ts` | `ArcadeSpec` 2.0, ten engines, all validation |
 | `lib/arcade/simulate.ts` | The **playability simulation** for the flyer |
 | `lib/arcade/engines.ts` | Playability checks for the other four engines |
 | `lib/arcade/ramp.ts` | Ranged physics — `{start, end}` over obstacles |
@@ -31,13 +32,17 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/round.ts` | The round budget, **shared across retries** |
 | `lib/arcade/powerups.ts` | Magnet and Power Rush. **May only make a run easier** |
 | `lib/arcade/duel.ts` | The fighting engine's rules and its simulated match |
-| `components/arcade/duel-engine.tsx` | The duel renderer, kept out of `engines.tsx` |
+| `lib/arcade/shooter.ts` | Space invaders: fleet geometry and its three timings |
+| `lib/arcade/maze.ts` | Pac-Man: the maze, the chasers, and a **full simulation** |
+| `lib/arcade/blocks.ts` | Tetris: the seven pieces and the placement-time check |
+| `lib/arcade/match3.ts` | Match-3: board, matches, collapse, "is there a move" |
+| `components/arcade/*-engine.tsx` | One renderer per newer engine, out of `engines.tsx` |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. Strict tool use |
 | `lib/arcade/live-generate.ts` | guard → cache → model → validate → repair → validate |
 | `lib/arcade/guard.ts` | **The spending wall.** Nothing paid runs without it |
 | `lib/arcade/brief.ts` | Engine routing: an engine, an **adaptation**, or an honest no |
-| `components/arcade/` | `GameFrame` (shell) + `engines.tsx` (five factories) |
+| `components/arcade/` | `GameFrame` (shell) + `engines.tsx` (the first six) |
 | `components/arcade/paint.ts` | Shared drawing: sky, parallax, blocks, ground |
 | `components/arcade/art.ts` | Authored SVGs, tinted from the palette at draw time |
 | `components/arcade/sound.ts` | Synthesised audio. **No files** - Web Audio at runtime |
@@ -179,7 +184,28 @@ tokens. `check:tokens` catches dangling `var(--…)`.
 (a racing game is the runner wearing a different name - said out loud, to the
 reader and to the model), or an honest no. A mapping earns a place only if the
 VERBS match: racing and running are both "go forward, avoid things"; tetris and
-snake share only a grid. An explicitly named engine always wins over a mapping.
+snake share only a grid, which is why tetris got an engine instead of a mapping.
+An explicitly named engine always wins over a mapping.
+
+**A SILENT GUESS IS WORSE THAN A REFUSAL, and it is the failure that hides.**
+Before `catalogue.ts`, anything the router did not recognise returned a flyer
+with `confident: false` - pac-man, tetris, a penalty shootout, a horror game.
+Nothing failed, every test passed, and it was the commonest outcome in the space
+of things people actually type. A refusal is a bad answer somebody can act on; a
+flyer they did not ask for is a wrong answer wearing the costume of a right one.
+`catalogue.test.ts` now asserts no genre in the catalogue can fall through.
+
+**A refusal needs a REASON, because refusal reasons here keep turning out to be
+wrong.** "A fighting game" was refused for months on a claim about sprite sheets
+that did not follow; it is the `duel` engine now. Every entry in the refused
+list names what is actually missing, and that reason is shown to the reader.
+
+**Anything the free tuner cannot produce is a feature only paying customers
+have.** `catalogue.test.ts` tunes every engine at every difficulty and validates
+it. First run: the tuner had NEVER produced a valid `duel`, at any difficulty,
+because its coefficients were written against a difficulty scale that does not
+exist - and nobody had noticed, because the duel fixtures are hand-written and
+the model was on.
 
 **Anything drawn OVER the canvas needs its own contrast.** The hearts are DS
 pink and were invisible on a chemistry game, which is pink. The canvas can be

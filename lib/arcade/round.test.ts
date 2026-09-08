@@ -44,6 +44,24 @@ function specFor(engine: (typeof ENGINES)[number], timeLimit?: number, targetSco
       moveSpeed: 150, reach: 88, strikeWindup: 0.3, strikeRecovery: 0.34,
       opponentReaction: 0.5, opponentAggression: 0.4, hitsToWin: 5, lives: 3,
     },
+    shooter: {
+      playerSpeed: 360, shotSpeed: 640, fireCooldown: 0.24,
+      fleetCols: 5, fleetRows: 3, fleetSpeed: 60, fleetDescent: 16,
+      enemyFireRate: 0.6, enemyShotSpeed: 200, lives: 3,
+    },
+    "maze-chase": {
+      gridCols: 15, gridRows: 15, playerSpeed: 6, chaserSpeed: 3.9,
+      chasers: 2, chaserSmarts: 0.4, dotTarget: 28, powerPellets: 2,
+      scaredSeconds: 6, mazeSeed: 42, lives: 3,
+    },
+    "falling-blocks": {
+      cols: 8, rows: 16, dropSpeed: 2.4, speedUp: 0.1,
+      linesToWin: 10, easyPieces: true, lives: 3,
+    },
+    "match-3": {
+      cols: 7, rows: 7, colours: 5, moveLimit: 28,
+      clearTarget: 70, boardSeed: 42, lives: 3,
+    },
   }[engine] as Record<string, unknown>;
   return { ...base, engine, rules } as unknown as ArcadeSpecInput;
 }

@@ -114,6 +114,98 @@ platformer  (Mario-like, one generated level)
   maxGap         40..220      px widest gap between platforms
   coins          0..20
   lives          1..5
+
+shooter  (Space Invaders: a fleet descends, you slide and fire up)
+  playerSpeed     120..520   px/s the ship slides
+  shotSpeed       200..800   px/s a player shot travels up
+  fireCooldown    0.12..1.2  s between shots - fires on its own, no button
+  fleetCols       3..8
+  fleetRows       2..5
+  fleetSpeed      10..140    px/s the fleet drifts sideways
+  fleetDescent    4..44      px it drops each time it reaches an edge
+  enemyFireRate   0..2       shots per second across the WHOLE fleet
+  enemyShotSpeed  80..420
+  lives           1..5
+
+  THE FLEET MUST BE CLEARABLE BEFORE IT LANDS, and that is simulated. Every
+  alien needs its own shot, so cols x rows x fireCooldown is the floor on how
+  long a wave takes; the fleet reaches the player after about
+  (room above the player / fleetDescent) sweeps of the screen. A big fleet with
+  a long cooldown and a steep descent is rejected. Two more rules the check
+  applies: the fleet must not slide more than two columns while a shot is in
+  the air, and the ship must be able to move its own width in the time an
+  incoming shot is visible at the fleet's CLOSEST approach.
+
+  A worked example that passes: cols 5, rows 3, fleetSpeed 60, fleetDescent 16,
+  fireCooldown 0.24, shotSpeed 640, playerSpeed 360, enemyFireRate 0.6,
+  enemyShotSpeed 200.
+
+maze-chase  (Pac-Man: clear every dot, do not get caught)
+  gridCols        9..21    forced to the nearest odd number when carved
+  gridRows        9..21
+  playerSpeed     2..10    cells per second
+  chaserSpeed     1..9     cells per second
+  chasers         1..4
+  chaserSmarts    0..1     chance of taking the step that closes the distance
+  dotTarget       5..120   dots to clear to win - must fit in the maze
+  powerPellets    0..4     eating one sends the chasers running
+  scaredSeconds   2..10    how long that lasts
+  lives           1..5
+
+  THIS ONE IS SIMULATED IN FULL: the maze is carved, the dots are laid, and a
+  perfect player walks it against the chasers before anyone sees the game. What
+  gets rejected is a board a competent player cannot clear.
+
+  BE CAREFUL WITH CHASERS. Two at 4 cells/s against a 6 cells/s player is a
+  game. Three at 6 with smarts above 0.7 and one life is not - they converge,
+  and no route survives it. If you want it harder, raise chaserSmarts and the
+  dot count before you raise the speed, and always leave at least one power
+  pellet as an escape. lives below 3 with three or more chasers is usually
+  rejected.
+
+  A worked example that passes: 15x15, playerSpeed 6, chaserSpeed 3.9,
+  chasers 2, chaserSmarts 0.4, dotTarget 28, powerPellets 2, scaredSeconds 6,
+  lives 3.
+
+falling-blocks  (Tetris: steer a falling piece, complete a row)
+  cols          6..12
+  rows          10..20
+  dropSpeed     0.6..8     cells per second the piece falls on its own
+  speedUp       0..0.35    cells/s added per line cleared
+  linesToWin    3..40
+  easyPieces    true/false  true = O, I, L, J only. false adds S, Z and T
+  lives         1..5
+
+  THE END OF THE RUN IS WHAT IS CHECKED, not the start. dropSpeed + speedUp x
+  linesToWin is the final speed, and rows divided by it must leave at least 0.9
+  seconds to place a piece - about two deliberate taps. A comfortable opening
+  that becomes unplaceable by line thirty is the commonest way to fail here.
+
+  easyPieces false needs room: a well narrower than 7 columns, or deeper than
+  2.4 times its width, is rejected with S and Z in the bag.
+
+  A worked example that passes: cols 8, rows 16, dropSpeed 2.4, speedUp 0.1,
+  linesToWin 10, easyPieces true.
+
+match-3  (Candy Crush: swap two neighbours to line up three of a colour)
+  cols          5..8
+  rows          5..8
+  colours       3..6     more colours means rarer matches - the real dial
+  moveLimit     8..60    swaps allowed. This engine's clock is MOVES, not time
+  clearTarget   10..120  tiles that must be cleared to win
+  lives         1..5
+
+  TWO THINGS ARE CHECKED. The board must be dense enough that a match is
+  findable rather than lucky - at least about 4.6 tiles of each colour, so six
+  colours on a 5x5 board is rejected. And the target must fit the moves: a swap
+  clears roughly 3 x (1 + 1.4 / colours) tiles even when it lands well, so
+  clearTarget above moveLimit times that is unreachable.
+
+  Do NOT set a timeLimit on this one unless the request explicitly asks for a
+  clock. It is the only genre in the catalogue that is thought about rather
+  than reacted to, and a stopwatch turns it into another reflex test.
+
+  A worked example that passes: 7x7, colours 5, moveLimit 28, clearTarget 70.
 `.trim();
 
 const RULES = `
@@ -140,6 +232,13 @@ HARD RULES
      foodTarget must stay under about 16 cells/second.
    - platformer: a running jump covers moveSpeed * (2 * -jumpVelocity /
      gravity) pixels. That must exceed maxGap, or the level cannot be crossed.
+   - shooter: the wave must be clearable before the fleet lands on the player.
+   - maze-chase: a perfect player must be able to clear every dot without being
+     caught more times than there are lives. Chasers are the dangerous field.
+   - falling-blocks: at the END of the ramp, a piece must still take 0.9s to
+     reach the floor.
+   - match-3: clearTarget must fit inside moveLimit, and the board must be
+     dense enough that matches are findable.
 
 3. Difficulty is a real dial. easy = forgiving numbers and 5 lives; hard =
    tight numbers and 1 life. Do not make everything "normal".
@@ -174,7 +273,7 @@ export function arcadeSystemPrompt(): string {
     ARCADE_SENTINEL,
     "",
     "You do not write code. You choose the numbers that make a game feel the",
-    "way someone described it, for one of five hand-built engines.",
+    "way someone described it, for one of ten hand-built engines.",
     "",
     "ENGINES AND THEIR BOUNDS",
     "",

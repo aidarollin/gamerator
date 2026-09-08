@@ -40,7 +40,7 @@ const DOORS = [
     href: "/play/arcade",
     title: "Play the samples",
     blurb:
-      "Twenty-one hand-written specs across all five engines, including the ones the playability simulation rejects and why.",
+      "Thirty-two hand-written specs across all ten engines, including the ones the playability simulation rejects and why.",
     cta: "Browse",
   },
   {

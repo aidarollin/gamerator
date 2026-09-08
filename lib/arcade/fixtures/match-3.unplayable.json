@@ -1,0 +1,21 @@
+{
+  "specVersion": "2.0",
+  "engine": "match-3",
+  "meta": {
+    "title": "Too Sparse",
+    "description": "Six colours on a small board - a match would be luck.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": { "palette": "biology", "character": "pbot", "background": "plain" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 40 },
+  "rules": {
+    "cols": 5,
+    "rows": 5,
+    "colours": 6,
+    "moveLimit": 10,
+    "clearTarget": 100,
+    "boardSeed": 3,
+    "lives": 1
+  }
+}

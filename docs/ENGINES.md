@@ -38,41 +38,82 @@ choice sets the constraints, and they are different from the old ones:
 
 ## The engines
 
-| id | The machine | Sprite need | Effort |
-| --- | --- | --- | --- |
-| `endless-flyer` | Flappy Bird. One input, gravity, procedural gaps | One static image, rotated | Small |
-| `endless-runner` | Jump and duck past obstacles, ground-based | One image, bob and rotate | Small |
-| `brick-breaker` | Breakout. Paddle, ball, brick grid | **None** — pure DS shapes | Small |
-| `snake` | Grid movement, grow on pickup | **None** — pure DS shapes | Small |
-| `platformer` | Tile levels, enemies, goal | Real animation frames | **Large** |
+Ten of them, each one a distinct set of VERBS — what your hands do. That is the
+axis the catalog is organised on, and it is the one that decides whether a new
+request needs a new engine or can wear an existing one.
 
-The sprite column is not incidental. Pandai's avatars are, by their own audit,
-**single whole PNGs — not layered, not sprite sheets**. So a bird that rotates
-works today; a character with run, jump and idle cycles does not, and the
-platformer needs art that does not currently exist. It is in the catalog because
-it was asked for, and it is last for that reason.
+| id | The machine | What your hands do |
+| --- | --- | --- |
+| `endless-flyer` | Flappy Bird. One input, gravity, procedural gaps | tap to stay up, thread a gap |
+| `endless-runner` | Jump obstacles on the ground, speeding up | go forward, jump what is in the way |
+| `platformer` | One generated level, reachable by construction | run, jump between ground, reach the end |
+| `brick-breaker` | Breakout. Paddle, ball, brick grid | slide along the bottom, bounce, clear a wall |
+| `snake` | Grid movement, grow on pickup | steer a growing line, avoid yourself |
+| `duel` | A timed sparring match, won on points | close distance, time a strike, block one back |
+| `shooter` | A fleet descends; you slide and fire up | slide, fire upward, dodge what comes back |
+| `maze-chase` | Pac-Man. Dots, corridors, pursuers that scatter | run a maze, clear dots, stay away |
+| `falling-blocks` | Tetris. A well, seven pieces, line clears | steer a falling piece, rotate, complete a row |
+| `match-3` | Candy Crush. Swap neighbours, cascade | swap two neighbours, line up three |
 
-`brick-breaker` and `snake` need no art at all: they can be drawn entirely from
-DS tokens. They are the cheapest and the safest, and they are the right place to
-prove the pipeline.
+**None of them needs art that does not exist.** The sprite question dominated
+the first version of this table and it was answered wrong: Pandai's avatars
+really are single whole PNGs with no frames, and the conclusion drawn from that
+— that a platformer and a fighting game were therefore off the table — did not
+follow. This renderer animates static sprites procedurally, and a lunge, a
+recoil and a run cycle are all the same class of transform. Both engines exist
+now, and neither needed a single new asset.
+
+### Three answers, not two
+
+Every prompt gets exactly one of these, and which one is decided in code by
+`lib/arcade/brief.ts` reading the catalog in `lib/arcade/catalogue.ts`.
+
+| Outcome | When | Example |
+| --- | --- | --- |
+| **An engine** | the prompt names one | "a flappy bird" |
+| **An adaptation** | no engine of its own, but a built one shares the VERBS | "a racing game" → `endless-runner` |
+| **No engine** | nothing shares a verb | "a tower defence game" |
+
+An adaptation is **always said out loud**, to the reader and to the model.
+Silently handing someone a runner when they asked for a race is the exact
+failure this layer exists to prevent.
+
+### The catalogue
+
+`lib/arcade/catalogue.ts` is the list of every genre somebody plausibly types,
+with its words, its verbs and its disposition. It is code rather than a document
+because it IS the routing table — a document would drift.
+
+Writing it out found something worse than the missing engines. The old router
+knew about twenty genres; everything else — pac-man, tetris, candy crush, doodle
+jump, a penalty shootout, a horror game — matched nothing and fell through to
+`endless-flyer` with `confident: false`. **A refusal is a bad answer somebody can
+act on. A flyer they did not ask for, with one apologetic line above it, is a
+wrong answer wearing the costume of a right one**, and it was the most common
+outcome in the space of things people actually type.
+
+`catalogue.test.ts` asserts every genre routes as declared, and that no genre in
+the catalogue falls through to the unconfident default.
 
 ### When the request has no engine
 
-A brief asking for a fighting game, a racer, or a tower defence has no engine to
-run on. That is a **first-class outcome**, not an error and not a silent
+A brief asking for a tower defence, a chess game or a rhythm game has no engine
+to run on. That is a **first-class outcome**, not an error and not a silent
 substitution:
 
 ```
 status: "no-engine"
-  requested: "a Mortal Kombat style fighter"
-  nearest:   "endless-runner"
-  message:   what the catalog does have, and that an engine is a pull request
+  requested: "a tower defence game"
+  nearest:   "endless-flyer"
+  why:       "nothing here has an economy, a build phase, or units that act
+              without you - a tower defence is three systems, not a skin"
 ```
 
-The alternative — quietly generating the nearest thing and calling it done —
-produces a user who asked for a fighter and got a runner with no explanation.
-Adding an engine is code, tests and a DS review; it is a change to this
-repository, not a prompt.
+`why` matters as much as the refusal. "No engine for that yet" gives the reader
+nothing to act on and nothing to disagree with — and **every one of these reasons
+has been wrong before**. "A fighting game" was refused for months on a reason
+that turned out to be false, and it is the `duel` engine now. A reason written
+down is a reason that can be checked.
 
 ## The ArcadeSpec
 

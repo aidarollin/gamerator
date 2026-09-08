@@ -1,0 +1,24 @@
+{
+  "specVersion": "2.0",
+  "engine": "shooter",
+  "meta": {
+    "title": "PBot Blaster",
+    "description": "Slide, fire and clear the fleet before it lands.",
+    "language": "en",
+    "difficulty": "normal"
+  },
+  "theme": { "palette": "science", "character": "pbot", "background": "night" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 25 },
+  "rules": {
+    "playerSpeed": 360,
+    "shotSpeed": 640,
+    "fireCooldown": 0.24,
+    "fleetCols": 5,
+    "fleetRows": 3,
+    "fleetSpeed": 60,
+    "fleetDescent": 16,
+    "enemyFireRate": 0.6,
+    "enemyShotSpeed": 200,
+    "lives": 3
+  }
+}

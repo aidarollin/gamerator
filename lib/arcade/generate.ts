@@ -2,6 +2,7 @@ import { ArcadeSpec, type Engine } from "./schema";
 import { chooseEngine, renderArcadeBrief, type ArcadeBrief } from "./brief";
 import { generateArcadeLive } from "./live-generate";
 import { providerMode } from "@/lib/config";
+import { hashString } from "@/lib/game/random";
 
 /**
  * Arcade generation. Stub-first, exactly as the learning pipeline is.
@@ -34,8 +35,12 @@ export type ArcadeOutcome =
       adapted?: { requested: string; how: string };
     }
   | { status: "invalid"; issues: Issue[] }
-  /** No engine exists for the genre asked for, and none is planned. */
-  | { status: "no-engine"; requested: string; nearest: string }
+  /**
+   * No engine exists for the genre asked for. `why` names what is actually
+   * missing - a refusal that only says "not yet" gives the reader nothing to
+   * act on and nothing to argue with.
+   */
+  | { status: "no-engine"; requested: string; nearest: string; why?: string }
   | { status: "error"; code: string; message: string };
 
 // Rounded, because float arithmetic leaks values like 90.80000000000001 into
@@ -137,26 +142,51 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
       };
     }
     case "duel": {
-      // `s` is the difficulty scalar: 0 easy, 1 normal, 2 hard. The dial that
-      // matters is the opponent's reaction - slower than your windup and you
-      // can hit it, faster and you have to bait the block first.
-      const windup = clamp(0.3 - s * 0.06, 0.08, 0.6);
+      /**
+       * THIS ENGINE HAD NEVER PRODUCED A VALID SPEC FROM THE FREE TUNER, at any
+       * difficulty, and nothing said so - the duel fixtures are hand-written and
+       * the model was on, so every duel anyone had seen came from a paid call.
+       * `catalogue.test.ts` tunes every engine at every difficulty, which is
+       * what finally asked the question.
+       *
+       * Two bugs, both from the same root. The comment above this block used to
+       * say "`s` is 0 easy, 1 normal, 2 hard"; `tone.scale` is -1, 0, 1. Every
+       * coefficient here was tuned against a scale that does not exist, so easy
+       * came out with an opponent reacting 0.88s after a 0.36s windup - a
+       * punchbag, rejected as trivial - and hard came out needing 6 hits with
+       * `tone.lives` of 1, which the prompt's own HARD RULE forbids.
+       *
+       * LIVES MEAN SOMETHING DIFFERENT HERE. Everywhere else a life is a retry;
+       * in a duel it is a hit you can take, and the match is a race to land
+       * `hitsToWin` first. One life is not "hard", it is "lose to the first
+       * exchange", so this engine sets its own floor instead of taking the
+       * shared one. Numbers are from the measured playable region in prompt.ts.
+       */
+      const lives = s > 0 ? 3 : s < 0 ? 5 : 4;
+      const windup = clamp(0.29 - s * 0.03, 0.08, 0.6);
       return {
         moveSpeed: clamp(150 + s * 40, 60, 320),
-        reach: clamp(88 - s * 6, 40, 130),
+        reach: clamp(88 - s * 5, 40, 130),
         strikeWindup: windup,
-        strikeRecovery: clamp(0.34 - s * 0.05, 0.1, 0.9),
-        // Easy reacts well after your windup lands; hard reacts inside it.
-        opponentReaction: clamp(windup * (1.9 - s * 0.55), 0.08, 0.9),
-        opponentAggression: clamp(0.35 + s * 0.2, 0, 1),
-        hitsToWin: Math.round(clamp(5 + s, 3, 12)),
-        lives: tone.lives,
+        strikeRecovery: clamp(0.3 - s * 0.03, 0.1, 0.9),
+        // Just above the windup, which is where the simulation says a strike
+        // can land but is not free. Below it, every strike is read and blocked.
+        opponentReaction: clamp(windup + 0.03, 0.08, 0.9),
+        opponentAggression: clamp(0.42 + s * 0.1, 0, 1),
+        // The hard rule from prompt.ts, enforced rather than hoped for: both
+        // fighters land at about the same rate, so needing more hits than you
+        // can take is losing by arithmetic instead of by skill.
+        hitsToWin: lives,
+        lives,
       };
     }
     case "brick-breaker":
       return {
-        ballSpeed: clamp(250 + s * 110, 120, 560),
-        paddleWidth: clamp(96 - s * 26, 40, 160),
+        // 280 rather than 250, because at easy the old base gave a 140px/s ball
+        // behind a 122px paddle, which `brickBreakerVerdict` correctly called a
+        // screensaver - the free tuner could not make an easy Breakout either.
+        ballSpeed: clamp(280 + s * 80, 120, 560),
+        paddleWidth: clamp(96 - s * 22, 40, 160),
         paddleSpeed: clamp(620 + s * 80, 200, 900),
         rows: clamp(3 + (s > 0 ? 2 : 0), 2, 7),
         cols: /wide|many|banyak/.test(p) ? 8 : 6,
@@ -184,6 +214,78 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
         coins: clamp(8 + (s > 0 ? 4 : 0), 0, 20),
         lives: tone.lives,
       };
+    case "shooter": {
+      // A bigger, faster, more aggressive fleet as it gets harder - but the
+      // COOLDOWN comes down with it, because a wave that lands before it can
+      // be cleared is rejected rather than hard.
+      const swarm = /swarm|many|banyak|horde|fleet/.test(p) ? 1 : 0;
+      return {
+        playerSpeed: clamp(360 - s * 40, 120, 520),
+        shotSpeed: clamp(640 + s * 40, 200, 800),
+        fireCooldown: clamp(0.24 - s * 0.05, 0.12, 1.2),
+        fleetCols: Math.round(clamp(5 + s + swarm, 3, 8)),
+        fleetRows: Math.round(clamp(3 + s, 2, 5)),
+        fleetSpeed: clamp(60 + s * 28, 10, 140),
+        fleetDescent: clamp(16 + s * 7, 4, 44),
+        // An easy wave still shoots back. Below 0.15 with a slow fleet the
+        // check calls it a shooting gallery, and it is right to.
+        enemyFireRate: clamp(0.6 + s * 0.35, 0, 2),
+        enemyShotSpeed: clamp(200 + s * 55, 80, 420),
+        lives: tone.lives,
+      };
+    }
+    case "maze-chase": {
+      const big = /big|large|besar|huge/.test(p) ? 2 : 0;
+      return {
+        gridCols: Math.round(clamp(15 + s * 2 + big, 9, 21)),
+        gridRows: Math.round(clamp(15 + s * 2 + big, 9, 21)),
+        playerSpeed: clamp(6 + s * 0.5, 2, 10),
+        chaserSpeed: clamp(3.9 + s * 0.8, 1, 9),
+        chasers: Math.round(clamp(2 + s, 1, 4)),
+        chaserSmarts: clamp(0.4 + s * 0.1, 0, 1),
+        dotTarget: Math.round(clamp(28 + s * 8, 5, 120)),
+        // Two pellets at every difficulty. Hard gets a SHORTER scare rather
+        // than fewer escapes: taking the escape away is what the simulation
+        // kept refusing to certify, and it was right - three pursuers with
+        // nowhere to run is not difficulty, it is arithmetic.
+        powerPellets: 2,
+        scaredSeconds: clamp(6 - s * 2, 2, 10),
+        // Stable per prompt, so the same words always give the same maze - and
+        // so the check simulates the board the person is handed.
+        mazeSeed: (hashString(p) % 999) + 1,
+        // Like the duel, a single life means something harsher here than
+        // elsewhere: one mistake against three chasers ends the board, and the
+        // simulation says so by refusing to certify it.
+        lives: Math.max(3, tone.lives),
+      };
+    }
+    case "falling-blocks":
+      return {
+        cols: Math.round(clamp(8 + (/wide|lebar/.test(p) ? 2 : 0), 6, 12)),
+        rows: 16,
+        dropSpeed: clamp(2.4 + s * 1.1, 0.6, 8),
+        speedUp: clamp(0.1 + s * 0.05, 0, 0.35),
+        linesToWin: Math.round(clamp(10 + s * 5, 3, 40)),
+        // The S, Z and T pieces are the difficulty, so they arrive with it.
+        easyPieces: s <= 0,
+        lives: tone.lives,
+      };
+    case "match-3": {
+      const size = Math.round(clamp(7 + (s > 0 ? 0 : -1), 5, 8));
+      const colours = Math.round(clamp(5 + s, 3, 6));
+      const moveLimit = Math.round(clamp(28 - s * 4, 8, 60));
+      return {
+        cols: size,
+        rows: size,
+        colours,
+        moveLimit,
+        // Derived from the ceiling rather than picked, so it is always both
+        // reachable and worth reaching - two thirds of a perfect run.
+        clearTarget: Math.round(clamp(moveLimit * (3 * (1 + 1.4 / colours)) * 0.66, 10, 120)),
+        boardSeed: (hashString(p) % 999) + 1,
+        lives: tone.lives,
+      };
+    }
   }
 }
 
@@ -211,6 +313,10 @@ const NOUN = {
   snake: ["Snake", "Ular"],
   platformer: ["Jump", "Lompat"],
   duel: ["Duel", "Lawan"],
+  shooter: ["Blaster", "Tembak"],
+  "maze-chase": ["Maze", "Sesat"],
+  "falling-blocks": ["Stack", "Susun"],
+  "match-3": ["Match", "Padan"],
 } as const;
 
 /**
@@ -284,6 +390,10 @@ function describe(engine: Engine, character: string, lang: "ms" | "en") {
     snake: `Grow as long as you can without biting yourself.`,
     platformer: `Run, jump and collect coins to reach the flag.`,
     duel: `Time your strikes and out-spar your opponent.`,
+    shooter: `Slide, fire and clear the fleet before it lands.`,
+    "maze-chase": `Clear every dot without getting caught.`,
+    "falling-blocks": `Turn each falling piece and complete a row.`,
+    "match-3": `Swap two neighbours to line up three of a colour.`,
   };
   const ms: Record<Engine, string> = {
     "endless-flyer": `Ketik untuk terbangkan ${who} melalui celah.`,
@@ -292,6 +402,10 @@ function describe(engine: Engine, character: string, lang: "ms" | "en") {
     snake: `Jadi sepanjang mungkin tanpa menggigit diri sendiri.`,
     platformer: `Berlari, melompat dan kutip syiling ke bendera.`,
     duel: `Pilih masa serangan dan kalahkan lawan anda.`,
+    shooter: `Tembak dan hapuskan armada sebelum ia mendarat.`,
+    "maze-chase": `Kutip semua titik tanpa ditangkap.`,
+    "falling-blocks": `Pusingkan setiap blok jatuh dan lengkapkan satu baris.`,
+    "match-3": `Tukar dua jiran untuk padankan tiga warna sama.`,
   };
   return (lang === "ms" ? ms : en)[engine];
 }
@@ -307,7 +421,12 @@ export async function generateArcade(
   // genre with no engine, and pretending otherwise wastes a call and the
   // person's time.
   if (choice.kind === "no-engine") {
-    return { status: "no-engine", requested: choice.requested, nearest: choice.nearest };
+    return {
+      status: "no-engine",
+      requested: choice.requested,
+      nearest: choice.nearest,
+      why: choice.why,
+    };
   }
 
   if (providerMode() === "live") {
@@ -342,6 +461,31 @@ export async function generateArcade(
     brief.character ?? (/aidan/i.test(p) ? "aidan" : /nadia/i.test(p) ? "nadia" : "pbot");
   const engine = choice.engine;
 
+  const rules = rulesFor(engine, p, tone);
+  // A duel hit is always worth two, because the whole purse is `hitsToWin`
+  // hits and a three-hit match at one point each falls under the schema's
+  // minimum target of five. The floor is the schema's; this is how the engine
+  // meets it without inflating the match.
+  const points = engine === "duel" ? 2 : tone.difficulty === "hard" ? 2 : 1;
+  /**
+   * The target, and the duel is not like the others.
+   *
+   * Every other engine here is open-ended enough that a flat 15/25/40 is
+   * something you play towards. A duel ENDS on the winning hit, so the entire
+   * purse is `hitsToWin * pointsPerObstacle` - and the flat target was above it
+   * at every difficulty, which meant "Target beaten" was a screen no tuned duel
+   * could ever show. The schema rejects that, correctly, so the free tuner
+   * simply had no valid duel to give.
+   */
+  const target =
+    engine === "duel" && "hitsToWin" in rules && typeof rules.hitsToWin === "number"
+      ? rules.hitsToWin * points
+      : tone.difficulty === "hard"
+        ? 40
+        : tone.difficulty === "easy"
+          ? 15
+          : 25;
+
   const candidate = {
     specVersion: "2.0" as const,
     engine,
@@ -357,11 +501,11 @@ export async function generateArcade(
       background: /night|dark|malam/.test(p) ? ("night" as const) : ("sky" as const),
     },
     scoring: {
-      pointsPerObstacle: tone.difficulty === "hard" ? 2 : 1,
-      targetScore: tone.difficulty === "hard" ? 40 : tone.difficulty === "easy" ? 15 : 25,
+      pointsPerObstacle: points,
+      targetScore: target,
       ...(timeLimit !== undefined ? { timeLimit } : {}),
     },
-    rules: rulesFor(engine, p, tone),
+    rules,
   };
 
   const parsed = ArcadeSpec.safeParse(candidate);

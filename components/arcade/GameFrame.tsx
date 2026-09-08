@@ -28,7 +28,7 @@ import a from "./arcade.module.css";
  * lives, and the title / game-over screens.
  *
  * Written once so an engine is only its own logic. It also means a fix to the
- * feel - and there were several - lands on all five engines at once instead of
+ * feel - and there were several - lands on all ten engines at once instead of
  * being reimplemented four times and drifting.
  */
 

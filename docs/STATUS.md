@@ -1650,3 +1650,115 @@ sent the port through a command-line parser for no reason.
 **And `/create` was lying.** Under the button it still said "Nothing here calls a
 paid model yet" - printed directly beneath the button that now spends the money.
 It reports the mode it is actually in.
+
+---
+
+## 2026-09-08 (later) — Every game, imagined; four more engines
+
+Zul: *"imagine every game possible for user to prompt, ready the engine for
+every game."*
+
+### The imagining found a bug bigger than the missing engines
+
+`lib/arcade/catalogue.ts` is the exercise done properly: every genre somebody
+plausibly types, with the **verbs** it is made of, and a disposition. It is code
+rather than a document because it IS the routing table now — `brief.ts` derives
+its three tables from it — and a document would drift.
+
+Writing it out found this: the router knew about twenty genres, and **everything
+else fell through to a flyer**. `pac man`, `tetris`, `candy crush`, `doodle
+jump`, `a penalty shootout`, `a whack a mole game`, `a scary horror game`, `a 3d
+first person game` — none matched anything, so all of them returned
+`endless-flyer` with `confident: false` and one apologetic line above the game.
+
+That is worse than the refusal it was designed to avoid. A refusal is a bad
+answer somebody can act on; a flyer they did not ask for is a wrong answer
+wearing the costume of a right one. It was the commonest outcome in the space of
+things people actually type, and nothing had ever failed.
+
+`catalogue.test.ts` now asserts every genre routes as declared **and** that none
+of them falls through to the unconfident default.
+
+### Four engines, taking the catalogue from six to ten
+
+| Engine | What it answers |
+| --- | --- |
+| `shooter` | space invaders, galaga, asteroids, aliens, tanks, *tembak* |
+| `maze-chase` | pac-man, ghosts, chases, *kejar*, frogger |
+| `falling-blocks` | tetris, block puzzles, stacking |
+| `match-3` | candy crush, bejeweled, gem swaps, bubble shooters |
+
+Each has bounds, a playability check that both accepts and rejects inside those
+bounds (`engines.test.ts` fuzzes all four), a renderer in its own file, two
+fixtures, and a section in the model's prompt with a worked example that passes.
+
+`shooter` replaces a **dishonest adaptation**: "a space invaders game" used to
+return brick-breaker, described as "you fire from the bottom and clear the
+formation above you". The two share a silhouette and nothing else — in Breakout
+the thing above you is inert and the danger is losing the ball.
+
+`maze-chase` is checked by a **full simulation**: the maze is carved, the dots
+are laid, and a perfect player walks it against the chasers. That is why
+`mazeSeed` is a field of the spec rather than something the renderer picks — a
+check that approves one maze while the player is handed another is not a check.
+`match-3` does the same with `boardSeed`. Both seeds are **hidden from the
+model** and derived from the prompt, for the same reason `timeLimit` is: strict
+tool use compels a value for every property, and a dice roll is not a design
+decision worth paying for.
+
+### The free tuner had never produced a valid duel
+
+`catalogue.test.ts` tunes every engine at every difficulty and validates the
+result. Nothing had ever done that, and it immediately found two shipped bugs:
+
+- **`duel` was invalid at every difficulty.** Its coefficients were written
+  against a difficulty scale of "0 easy, 1 normal, 2 hard" — the comment said so
+  — while `tone.scale` is -1, 0, 1. Easy came out with an opponent reacting
+  0.88s after a 0.36s windup (a punchbag, rejected as trivial); hard came out
+  needing 6 hits with 1 life, which the prompt's own HARD RULE forbids. And
+  `targetScore` was a flat 15/25/40 against a purse of `hitsToWin` hits, so
+  "Target beaten" was a screen no tuned duel could reach. Invisible because the
+  duel fixtures are hand-written and the model was on: **every duel anybody had
+  ever seen came from a paid call.**
+- **`brick-breaker` at easy** was rejected as a screensaver — a 140px/s ball
+  behind a 122px paddle.
+
+Both fixed. Lives now mean something engine-specific where they have to: in a
+duel a life is a hit you can take, so one life is not "hard", it is "lose to the
+first exchange".
+
+### What a screenshot found that 339 tests did not
+
+Four brand-new renderers, all green, all returning 200, all drawing:
+
+1. **Two gems on the match-3 board were invisible.** One of the five inks is
+   `palette.white`, and a white gem on the board's pale squares read as an empty
+   hole. Every gem is outlined now — the hearts-over-the-canvas rule again:
+   anything drawn on an arbitrary background carries its own contrast.
+2. **The maze had bare corridors.** Dots were laid on every third free cell, so
+   28 dots across 110 cells left whole stretches empty and a player could run
+   for four seconds down a reasonable route and score nothing — which looks
+   exactly like a broken collectible. Every corridor carries a dot now and
+   `dotTarget` is how many you must eat.
+3. **The shooter's fleet vanished into the night sky**, and the biggest cloud
+   parked itself behind the score. It is a space game: starfield instead of
+   clouds, and a white rim on every alien.
+4. **My cascade estimate was wrong by a factor of 2.5.** `perSwap` predicted 3.8
+   tiles a swap at five colours; a photographed board cleared 67 tiles in 7
+   swaps. Reasoning about cascades from first principles simply failed, and it
+   was failing in the DANGEROUS direction — an under-estimate wrongly rejects
+   winnable games.
+
+### Also
+
+- The **maze chasers scatter**, seven seconds hunting and three heading home,
+  which is how the 1980 original made three pursuers survivable. The check kept
+  refusing to certify three chasers and it was right; the instinct to soften the
+  numbers until it went quiet would have been fixing the thermometer.
+- Refusals now carry a **`why`**, shown on `/create`. "No engine for that yet"
+  gives the reader nothing to act on — and every vague refusal reason in this
+  project's history has turned out to be wrong.
+- `/create`'s examples cover the range. Four of the ten engines had shipped
+  without ever appearing there.
+
+`npm run check` green: typecheck, lint, `check:ds`, `check:tokens`, 339 tests.

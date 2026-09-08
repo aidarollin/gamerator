@@ -1,0 +1,21 @@
+{
+  "specVersion": "2.0",
+  "engine": "match-3",
+  "meta": {
+    "title": "PBot Padan",
+    "description": "Tukar dua jiran untuk padankan tiga warna sama.",
+    "language": "ms",
+    "difficulty": "normal"
+  },
+  "theme": { "palette": "biology", "character": "pbot", "background": "plain" },
+  "scoring": { "pointsPerObstacle": 1, "targetScore": 30 },
+  "rules": {
+    "cols": 7,
+    "rows": 7,
+    "colours": 5,
+    "moveLimit": 28,
+    "clearTarget": 70,
+    "boardSeed": 42,
+    "lives": 3
+  }
+}

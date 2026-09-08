@@ -1,0 +1,21 @@
+{
+  "specVersion": "2.0",
+  "engine": "falling-blocks",
+  "meta": {
+    "title": "Too Fast",
+    "description": "By line thirty a piece hits the floor before you can turn it.",
+    "language": "en",
+    "difficulty": "hard"
+  },
+  "theme": { "palette": "chemistry", "character": "aidan", "background": "plain" },
+  "scoring": { "pointsPerObstacle": 2, "targetScore": 40 },
+  "rules": {
+    "cols": 8,
+    "rows": 10,
+    "dropSpeed": 7,
+    "speedUp": 0.3,
+    "linesToWin": 35,
+    "easyPieces": false,
+    "lives": 1
+  }
+}

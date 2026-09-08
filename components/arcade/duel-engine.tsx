@@ -18,7 +18,7 @@ import type { EngineFactory } from "./GameFrame";
  * true fact with a false conclusion attached.
  *
  * It lives in its own file rather than in `engines.tsx` because that file was
- * already 850 lines of five engines, and a sixth with its own vocabulary of
+ * already 850 lines of engines, and one more with its own vocabulary of
  * windups and blocks would have made it the place nobody wants to open.
  *
  * The opponent has a stated REACTION TIME and obeys it. An AI that reads inputs

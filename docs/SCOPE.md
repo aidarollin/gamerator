@@ -195,3 +195,72 @@ obstacle in your lane."*
 "go forward, avoid things". Tetris and snake are both on a grid and have nothing
 else in common. An explicitly named engine always beats a genre mapping - "a
 racing game like flappy bird" is a flyer, because the author said so.
+
+### 2026-09-08 — Imagining every game, and four engines out of it
+
+Zul: *"imagine every game possible for user to prompt, ready the engine for
+every game."*
+
+The imagining is now `lib/arcade/catalogue.ts` — every genre somebody plausibly
+types, with the **verbs** it is made of and a disposition. It is code rather
+than a document because it is the routing table itself, and `catalogue.test.ts`
+asserts every entry routes the way it claims.
+
+**What the exercise actually found was worse than the missing engines.** The
+router knew about twenty genres. Everything else — pac-man, tetris, candy crush,
+doodle jump, a penalty shootout, a horror game, "a 3d first person game" —
+matched nothing at all and fell through to `endless-flyer` with
+`confident: false`. A refusal is a bad answer somebody can act on. A flyer they
+did not ask for, with one apologetic line above it, is a wrong answer wearing
+the costume of a right one, and it was the commonest outcome in the space of
+things people actually type. The catalogue's rule is that **no genre in it is
+ever a silent guess.**
+
+#### Four engines built, taking the catalogue to ten
+
+| Engine | Genres it answers | Why it could not be an adaptation |
+| --- | --- | --- |
+| `shooter` | space invaders, galaga, asteroids, aliens, tanks, *tembak* | it was adapted to brick-breaker, which was dishonest: in Breakout the thing above you is inert and the danger is losing the ball; here it shoots back and the danger is standing still |
+| `maze-chase` | pac-man, ghosts, chases, *kejar*, frogger | snake is the only other grid engine and its verbs are "grow, don't hit yourself" — nothing was chasing you |
+| `falling-blocks` | tetris, block puzzles, stacking, columns | the most-named refusal. "Tetris and snake share only a grid" was right about the *adaptation* and wrong as a permanent answer |
+| `match-3` | candy crush, bejeweled, gem swaps, bubble shooters | it was refused under "a puzzle game" alongside sudoku, which conflated two different things — a match-three board can be simulated, a sudoku cannot |
+
+Each has bounds, a playability check that can both accept and reject inside
+those bounds, a renderer, fixtures, and a place in the model's prompt.
+`maze-chase` is checked by a **full simulation** — the maze is carved, the dots
+are laid and a perfect player walks it against the chasers — which is why
+`mazeSeed` is a field of the spec: a check that approves one maze while the
+player is handed another is not a check.
+
+#### Also adapted, and announced
+
+pong and air hockey → `brick-breaker`; catching falling things →
+`brick-breaker`; doodle jump and climbing → `platformer`; bubble shooter →
+`match-3`; tower stacking → `falling-blocks`; frogger and crossy road →
+`maze-chase`; war, tank and gun games → `shooter`, explicitly re-dressed as
+ships and sparks because the audience is schoolchildren.
+
+#### Still refused, now with a reason each
+
+Tower defence, card and board games, logic puzzles (sudoku, minesweeper, tic tac
+toe), rhythm and music games, typing and word games, sports, launcher games
+(Angry Birds, archery), reaction and clicker games, memory matching,
+simulations, fishing, **scary games**, gambling, multiplayer, and 3D.
+
+Two of those are decisions rather than gaps and will not change: **nothing
+generated here may frighten a child**, and **no game of chance with a stake**.
+The rest name what is missing, because every refusal reason in this project's
+history that was left vague turned out to be wrong.
+
+The nearest one to being wrong today is **reaction/tapping games** —
+whack-a-mole is a grid, a timer and a spawn table, and it is the next engine
+worth building rather than something to fake.
+
+#### Three bugs the free tuner had been hiding
+
+`catalogue.test.ts` tunes every engine at every difficulty and validates the
+result, which nothing had ever done. It found that **the free tuner had never
+produced a valid `duel` at any difficulty** — its coefficients were written
+against a difficulty scale of 0/1/2 while `tone.scale` is -1/0/1 — and that an
+easy `brick-breaker` was rejected as a screensaver. Both had been invisible
+because the duel fixtures are hand-written and the model was on.

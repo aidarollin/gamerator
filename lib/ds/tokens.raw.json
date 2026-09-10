@@ -12,11 +12,56 @@
     },
     "aliasChain": "Semantic -> Product -> Primitives. Every value below is fully resolved through that chain; no aliases remain.",
     "collections": {
-      "Primitives": { "vars": 542, "modes": ["Value"] },
-      "Product": { "vars": 90, "modes": ["Student", "Teacher", "Parent"] },
-      "Semantic": { "vars": 386, "modes": ["Light", "Dark"] },
-      "Responsives": { "vars": 70, "modes": ["Desktop", "Tablet", "Mobile"] },
-      "Typography": { "vars": 57, "modes": ["Value"] }
+      "Primitives": {
+        "vars": 545,
+        "modes": [
+          "Value"
+        ]
+      },
+      "Product": {
+        "vars": 94,
+        "modes": [
+          "Student",
+          "Teacher",
+          "Parent"
+        ]
+      },
+      "Semantic": {
+        "vars": 386,
+        "modes": [
+          "Light",
+          "Dark"
+        ]
+      },
+      "Responsives": {
+        "vars": 70,
+        "modes": [
+          "Desktop",
+          "Tablet",
+          "Mobile"
+        ]
+      },
+      "Subjects (A-E)": {
+        "vars": 5,
+        "modes": 10
+      },
+      "Subjects (G-S)": {
+        "vars": 5,
+        "modes": 9
+      },
+      "Typography": {
+        "vars": 57,
+        "modes": [
+          "Value"
+        ]
+      },
+      "Platform (Mobile)": {
+        "vars": 5,
+        "modes": [
+          "iOS",
+          "Android"
+        ]
+      }
     },
     "notVendoredYet": [
       "Semantic/JDP (20)",
@@ -25,9 +70,15 @@
       "Primitives/* (542, reachable through the chain above)",
       "Dark mode of every Semantic token",
       "Teacher and Parent modes of every Product token"
-    ]
+    ],
+    "lastVerifiedAt": "2026-09-10",
+    "digest": "786f6dbc",
+    "digestNote": "FNV-1a over sorted `c:name=value` / `d:name=value` lines. Computed identically in Figma and in the repo, so a re-sync can prove nothing changed instead of eyeballing a diff. See scripts/sync-tokens.md.",
+    "notExtracted": {
+      "JDP/": 20,
+      "why": "20 Semantic variables sit under a JDP/ prefix that this extractor does not match. Recorded rather than silently dropped - a group added to the DS after this build was written would otherwise be invisible."
+    }
   },
-
   "dimension": {
     "Radius/none": 0,
     "Radius/xs": 2,
@@ -40,7 +91,6 @@
     "Radius/4xl": 54,
     "Radius/full": 60,
     "Radius/pill": 999,
-
     "Spacing/component/none": 0,
     "Spacing/component/3xs": 2,
     "Spacing/component/2xs": 4,
@@ -55,14 +105,12 @@
     "Spacing/layout/md": 24,
     "Spacing/layout/lg": 60,
     "Spacing/layout/xl": 108,
-
     "Border Width/none": 0,
     "Border Width/xs": 1,
     "Border Width/s": 2,
     "Border Width/m": 4,
     "Border Width/lg": 8
   },
-
   "color": {
     "Accents/Azure/default": "#30a9e5",
     "Accents/Azure/default-hover": "#2a86b3",
@@ -84,7 +132,6 @@
     "Accents/Pumpkin/focus": "#c2932e",
     "Accents/Pumpkin/on-color": "#ffffff",
     "Accents/Pumpkin/on-color-hover": "#fcf1d7",
-
     "Border/alert/default": "#ff9f43",
     "Border/alert/default-hover": "#ffcea0",
     "Border/alert/default-subtle": "#fff6ed",
@@ -144,7 +191,6 @@
     "Border/warning/default-subtle": "#ffeeee",
     "Border/warning/default-subtle-hover": "#ffcacb",
     "Border/warning/focus": "#b23539",
-
     "Icon/alert/default": "#ff9f43",
     "Icon/alert/default-hover": "#ffcea0",
     "Icon/alert/focus": "#b26f2f",
@@ -189,7 +235,6 @@
     "Icon/warning/focus": "#b23539",
     "Icon/warning/on-color": "#ffffff",
     "Icon/warning/on-color-hover": "#ffffff",
-
     "Status/coins/default": "#fece00",
     "Status/coins/focus": "#cba500",
     "Status/coins/on color": "#ffffff",
@@ -205,7 +250,6 @@
     "Status/streak/default": "#7367f0",
     "Status/streak/focus": "#5c52c0",
     "Status/streak/on color": "#ffffff",
-
     "Subjects/account/default": "#0072ca",
     "Subjects/account/default-hover": "#005ba2",
     "Subjects/account/default-subtle": "#eef5fc",
@@ -301,7 +345,6 @@
     "Subjects/science/default-subtle": "#fffbec",
     "Subjects/science/default-subtle-hover": "#ffefb3",
     "Subjects/science/focus": "#998027",
-
     "Surface/alert/default": "#ff9f43",
     "Surface/alert/default-hover": "#ffcea0",
     "Surface/alert/default-subtle": "#fff6ed",
@@ -364,7 +407,6 @@
     "Surface/warning/default-subtle": "#ffeeee",
     "Surface/warning/default-subtle-hover": "#ffcacb",
     "Surface/warning/focus": "#b23539",
-
     "Text/alert/default": "#ff9f43",
     "Text/alert/default-hover": "#ffcea0",
     "Text/alert/on-color": "#ffffff",

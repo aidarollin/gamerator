@@ -26,9 +26,37 @@ is a real script that anyone can run and whose output is diffable in review.
 3. **Run [`figma-token-resolver.js`](figma-token-resolver.js) via `use_figma`**
    against that file key. Load the `/figma-use` skill first — it is a mandatory
    prerequisite and skipping it causes hard-to-debug failures.
-4. **Paste the returned `color` and `dimension` objects into
-   [`lib/ds/tokens.raw.json`](../lib/ds/tokens.raw.json)**, and update
-   `$meta.extractedAt`.
+4. **Compare the digest before pasting anything.** Have the script also return
+   an FNV-1a hash over its sorted `c:name=value` / `d:name=value` lines, and
+   compute the same hash over the committed `color` and `dimension` objects:
+
+   ```bash
+   node -e 'const r=require("./lib/ds/tokens.raw.json");const l=[];
+   for(const[k,v]of Object.entries(r.color))l.push("c:"+k+"="+v);
+   for(const[k,v]of Object.entries(r.dimension))l.push("d:"+k+"="+v);l.sort();
+   let h=0x811c9dc5;const s=l.join("
+");
+   for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}
+   console.log((h>>>0).toString(16), l.length);'
+   ```
+
+   **If the digests match, there is nothing to paste** - record the check in
+   `$meta.lastVerifiedAt` and stop. This is not an optimisation: the DS file
+   moves for reasons that do not touch the Semantic layer this build reads, and
+   on 2026-09-10 it had gained three collections and seven Primitives while
+   every one of the 366 tokens here stayed byte-identical. Without the digest
+   that is a diff nobody can be sure they read correctly.
+
+5. **Only if they differ:** paste the returned `color` and `dimension` objects
+   into [`lib/ds/tokens.raw.json`](../lib/ds/tokens.raw.json), update
+   `$meta.extractedAt` and `$meta.digest`, and regenerate.
+
+6. **Check what the extractor SKIPPED.** It matches seven colour prefixes and
+   three dimension prefixes; anything else in Semantic is dropped silently. Have
+   the script return a count per unmatched top-level group and record it in
+   `$meta.notExtracted`. As of 2026-09-10 that is `JDP/` (20 variables) - which
+   may well be correct to ignore, but a group added to the DS after this build
+   was written would otherwise be invisible forever.
 
 ## Generate
 

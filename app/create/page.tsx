@@ -72,6 +72,11 @@ export default async function CreatePage({
               options={[["easy", "Easy"], ["normal", "Normal"], ["hard", "Hard"]]} />
             <Field label="Language" name="language" value={sp.language}
               options={[["en", "English"], ["ms", "Bahasa Melayu"]]} />
+            {/* "Auto" means the arcade scene, which is the 2026-09-06 default.
+                Pandai renders the same game through the DS token ramp, for when
+                it has to sit next to real Pandai chrome. */}
+            <Field label="Colours" name="skin" value={sp.skin}
+              options={[["arcade", "Its own"], ["pandai", "Pandai DS"]]} />
           </div>
 
           <button className={s.submit} type="submit">
@@ -148,6 +153,7 @@ async function Result({ params }: { params: Record<string, string | undefined> }
     character: params.character || undefined,
     palette: params.palette || undefined,
     difficulty: params.difficulty || undefined,
+    skin: params.skin || undefined,
     // "Auto" sends an empty string. Detect the language from the words before
     // falling back to English, or a Malay request comes back in English - which
     // it did, live, for "permainan lari yang laju untuk Tahun 4".

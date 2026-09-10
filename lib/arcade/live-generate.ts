@@ -53,6 +53,7 @@ export async function generateArcadeLive(
     palette: brief.palette,
     difficulty: brief.difficulty,
     language: brief.language,
+    skin: brief.skin,
     adapted: adapted?.requested,
   });
   const hit = cached<ArcadeSpec>(key);
@@ -118,7 +119,19 @@ export async function generateArcadeLive(
     return { ...r, rules: { ...r.rules, [field]: (hashString(brief.prompt) % 999) + 1 } };
   };
 
-  const prepare = (raw: unknown) => withSeed(withBudget(shape(raw)));
+  /**
+   * The skin, merged in like the budget and the seeds. It is hidden from the
+   * model because it is the author's decision about where the game will LIVE,
+   * not a property of the game - and a model asked for it would answer.
+   */
+  const withSkin = (raw: unknown): unknown => {
+    if (!brief.skin || typeof raw !== "object" || raw === null) return raw;
+    const r = raw as { theme?: Record<string, unknown> };
+    if (!r.theme) return raw;
+    return { ...r, theme: { ...r.theme, skin: brief.skin } };
+  };
+
+  const prepare = (raw: unknown) => withSkin(withSeed(withBudget(shape(raw))));
 
   const first = await generateLive(brief, engine, undefined, adapted);
   if (first.kind === "refusal") return { status: "refused", reason: first.reason };

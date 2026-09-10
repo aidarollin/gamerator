@@ -111,7 +111,7 @@ export async function generateLive(
             ENGINE_SCHEMAS[engine]
               .omit({ contentTwist: true })
               .extend({
-                theme: ENGINE_SCHEMAS[engine].shape.theme.omit({ opponent: true }),
+                theme: ENGINE_SCHEMAS[engine].shape.theme.omit({ opponent: true, skin: true }),
                 scoring: ENGINE_SCHEMAS[engine].shape.scoring.omit({ timeLimit: true }),
                 ...(engine === "maze-chase"
                   ? { rules: ENGINE_SCHEMAS[engine].shape.rules.omit({ mazeSeed: true }) }

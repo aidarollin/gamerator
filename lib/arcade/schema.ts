@@ -58,6 +58,24 @@ export const Theme = z.object({
    * whoever the player is not.
    */
   opponent: Character.optional(),
+  /**
+   * WHICH COLOUR WORLD THE CANVAS LIVES IN.
+   *
+   * `arcade` is the default and the 2026-09-06 decision: the game gets its own
+   * art direction from `lib/arcade/palettes.ts`, a sky family and a solid
+   * family, tuned for a screen you play rather than one you read.
+   *
+   * `pandai` sends it back through the DS token ramp instead - the same
+   * identity, the same subject vocabulary, but rendered in the colours the rest
+   * of Pandai uses. That path was never dead code (it is what any palette key
+   * without a scene already falls through to); this makes it a CHOICE, for
+   * when a game has to sit next to real Pandai chrome and look like it belongs.
+   *
+   * Optional so no existing spec changes meaning, and hidden from the model for
+   * the same reason `opponent` and `timeLimit` are: strict tool use compels a
+   * value for every property, and this is the author's call, not the model's.
+   */
+  skin: z.enum(["arcade", "pandai"]).optional(),
 });
 
 export const Scoring = z.object({

@@ -41,27 +41,51 @@ export async function generateLive(
   repair?: { previous: unknown; issues: { path: string; message: string }[] },
   /** Set when this engine is standing in for a genre it does not have. */
   adapted?: { requested: string; how: string },
+  /**
+   * A picture the author dropped in. Sent as its own content block AHEAD of the
+   * words, because a model reads a message in order and "look at this, now here
+   * is what I want" is the sentence a person would actually have said.
+   */
+  picture?: { mediaType: string; base64: string },
 ): Promise<LiveResult> {
   const client = new Anthropic();
   const model = configuredModel();
 
-  const messages: Anthropic.MessageParam[] = [
-    {
-      role: "user",
-      // The adaptation is told to the model as well as to the reader. Without
-      // it a request for a racing game comes back titled "Jump the Blocks" -
-      // mechanically correct, and answering a question nobody asked.
-      content: [
-        renderArcadeBrief(brief),
-        `Engine: ${engine}`,
-        adapted
-          ? `The author asked for ${adapted.requested}. There is no engine for that, so this one is being dressed as one: ${adapted.how}. Write meta.title and meta.description as ${adapted.requested}, and pick physics that suit it.`
-          : "",
+  const words = [
+    renderArcadeBrief(brief),
+    `Engine: ${engine}`,
+    // The adaptation is told to the model as well as to the reader. Without it
+    // a request for a racing game comes back titled "Jump the Blocks" -
+    // mechanically correct, and answering a question nobody asked.
+    adapted
+      ? `The author asked for ${adapted.requested}. There is no engine for that, so this one is being dressed as one: ${adapted.how}. Write meta.title and meta.description as ${adapted.requested}, and pick physics that suit it.`
+      : "",
+    // Said explicitly, because a model handed a picture and no instructions
+    // will describe it. What is wanted from a reference image is its FEEL - the
+    // palette identity, the mood, the kind of game it looks like - and a title
+    // reciting the contents of somebody's screenshot is the failure here.
+    picture
+      ? "The author attached a picture as a reference. Take the mood, the palette identity and the kind of game it looks like from it. Do not try to reproduce what is in it, and do not describe it in meta.description."
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const content: Anthropic.ContentBlockParam[] = picture
+    ? [
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: picture.mediaType as "image/png",
+            data: picture.base64,
+          },
+        },
+        { type: "text", text: words },
       ]
-        .filter(Boolean)
-        .join("\n"),
-    },
-  ];
+    : [{ type: "text", text: words }];
+
+  const messages: Anthropic.MessageParam[] = [{ role: "user", content }];
   if (repair) {
     messages.push(
       { role: "assistant", content: JSON.stringify(repair.previous) },

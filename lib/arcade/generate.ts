@@ -3,6 +3,7 @@ import { chooseEngine, renderArcadeBrief, type ArcadeBrief } from "./brief";
 import { generateArcadeLive } from "./live-generate";
 import { providerMode } from "@/lib/config";
 import { hashString } from "@/lib/game/random";
+import { MazeRules, mazeVerdict } from "./maze";
 
 /**
  * Arcade generation. Stub-first, exactly as the learning pipeline is.
@@ -234,31 +235,8 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
         lives: tone.lives,
       };
     }
-    case "maze-chase": {
-      const big = /big|large|besar|huge/.test(p) ? 2 : 0;
-      return {
-        gridCols: Math.round(clamp(15 + s * 2 + big, 9, 21)),
-        gridRows: Math.round(clamp(15 + s * 2 + big, 9, 21)),
-        playerSpeed: clamp(6 + s * 0.5, 2, 10),
-        chaserSpeed: clamp(3.9 + s * 0.8, 1, 9),
-        chasers: Math.round(clamp(2 + s, 1, 4)),
-        chaserSmarts: clamp(0.4 + s * 0.1, 0, 1),
-        dotTarget: Math.round(clamp(28 + s * 8, 5, 120)),
-        // Two pellets at every difficulty. Hard gets a SHORTER scare rather
-        // than fewer escapes: taking the escape away is what the simulation
-        // kept refusing to certify, and it was right - three pursuers with
-        // nowhere to run is not difficulty, it is arithmetic.
-        powerPellets: 2,
-        scaredSeconds: clamp(6 - s * 2, 2, 10),
-        // Stable per prompt, so the same words always give the same maze - and
-        // so the check simulates the board the person is handed.
-        mazeSeed: (hashString(p) % 999) + 1,
-        // Like the duel, a single life means something harsher here than
-        // elsewhere: one mistake against three chasers ends the board, and the
-        // simulation says so by refusing to certify it.
-        lives: Math.max(3, tone.lives),
-      };
-    }
+    case "maze-chase":
+      return { ...mazeShape(p, tone), mazeSeed: playableMazeSeed(p, tone) };
     case "falling-blocks":
       return {
         cols: Math.round(clamp(8 + (/wide|lebar/.test(p) ? 2 : 0), 6, 12)),
@@ -287,6 +265,69 @@ function rulesFor(engine: Engine, p: string, tone: Tone) {
       };
     }
   }
+}
+
+/**
+ * Everything about a maze except which one.
+ *
+ * Extracted so `playableMazeSeed` below reasons about the SAME numbers the
+ * player is handed. A seed searched against different settings from the ones it
+ * ships with is a seed chosen for a game nobody plays - the mistake this repo
+ * keeps catching itself making, most recently between a renderer and its check.
+ */
+function mazeShape(p: string, tone: Tone) {
+  const s = tone.scale;
+  const big = /big|large|besar|huge/.test(p) ? 2 : 0;
+  return {
+    gridCols: Math.round(clamp(15 + s * 2 + big, 9, 21)),
+    gridRows: Math.round(clamp(15 + s * 2 + big, 9, 21)),
+    playerSpeed: clamp(6 + s * 0.5, 2, 10),
+    chaserSpeed: clamp(3.9 + s * 0.8, 1, 9),
+    chasers: Math.round(clamp(2 + s, 1, 4)),
+    chaserSmarts: clamp(0.4 + s * 0.1, 0, 1),
+    dotTarget: Math.round(clamp(28 + s * 8, 5, 120)),
+    // Two pellets at every difficulty. Hard gets a SHORTER scare rather than
+    // fewer escapes: taking the escape away is what the simulation kept
+    // refusing to certify, and it was right - three pursuers with nowhere to
+    // run is not difficulty, it is arithmetic.
+    powerPellets: 2,
+    scaredSeconds: clamp(6 - s * 2, 2, 10),
+    // Like the duel, one life means something harsher here than elsewhere: a
+    // single mistake against three chasers ends the board.
+    lives: Math.max(3, tone.lives),
+  };
+}
+
+/**
+ * A maze seed that produces an actual game.
+ *
+ * The maze is carved from its seed, so the seed decides the board, and the
+ * board decides whether `mazeVerdict` calls it winnable, unwinnable, or a walk.
+ * About one board in fifty comes out trivial - a layout so open, or chasers so
+ * badly placed, that a perfect player is never threatened.
+ *
+ * The first version took `hash(prompt) % 999` and hoped. That works forty-nine
+ * times in fifty, and the fiftieth person gets "the game that came back was not
+ * playable" for a request that was completely reasonable - which is exactly
+ * what happened the first time somebody pasted a design document in.
+ *
+ * So the seed is SEARCHED. Still derived from the prompt, so the same words
+ * still give the same maze; it just walks forward until it finds one worth
+ * playing. Bounded at eight, because a settings combination where no board
+ * works is a settings problem, and the verdict should be allowed to say so
+ * rather than being hidden by a longer search.
+ */
+function playableMazeSeed(prompt: string, tone: Tone): number {
+  const first = hashString(prompt) % 999;
+  const shape = mazeShape(prompt, tone);
+  for (let i = 0; i < 8; i++) {
+    const seed = ((first + i * 137) % 999) + 1;
+    const candidate = MazeRules.safeParse({ ...shape, mazeSeed: seed });
+    if (!candidate.success) continue;
+    const verdict = mazeVerdict(candidate.data);
+    if (verdict.ok && !verdict.trivial) return seed;
+  }
+  return (first % 999) + 1;
 }
 
 const PALETTE_WORDS: [RegExp, string][] = [
@@ -414,8 +455,23 @@ export async function generateArcade(
   brief: ArcadeBrief,
   /** Identifies the caller for rate limiting. Ignored by the free tuner. */
   client = "anonymous",
+  opts: {
+    /**
+     * Everything the author actually said, not just the one short line: the
+     * prompt plus the notes plus whatever the reference link turned out to be
+     * about. Every keyword decision below reads this rather than `brief.prompt`.
+     *
+     * Before it existed, someone who pasted a design document and typed "make
+     * this" in the box got a coin flip - the document was sent to the model but
+     * was invisible to the code choosing which engine the model was asked
+     * about, and to the tuner deriving the physics.
+     */
+    routable?: string;
+    picture?: { mediaType: string; base64: string; fingerprint: string };
+  } = {},
 ): Promise<ArcadeOutcome> {
-  const choice = chooseEngine(brief.prompt);
+  const routable = opts.routable ?? brief.prompt;
+  const choice = chooseEngine(routable);
 
   // Answered before any generation happens: there is nothing to generate for a
   // genre with no engine, and pretending otherwise wastes a call and the
@@ -434,7 +490,7 @@ export async function generateArcade(
     // here falls through to nothing: the stub is not a silent fallback, because
     // silently serving a keyword-tuned game while claiming the model made it is
     // the one dishonesty this whole design exists to avoid.
-    const live = await generateArcadeLive(brief, choice.engine, client, choice.adapted);
+    const live = await generateArcadeLive(brief, choice.engine, client, choice.adapted, opts.picture);
     switch (live.status) {
       case "ok":
         return {
@@ -454,7 +510,9 @@ export async function generateArcade(
     }
   }
 
-  const p = brief.prompt.toLowerCase();
+  // The tone, the palette, the character, the clock - all of it read from
+  // everything the author said rather than from the headline alone.
+  const p = routable.toLowerCase();
   const tone = readTone(p, brief.difficulty);
   const timeLimit = readTimeLimit(p);
   const character =

@@ -25,6 +25,28 @@ export const ArcadeBrief = z.object({
    * author's call, never the model's - see `theme.skin` in schema.ts.
    */
   skin: z.enum(["arcade", "pandai"]).optional(),
+
+  /* ------------------------------------------- the other ways to say it */
+
+  /**
+   * A design document, a game-flow description, a pasted brief. The long field.
+   *
+   * `prompt` stays short because it is the one line that NAMES the thing, and a
+   * 600-character limit is what keeps it that. This is where everything else
+   * goes, and 4000 characters is the same allowance `lib/spec/brief.ts` gives
+   * the learning templates, for the same reason.
+   */
+  notes: z.string().max(4000).optional(),
+
+  /**
+   * A link to a game, a video, a page describing one. Read, never rendered.
+   *
+   * `z.url()` rather than the deprecated `z.string().url()`. The shape check is
+   * only the first gate anyway - `lib/inputs/link.ts` re-parses it and refuses
+   * anything that is not http(s) or points somewhere a server should not be
+   * talked into fetching.
+   */
+  link: z.url().max(2000).optional(),
 });
 
 export type ArcadeBrief = z.infer<typeof ArcadeBrief>;
@@ -143,5 +165,31 @@ export function renderArcadeBrief(brief: ArcadeBrief): string {
   if (brief.palette) lines.push(`Palette: ${brief.palette}`);
   if (brief.difficulty) lines.push(`Difficulty: ${brief.difficulty}`);
   lines.push(`Language: ${brief.language === "ms" ? "Bahasa Melayu" : "English"}`);
+  if (brief.link) lines.push(`Reference link: ${brief.link}`);
+  if (brief.notes?.trim()) lines.push("", "Notes from the author:", brief.notes.trim());
   return lines.join("\n");
+}
+
+/**
+ * EVERY WORD THE AUTHOR GAVE US, for the router to read.
+ *
+ * The routing table matches on words, and before this it could only see the one
+ * short line. Somebody who pastes a design document saying "the player runs
+ * along the bottom and jumps over obstacles" and types "make this" in the box
+ * was getting a coin flip - the notes were sent to the model but were invisible
+ * to the code that decides which engine the model is even being asked about.
+ *
+ * `prompt` goes first AND is repeated, so an explicit one-line instruction
+ * still outweighs a long document that mentions six genres in passing: the
+ * router scores by weight, and doubling means a genre named in the box counts
+ * twice for every once it is named in the notes.
+ */
+export function routableText(brief: {
+  prompt: string;
+  notes?: string;
+  linkWords?: string;
+}): string {
+  return [brief.prompt, brief.prompt, brief.linkWords ?? "", brief.notes ?? ""]
+    .filter(Boolean)
+    .join("\n");
 }

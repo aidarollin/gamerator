@@ -100,3 +100,34 @@
     transform: none;
   }
 }
+
+/*
+ * A learning template on a card: the real renderer, laid out at the arcade
+ * world's 360px and scaled down to fit. `pointer-events: none` matters - these
+ * are pictures inside a link, and a half-playable quiz that swallows the click
+ * that was meant to open it is worse than a static image.
+ */
+.dom {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  display: block;
+}
+
+.domInner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 360px;
+  transform-origin: top left;
+  /*
+   * 0.34 is 122/360 - the grid's minimum card width over the layout width
+   * above. A custom property would have been tidier and `check:tokens`
+   * correctly refused it: every `var(--...)` in app code has to resolve to a
+   * real DS token or an app-owned name on a short allowlist, and a one-off
+   * layout constant is neither. It is one number in one place.
+   */
+  transform: scale(0.34);
+}

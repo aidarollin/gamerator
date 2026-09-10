@@ -1,4 +1,5 @@
 import type { Engine } from "./schema";
+import type { TEMPLATES } from "@/lib/spec/schema";
 
 /**
  * EVERY GAME SOMEONE IS LIKELY TO TYPE INTO THE BOX, and what happens to it.
@@ -40,6 +41,17 @@ export type Disposition =
    */
   | { kind: "adapt"; engine: Engine; how: string }
   /**
+   * A PANDAI DESIGN SYSTEM LEARNING TEMPLATE rather than an arcade engine.
+   *
+   * These five are the older half of the product and they never went away:
+   * `lib/spec` validates them, `components/game` renders them, and every pixel
+   * comes from the DS token layer. They were reachable only at
+   * `/play/preview` - so a person asking for "a quiz about photosynthesis" got
+   * a flyer, and the five games in the repo that are ALREADY pure Pandai were
+   * the ones nobody could ask for.
+   */
+  | { kind: "template"; template: (typeof TEMPLATES)[number] }
+  /**
    * No engine and no honest adaptation. `why` names what is actually missing,
    * because "no engine for that yet" tells someone nothing they can use.
    */
@@ -60,6 +72,7 @@ export type Genre = {
 const engine = (e: Engine, weight: 1 | 3 = 3): Disposition => ({ kind: "engine", engine: e, weight });
 const adapt = (e: Engine, how: string): Disposition => ({ kind: "adapt", engine: e, how });
 const refuse = (why: string): Disposition => ({ kind: "refuse", why });
+const template = (t: (typeof TEMPLATES)[number]): Disposition => ({ kind: "template", template: t });
 
 /**
  * The catalogue, in the order it is consulted for adaptations and refusals.
@@ -217,6 +230,48 @@ export const CATALOGUE: Genre[] = [
     verbs: "swap two neighbours, line up three of a colour, watch it cascade",
     disposition: engine("match-3", 1),
     examples: ["swap gems to match colours"],
+  },
+
+  /* ------------------------- the five Pandai DS learning templates */
+
+  {
+    label: "a quiz race",
+    words: /quiz|trivia|question.*answer|multiple choice|\bkuiz\b|soalan/i,
+    verbs: "read a question, pick the right answer before the timer",
+    disposition: template("quiz-race"),
+    examples: ["a quiz about photosynthesis for Year 5", "kuiz matematik untuk Tahun 4"],
+  },
+  {
+    label: "a matching pairs game",
+    // Moved off the refusal list on 2026-09-10. The reason recorded there was
+    // that match-pairs "exists already but on the other side of the product,
+    // and joining the two is a real piece of work rather than a routing
+    // entry". That was true, and this is that work.
+    words: /memory (game|match|card|pair)|memory matching|concentration game|match(ing)? (the )?pairs|pair up|padankan/i,
+    verbs: "turn two cards, remember where the last one was",
+    disposition: template("match-pairs"),
+    examples: ["a memory matching game about animals", "match the pairs of countries and capitals"],
+  },
+  {
+    label: "a sorting game",
+    words: /sort(ing)?|categor(y|ise|ize)|group them|into buckets|\bbuckets?\b|asingkan|kumpulkan/i,
+    verbs: "drop each thing into the group it belongs to",
+    disposition: template("sort-buckets"),
+    examples: ["a sorting game for mammals and reptiles", "sort these into solids and liquids"],
+  },
+  {
+    label: "an ordering game",
+    words: /put.*in order|sequence|chronolog|timeline|susun ikut|\border\b the (steps|events)/i,
+    verbs: "put the steps into the right order",
+    disposition: template("sequence-order"),
+    examples: ["put the steps of the water cycle in order", "a timeline game about Malaysian history"],
+  },
+  {
+    label: "a fill in the blank game",
+    words: /fill.?in.?the.?blank|cloze|missing word|complete the sentence|isi tempat kosong/i,
+    verbs: "choose the word that completes the sentence",
+    disposition: template("fill-blank"),
+    examples: ["fill in the blank sentences about verbs", "isi tempat kosong untuk Tahun 3"],
   },
 
   /* --------------------------------------------------------- adaptations */
@@ -387,13 +442,13 @@ export const CATALOGUE: Genre[] = [
     examples: ["a whack a mole game", "a clicker game"],
   },
   {
-    label: "a memory game",
-    words: /memory (game|match|card|pair)|memory matching|concentration game|simon says|match(ing)? (the )?pairs/i,
-    verbs: "turn two cards, remember where the last one was",
+    label: "a repeat-the-pattern game",
+    words: /simon says|repeat the (pattern|sequence)/i,
+    verbs: "watch a pattern play, then play it back",
     disposition: refuse(
-      "this exists already but on the other side of the product - `/play/preview` has `match-pairs`, a learning template rather than an arcade engine, and joining the two is a real piece of work rather than a routing entry",
+      "Simon is a memory of TIMING rather than of position, so it needs a playback phase nothing here has - `match-pairs` covers remembering WHERE something was, which is the half that already exists",
     ),
-    examples: ["a memory matching game", "a simon says game"],
+    examples: ["a simon says game"],
   },
   {
     label: "a simulation game",
@@ -462,6 +517,13 @@ export const ENGINE_WORDS = CATALOGUE.flatMap((g) =>
 export const ADAPTED = CATALOGUE.flatMap((g) =>
   g.disposition.kind === "adapt"
     ? [{ label: g.label, words: g.words, engine: g.disposition.engine, how: g.disposition.how }]
+    : [],
+);
+
+/** The learning templates, in catalogue order. First match wins. */
+export const TEMPLATE_WORDS = CATALOGUE.flatMap((g) =>
+  g.disposition.kind === "template"
+    ? [{ label: g.label, words: g.words, template: g.disposition.template }]
     : [],
 );
 

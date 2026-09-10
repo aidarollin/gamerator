@@ -25,34 +25,74 @@ function readToken(el: HTMLElement, cssVar: string) {
 }
 
 /**
- * The DS token ramp, used when no arcade scene matches.
+ * The DS token ramp: two families, both from the token layer.
  *
- * Not dead code kept for sentiment - it is what any palette key without a scene
- * renders through, which is what happens the day the DS gains a subject and
- * `palettes.ts` has not caught up. A new subject then looks a little flat
- * instead of throwing.
+ * This is what any palette key without an arcade scene renders through, and now
+ * also what `theme.skin: "pandai"` selects on purpose.
+ *
+ * IT GIVES THE SOLIDS AND THE SKY DIFFERENT FAMILIES, and that is the whole
+ * lesson of `palettes.ts` applied here rather than only there. The first Pandai
+ * skin was photographed and it was pink sky over pink pipes over a pink
+ * ground - a single subject ramp painting everything, which is precisely the
+ * "diagram of a game" that arcade scenes were invented to escape. The option
+ * would have shipped as a feature that makes games worse.
+ *
+ * So: the SUBJECT ramp is the identity and paints what you hit, and PANDAI
+ * PRIMARY GREEN paints the sky behind it. That is more on-brand rather than
+ * less - the green is the Pandai green, and a chemistry game reads as pink
+ * obstacles in a Pandai world instead of as a pink wash.
+ *
+ * Every value still comes from the generated token layer, so `check:ds` holds
+ * and `palettes.ts` remains the only file outside it allowed to name a colour.
  */
 function dsPalette(host: HTMLElement, spec: ArcadeSpec): Palette {
   const isSubject = (SUBJECT_KEYS as readonly string[]).includes(spec.theme.palette);
-  const ramp = isSubject
+  const identity = isSubject
     ? subjectRamp(spec.theme.palette as (typeof SUBJECT_KEYS)[number])
     : accentRamp(spec.theme.palette as never);
 
-  // The saturated end of the ramp, not the pale end. This one choice is most of
-  // the difference between "a game" and "a component demo".
+  /**
+   * The backdrop. Primary green unless the game's own identity IS primary, in
+   * which case a sky and a solid drawn from the same ramp would collapse back
+   * into one family - so that case falls back to the neutral page surfaces.
+   */
+  const brandIsIdentity = spec.theme.palette === "primary";
+  const sky = brandIsIdentity
+    ? {
+        deep: "--surface-general-page-secondary",
+        mid: "--surface-general-page-secondary",
+        light: "--surface-general-page",
+        edge: "--border-general-default",
+      }
+    : {
+        deep: "--surface-primary-default-hover",
+        mid: "--surface-primary-default",
+        light: "--surface-primary-default-subtle-hover",
+        edge: "--surface-primary-focus",
+      };
+
+  // The saturated end of each ramp, not the pale end. This one choice is most
+  // of the difference between "a game" and "a component demo".
   return {
-    deep: readToken(host, ramp.focus),
-    mid: readToken(host, ramp.default),
-    light: readToken(host, ramp.subtleHover),
-    edge: readToken(host, ramp.hover),
+    deep: readToken(host, sky.deep),
+    mid: readToken(host, sky.mid),
+    light: readToken(host, sky.light),
+    edge: readToken(host, sky.edge),
     ink: readToken(host, "--text-default-heading"),
     white: readToken(host, "--surface-general-default"),
     gold: readToken(host, "--status-coins-default"),
     danger: readToken(host, "--surface-warning-default"),
+    solidDeep: readToken(host, identity.focus),
+    solidMid: readToken(host, identity.default),
+    solidEdge: readToken(host, identity.hover),
   };
 }
 
 /** `host` is any mounted element - the tokens are read off its computed style. */
 export function paletteFor(host: HTMLElement, spec: ArcadeSpec): Palette {
+  // `pandai` skips the arcade scene entirely and renders through the token
+  // ramp - the same branch a palette key with no scene already takes, made
+  // reachable on purpose. See `theme.skin` in lib/arcade/schema.ts.
+  if (spec.theme.skin === "pandai") return dsPalette(host, spec);
   return sceneFor(spec.theme.palette, spec.theme.background) ?? dsPalette(host, spec);
 }

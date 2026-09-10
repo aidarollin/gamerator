@@ -499,6 +499,11 @@ export async function generateArcade(
       palette: brief.palette ?? guessPalette(p) ?? "b-melayu",
       character,
       background: /night|dark|malam/.test(p) ? ("night" as const) : ("sky" as const),
+      // Words work too, so "make it look like Pandai" does the right thing
+      // without anyone finding the dropdown.
+      ...(brief.skin ?? (/pandai (style|look|skin|colours|colors)|on.?brand/.test(p) ? "pandai" : undefined)
+        ? { skin: brief.skin ?? ("pandai" as const) }
+        : {}),
     },
     scoring: {
       pointsPerObstacle: points,

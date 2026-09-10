@@ -18,6 +18,12 @@ export const ArcadeBrief = z.object({
   palette: z.enum([...SUBJECT_KEYS, ...ACCENT_FAMILIES] as [string, ...string[]]).optional(),
   difficulty: z.enum(["easy", "normal", "hard"]).optional(),
   language: z.enum(["ms", "en"]).default("en"),
+  /**
+   * `arcade` (default) gives the game its own art direction; `pandai` renders
+   * it through the DS token ramp so it sits next to real Pandai chrome. The
+   * author's call, never the model's - see `theme.skin` in schema.ts.
+   */
+  skin: z.enum(["arcade", "pandai"]).optional(),
 });
 
 export type ArcadeBrief = z.infer<typeof ArcadeBrief>;

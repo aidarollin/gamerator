@@ -133,10 +133,6 @@ export function EnginePreview({ spec }: { spec: ArcadeSpec }) {
 
     let live = true;
     let sprites: Record<Mood, HTMLImageElement> | null = null;
-    void loadArt();
-    void loadCharacter(spec.theme.character).then((s) => {
-      if (live) sprites = s;
-    });
 
     let engine: Engine | null = null;
     let score = 0;
@@ -249,6 +245,29 @@ export function EnginePreview({ spec }: { spec: ArcadeSpec }) {
         live = false;
       };
     }
+
+    /**
+     * REPAINT WHEN THE ART ARRIVES.
+     *
+     * Found on the deployed site, not locally, and only because the shot was
+     * taken a second sooner: the warm-up frame is drawn synchronously at mount,
+     * and the pipes and the character sprites load over the network. A card
+     * below the fold therefore froze on a frame with no obstacles and a blank
+     * white disc where PBot should be - and since its loop only starts when it
+     * is scrolled to, it kept that frame indefinitely.
+     *
+     * The same class of bug as the empty grey boxes: drawing once is only
+     * correct if everything you draw with is already there.
+     */
+    const repaint = () => {
+      if (live && !running) engine?.draw();
+    };
+    void loadArt().then(repaint);
+    void loadCharacter(spec.theme.character).then((loaded) => {
+      if (!live) return;
+      sprites = loaded;
+      repaint();
+    });
 
     /**
      * Only while it is on screen. Ten engines running their fixed-timestep loops

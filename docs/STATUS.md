@@ -1823,3 +1823,35 @@ frame, because ten looping canvases is precisely what that setting is for and
 CSS cannot reach inside a canvas.
 
 `npm run check` green: typecheck, lint, `check:ds`, `check:tokens`, 339 tests.
+
+---
+
+## 2026-09-10 — Deployed, and the deploy found one more
+
+Zul: *"deploy"*. Live at <https://gamerator.aidaasofiah.workers.dev> — ten
+engines, the gallery, the catalogue routing and the refusal reasons.
+
+**Production is still stub, deliberately.** `wrangler secret list` is empty and
+`wrangler.jsonc` sets no `GAMERATOR_PROVIDER`, so the deployed site cannot spend
+anything; `/create` says so under the button. Putting the key on the Worker is
+still Zul's call and still wants a hard credit limit on the OpenRouter key
+first — `/create` is public and unauthenticated, and `guard.ts` counts per
+isolate.
+
+Verified live rather than assumed: `motorcycle racing game` → a runner dressed
+as a race, `a tetris puzzle` → **PBot Stack**, and `a tower defence game` →
+refused with its reason. All three were wrong answers a week ago.
+
+### The screenshot of the DEPLOYED page caught a bug the local one did not
+
+Not because production differs — because the shot was taken a second sooner.
+The previews draw their warm-up frame **synchronously at mount**, and the pipes
+and the character sprites arrive over the network. A card below the fold
+therefore froze on a frame with no obstacles and a blank white disc where PBot
+should be, and because its loop only starts when it is scrolled to, it kept that
+frame indefinitely.
+
+Exactly the same class as the empty grey boxes two entries up: **drawing once is
+only correct if everything you draw with is already there.** Both loads now
+repaint the frame when they resolve. Rebuilt and redeployed; the pipes and the
+mascots are in the cards.

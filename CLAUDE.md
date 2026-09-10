@@ -23,6 +23,8 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | Path | What |
 | --- | --- |
 | `lib/arcade/catalogue.ts` | **Every game somebody might prompt**, and what happens to it |
+| `lib/games.ts` | One door: arcade engines AND the DS learning templates |
+| `lib/inputs/` | Reading a pasted link and an uploaded picture, safely |
 | `lib/arcade/schema.ts` | `ArcadeSpec` 2.0, ten engines, all validation |
 | `lib/arcade/simulate.ts` | The **playability simulation** for the flyer |
 | `lib/arcade/engines.ts` | Playability checks for the other four engines |
@@ -182,6 +184,16 @@ the platformer came out as one flat sheet.
 hold colour, by Zul's decision on 2026-09-06, and `scripts/check-ds.mjs` names
 it explicitly. Everything else - all chrome, every component - is still held to
 tokens. `check:tokens` catches dangling `var(--…)`.
+
+**A NEW INPUT HAS TO REACH THE ROUTER, not just the model.** Notes and a
+reference link were sent to the model while `chooseGame` still read only the one
+short line, so pasting a design document and typing "make this" was a coin flip.
+`routableText` is the whole request; every keyword decision reads it.
+
+**An input that looks accepted and silently does nothing is the same lie as an
+unannounced adaptation.** Every extra input reports what it actually did - a
+link that 404ed, a picture in a deployment with no model. Otherwise the person
+swaps the picture, gets the same game, and concludes the product is broken.
 
 **Three answers to "what game is this?", not two.** An engine, an ADAPTATION
 (a racing game is the runner wearing a different name - said out loud, to the

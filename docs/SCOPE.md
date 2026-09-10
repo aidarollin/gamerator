@@ -264,3 +264,68 @@ produced a valid `duel` at any difficulty** — its coefficients were written
 against a difficulty scale of 0/1/2 while `tone.scale` is -1/0/1 — and that an
 easy `brick-breaker` was rejected as a screensaver. Both had been invisible
 because the duel fixtures are hand-written and the model was on.
+
+### 2026-09-10 — Three more ways to say it, and both halves of the product
+
+Zul: *"can you add more mediums for user to include in the prompt/input (game
+link, picture, docs for the game flow/description). and make more game templates
+available to be generated but with pandai Design System(or a touch of Pandai),
+and then fetch Pandai Design System 1.5."*
+
+#### The DS re-sync found nothing to change, and proved it
+
+Ran the committed resolver against `TLVKe3bgJTdVvuPAzgDq2f`. The file HAS moved
+since 2026-09-06 — Primitives 542→545, Product 90→94, and three new collections
+(`Subjects (A–E)`, `Subjects (G–S)`, `Platform (Mobile)`) — and **none of it
+reaches the Semantic layer this build reads.** An FNV-1a digest over the sorted
+name=value lines comes out `786f6dbc` on both sides across all 366 tokens, and
+`npm run tokens` regenerates byte-identically.
+
+`sync-tokens.md` now has that digest step, so a future sync can prove "nothing
+changed" in one command rather than by reading a 366-line diff. It also records
+what the extractor SKIPS: 20 Semantic variables under a `JDP/` prefix, dropped
+in silence until now.
+
+#### Three input mediums
+
+| Medium | What happens to it |
+| --- | --- |
+| **A link** | Fetched server-side for its `<title>` and description only. Bounded at 128KB and six seconds, http(s) only, private and link-local addresses refused. A page behind a login degrades to the words in its own URL. |
+| **A picture** | Sent to the vision model as its own content block. Capped on BYTES *and* on decoded pixel area, because tokens track area and area is invisible in a file size. |
+| **Notes** | Up to 4000 characters — a design doc, a game flow, the rules. Maps onto the field `lib/spec/brief.ts` already had for exactly this. |
+
+**All three feed the ROUTER, not just the model.** `routableText` is the prompt
+plus the notes plus whatever the link turned out to be about, and every keyword
+decision reads it. Before that, someone who pasted a design document and typed
+"make this" got a coin flip: the document reached the model but was invisible to
+the code choosing which engine the model was even asked about. It now correctly
+produces a maze chase.
+
+**Every input reports what it actually did.** An input that appears to be
+accepted and silently does nothing is the same class of lie as an unannounced
+adaptation: the person swaps the picture, gets the same game, and concludes the
+product is broken rather than that the feature never applied.
+
+#### `/create` is now GET *and* POST
+
+A file cannot travel in a query string, and the query string was load-bearing:
+shareable links, the back button, a free refresh because the cache key matches,
+and gallery cards that are plain anchors. So a text brief still redirects to the
+URL it would have had, and only a brief carrying an upload is answered inline —
+and says it has no link of its own to share, because it genuinely has not.
+
+#### The five learning templates are askable, and a Pandai skin exists
+
+`quiz-race`, `match-pairs`, `sort-buckets`, `sequence-order` and `fill-blank`
+were built first, are fully tested, are made entirely of DS tokens, and were
+reachable only from `/play/preview`. They are a fourth disposition in the
+catalogue now, and the gallery shows all fifteen games. One refusal became a
+game; what is left of it (Simon says) is refused on its own terms.
+
+`theme.skin: "pandai"` renders any arcade game through the DS ramp instead of an
+authored scene. Its first version was pink-on-pink-on-pink and had to be fixed
+before shipping — see STATUS.
+
+**Still not built:** an export path for learning specs. `ExportPanel` and
+`/embed` are arcade-only, so a generated quiz can be played and not yet handed
+to an engineer. That is the next real gap.

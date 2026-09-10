@@ -1,6 +1,10 @@
 import { SUBJECT_KEYS } from "@/lib/ds/tokens.generated";
-import { chooseGame, type ArcadeBrief } from "@/lib/arcade/brief";
+import { chooseGame, routableText, type ArcadeBrief } from "@/lib/arcade/brief";
+import { readLink, wordsFromUrl, type LinkRead } from "@/lib/inputs/link";
+import { readImage } from "@/lib/inputs/image";
+import { hashString } from "@/lib/game/random";
 import { generateArcade, readLanguage, type ArcadeOutcome } from "@/lib/arcade/generate";
+import { providerMode } from "@/lib/config";
 import { Brief } from "@/lib/spec/brief";
 import { generateSpec } from "@/lib/generate";
 import type { GameSpec } from "@/lib/spec/schema";
@@ -20,6 +24,21 @@ import type { GameSpec } from "@/lib/spec/schema";
  * schema that is loose enough for both. It just answers the question "what did
  * this person ask for" once, and sends it to whichever pipeline owns it.
  */
+
+/**
+ * What the extra inputs actually contributed, for the page to say out loud.
+ *
+ * A link that could not be fetched, or a picture the free tuner cannot look at,
+ * has to be REPORTED rather than silently ignored. An input that appears to be
+ * accepted and does nothing is the same class of lie as an adaptation nobody
+ * announces - the person changes the picture, gets the same game, and concludes
+ * the product is broken rather than that the feature was never applied.
+ */
+export type InputNotes = {
+  link?: { url: string; used: boolean; detail: string };
+  picture?: { used: boolean; detail: string };
+  notes?: { chars: number };
+};
 
 export type GameOutcome =
   | ArcadeOutcome
@@ -97,35 +116,109 @@ export function guessYear(prompt: string): number {
  * depending on a word they have not typed yet, the sentence IS the objective
  * and everything else is read out of it.
  */
-export function learningBriefFrom(brief: ArcadeBrief): Brief {
+export function learningBriefFrom(brief: ArcadeBrief, routable = brief.prompt): Brief {
   const objective = brief.prompt.trim();
   return Brief.parse({
-    subject: guessSubject(objective),
-    yearLevel: guessYear(objective),
-    language: brief.language ?? readLanguage(objective) ?? "en",
+    // Read from EVERYTHING the author said. The subject and the year level are
+    // far more likely to be in a pasted document than in the one-line box.
+    subject: guessSubject(routable),
+    yearLevel: guessYear(routable),
+    language: brief.language ?? readLanguage(routable) ?? "en",
     // The schema wants at least ten characters of intent. A shorter prompt is
     // padded with what was actually asked rather than rejected, because the
     // person did type something and the box promised it would work.
     learningObjective:
       objective.length >= 10 ? objective.slice(0, 300) : `A game about: ${objective}`.slice(0, 300),
-    rules: "",
+    // The long field maps straight onto the one this schema already had for it.
+    rules: (brief.notes ?? "").slice(0, 4000),
   });
 }
 
 export async function generateGame(
   brief: ArcadeBrief,
   client = "anonymous",
-): Promise<GameOutcome> {
-  const choice = chooseGame(brief.prompt);
+  /** The reference picture, straight off the form. Validated here, not there. */
+  picture?: File,
+): Promise<{ outcome: GameOutcome; inputs: InputNotes }> {
+  const inputs: InputNotes = {};
+  if (brief.notes?.trim()) inputs.notes = { chars: brief.notes.trim().length };
+
+  /**
+   * The link, read before anything is routed - because what the page turns out
+   * to be about is part of the request, not decoration on it.
+   *
+   * A failed fetch is NOT a failed generation. Half the interesting links on
+   * the internet are behind a login or a JavaScript shell, and the URL's own
+   * words ("itch.io/games/flappy-bird-clone") are often the whole answer
+   * anyway. So it degrades to those and says which it used.
+   */
+  let linkWords = "";
+  if (brief.link) {
+    const read: LinkRead = await readLink(brief.link);
+    if (read.ok) {
+      linkWords = read.words;
+      inputs.link = { url: read.url, used: true, detail: read.title || read.description };
+    } else {
+      linkWords = wordsFromUrl(brief.link);
+      inputs.link = {
+        url: brief.link,
+        used: linkWords.length > 0,
+        detail: linkWords
+          ? `${read.reason}, so only the words in the address were used`
+          : read.reason,
+      };
+    }
+  }
+
+  /**
+   * The picture. Only a model can look at one, and this deployment may not be
+   * calling a model - in which case the honest answer is that it was ignored,
+   * printed above the game rather than left for the author to work out.
+   */
+  let shot: { mediaType: string; base64: string; fingerprint: string } | undefined;
+  if (picture && picture.size > 0) {
+    if (providerMode() !== "live") {
+      inputs.picture = {
+        used: false,
+        detail:
+          "nothing here is calling a model, and a picture is the one input only a model can read - it was not used",
+      };
+    } else {
+      const read = await readImage(picture);
+      if (read.ok) {
+        shot = {
+          mediaType: read.mediaType,
+          base64: read.base64,
+          // Fingerprinted rather than hashed whole: the base64 runs to
+          // megabytes, and name+size+type+the first kilobyte separates two
+          // different uploads without walking four million characters.
+          fingerprint: String(
+            hashString(`${picture.name}:${picture.size}:${read.mediaType}:${read.base64.slice(0, 1024)}`),
+          ),
+        };
+        inputs.picture = {
+          used: true,
+          detail: `read as a reference, about ${read.estimatedTokens} tokens`,
+        };
+      } else {
+        inputs.picture = { used: false, detail: read.reason };
+      }
+    }
+  }
+
+  const routable = routableText({ prompt: brief.prompt, notes: brief.notes, linkWords });
+  const choice = chooseGame(routable);
 
   if (choice.kind === "template") {
-    const outcome = await generateSpec(learningBriefFrom(brief), {
+    const outcome = await generateSpec(learningBriefFrom(brief, routable), {
       actor: client,
     });
     switch (outcome.status) {
       case "ok":
       case "repaired":
         return {
+          inputs,
+          outcome: {
           status: "ok-learning",
           spec: outcome.spec,
           requested: choice.requested,
@@ -138,17 +231,25 @@ export async function generateGame(
               : outcome.status === "repaired"
                 ? "model-repaired"
                 : "model",
+          },
         };
       case "invalid":
-        return { status: "invalid", issues: outcome.issues };
+        return { inputs, outcome: { status: "invalid", issues: outcome.issues } };
       case "refused":
-        return { status: "error", code: "refused", message: outcome.reason };
+        return { inputs, outcome: { status: "error", code: "refused", message: outcome.reason } };
       case "error":
-        return { status: "error", code: outcome.code, message: outcome.message };
+        return {
+          inputs,
+          outcome: { status: "error", code: outcome.code, message: outcome.message },
+        };
     }
   }
 
-  // Everything else - an engine, an adaptation, or an honest no - is the
-  // arcade pipeline's, and it re-runs the same deterministic routing itself.
-  return generateArcade(brief, client);
+  // Everything else - an engine, an adaptation, or an honest no - is the arcade
+  // pipeline's. It is handed the SAME routable text so its own routing cannot
+  // reach a different conclusion from the one taken above.
+  return {
+    inputs,
+    outcome: await generateArcade(brief, client, { routable, picture: shot }),
+  };
 }

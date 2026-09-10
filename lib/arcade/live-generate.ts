@@ -42,6 +42,13 @@ export async function generateArcadeLive(
   client: string,
   /** Set when this engine is dressed as a genre it is not. */
   adapted?: { requested: string; how: string },
+  /**
+   * A reference picture, already validated and size-capped by
+   * `lib/inputs/image.ts`. `fingerprint` is what goes in the cache key: the
+   * base64 itself is megabytes and hashing it per request would cost more than
+   * the lookup saves.
+   */
+  picture?: { mediaType: string; base64: string; fingerprint: string },
 ): Promise<LiveOutcome> {
   // The same brief must not be billed twice. `/create` reads its brief from the
   // query string, so refreshes, shared links and the back button all re-render
@@ -55,6 +62,12 @@ export async function generateArcadeLive(
     language: brief.language,
     skin: brief.skin,
     adapted: adapted?.requested,
+    // The new inputs are part of the brief, so they are part of what makes
+    // two requests the same request. Without them, changing only the notes
+    // or swapping the reference picture would silently return the old game.
+    notes: brief.notes,
+    link: brief.link,
+    picture: picture?.fingerprint,
   });
   const hit = cached<ArcadeSpec>(key);
   if (hit) return { status: "ok", spec: hit, repaired: false, cached: true };
@@ -133,7 +146,7 @@ export async function generateArcadeLive(
 
   const prepare = (raw: unknown) => withSkin(withSeed(withBudget(shape(raw))));
 
-  const first = await generateLive(brief, engine, undefined, adapted);
+  const first = await generateLive(brief, engine, undefined, adapted, picture);
   if (first.kind === "refusal") return { status: "refused", reason: first.reason };
   if (first.kind === "error") {
     return { status: "error", code: first.code, message: first.message };
@@ -149,6 +162,9 @@ export async function generateArcadeLive(
   // reasons - which are facts about numbers, not opinions - and asked again.
   const issues = issuesOf(parsed.error);
 
+  // The picture is NOT sent again on the repair turn. The model has already
+  // read it and its answer is in the transcript; re-sending costs the image's
+  // tokens a second time to tell it something it just said.
   const second = await generateLive(brief, engine, { previous: first.raw, issues }, adapted);
   if (second.kind === "refusal") return { status: "refused", reason: second.reason };
   if (second.kind === "error") {

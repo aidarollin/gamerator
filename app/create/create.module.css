@@ -87,3 +87,74 @@
   line-height: 1.5;
   text-align: center;
 }
+
+/*
+ * The three other ways to say it, collapsed by default.
+ *
+ * A form with six boxes gets abandoned; a form with one box and a quiet line
+ * offering more gets filled in. Nothing in here is required and the button
+ * works without opening it.
+ */
+.more {
+  border: var(--border-width-xs) solid var(--border-general-default);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-component-xs);
+  background: var(--surface-general-page);
+}
+
+.summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary-default);
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary::before {
+  content: "+ ";
+  font-weight: 700;
+}
+
+.more[open] > .summary::before {
+  content: "− ";
+}
+
+.moreBody {
+  display: grid;
+  gap: var(--spacing-component-2xs);
+  padding-top: var(--spacing-component-xs);
+}
+
+.input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--spacing-component-xs);
+  border-radius: var(--radius-2xl);
+  border: var(--border-width-xs) solid var(--border-general-default);
+  background: var(--surface-general-default);
+  color: var(--text-default-heading);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.input:focus-visible {
+  outline: var(--border-width-s) solid var(--border-primary-focus);
+  outline-offset: 1px;
+}
+
+/* File inputs ignore most of the above, so they get their own padding. */
+.input[type="file"] {
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  line-height: 1.6;
+}
+
+.hint {
+  margin: 0 0 var(--spacing-component-2xs);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-default-caption);
+}

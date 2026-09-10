@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { ACCENT_FAMILIES, SUBJECT_KEYS } from "@/lib/ds/tokens.generated";
 import { Character, ENGINES, PLANNED_ENGINES } from "./schema";
-import { ADAPTED, ENGINE_WORDS, UNSUPPORTED } from "./catalogue";
+import { ADAPTED, ENGINE_WORDS, TEMPLATE_WORDS, UNSUPPORTED } from "./catalogue";
+import type { TEMPLATES } from "@/lib/spec/schema";
 
 /**
  * What a person types to get a game.
@@ -100,6 +101,38 @@ export function chooseEngine(prompt: string): EngineChoice {
   // game for Year 3", or "asdfgh". Both get a flyer, and both get TOLD it was a
   // guess, which is the difference between a default and a silent one.
   return { kind: "engine", engine: "endless-flyer", confident: false };
+}
+
+/**
+ * The whole answer, arcade engines AND Pandai DS learning templates.
+ *
+ * `chooseEngine` above stays arcade-only on purpose: `generateArcade` calls it
+ * and must never be handed a template. This is the layer that knows about both
+ * halves of the product, and it is what `/create` asks.
+ *
+ * TEMPLATES ARE CHECKED AFTER THE ENGINES AND BEFORE THE ADAPTATIONS. After the
+ * engines, because "match 3" is an arcade engine and "match the pairs" is a
+ * template, and the more specific arcade word should win when someone names
+ * one. Before the adaptations, because "a quiz race about photosynthesis"
+ * contains "race", and racing is adapted to the endless runner - a quiz would
+ * otherwise come back as a jumping game.
+ */
+export type GameChoice =
+  | EngineChoice
+  | { kind: "template"; template: (typeof TEMPLATES)[number]; requested: string };
+
+export function chooseGame(prompt: string): GameChoice {
+  const arcade = chooseEngine(prompt);
+  // A confident arcade answer wins outright. An unconfident one is the default
+  // flyer, which is exactly the guess a template should be allowed to beat.
+  if (arcade.kind === "engine" && arcade.confident && !arcade.adapted) return arcade;
+
+  for (const t of TEMPLATE_WORDS) {
+    if (t.words.test(prompt)) {
+      return { kind: "template", template: t.template, requested: t.label };
+    }
+  }
+  return arcade;
 }
 
 export const ALL_ENGINE_NAMES = [...ENGINES, ...PLANNED_ENGINES];

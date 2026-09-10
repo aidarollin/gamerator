@@ -3,13 +3,15 @@ import { Card, Chip } from "@/components/ds";
 import { ArcadeGame } from "@/components/arcade/ArcadeGame";
 import { ExportPanel } from "@/components/arcade/ExportPanel";
 import { headers } from "next/headers";
-import { generateArcade, readLanguage } from "@/lib/arcade/generate";
+import { readLanguage } from "@/lib/arcade/generate";
+import { generateGame } from "@/lib/games";
+import { GameRenderer } from "@/components/game";
 import { providerMode } from "@/lib/config";
 import { ArcadeBrief } from "@/lib/arcade/brief";
 import { ENGINES } from "@/lib/arcade/schema";
 import { CHARACTERS } from "@/components/arcade/characters";
 import { GameGallery } from "@/components/arcade/GameGallery";
-import { GALLERY } from "@/lib/arcade/gallery";
+import { GALLERY } from "@/lib/gallery";
 import s from "./create.module.css";
 
 export const metadata = {
@@ -188,7 +190,39 @@ async function Result({ params }: { params: Record<string, string | undefined> }
     h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown";
 
-  const outcome = await generateArcade(parsed.data, client);
+  const outcome = await generateGame(parsed.data, client);
+
+  /**
+   * A Pandai DS learning template rather than an arcade engine.
+   *
+   * Rendered by `components/game`, which is the older half of this product and
+   * has been sitting behind `/play/preview` since before the arcade existed.
+   * Every pixel of it comes from the token layer.
+   */
+  if (outcome.status === "ok-learning") {
+    return (
+      <div className={s.result}>
+        <p className={s.guess}>
+          That reads as <strong>{outcome.requested}</strong>, so this is a Pandai
+          design-system template rather than an arcade game &mdash; the same
+          components the rest of Pandai is built from.
+        </p>
+        {/* The uncomfortable half, said out loud. For an arcade game the free
+            path DERIVES the physics from your words. For a learning template it
+            returns a canned fixture: the template is right and the content is
+            somebody else's. A demo that hides that is a lie. */}
+        {outcome.source === "fixture" && (
+          <p className={s.guess}>
+            <strong>The content here is a sample, not yours.</strong> Choosing a
+            template from your words is free; writing the questions is a model
+            call, and this deployment is not making one. Turn the model on and
+            the questions come from your prompt.
+          </p>
+        )}
+        <GameRenderer spec={outcome.spec} />
+      </div>
+    );
+  }
 
   // The honest answers, before the happy path.
   if (outcome.status === "no-engine") {

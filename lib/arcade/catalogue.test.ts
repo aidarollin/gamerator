@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOGUE } from "./catalogue";
-import { chooseEngine } from "./brief";
+import { chooseEngine, chooseGame } from "./brief";
 import { generateArcade } from "./generate";
 import { ENGINES } from "./schema";
 
@@ -17,8 +17,14 @@ describe("the catalogue routes the way it says it does", () => {
   for (const genre of CATALOGUE) {
     for (const example of genre.examples) {
       it(`${JSON.stringify(example)} -> ${genre.disposition.kind}`, () => {
-        const choice = chooseEngine(example);
+        const choice = chooseGame(example);
         const d = genre.disposition;
+
+        if (d.kind === "template") {
+          expect(choice.kind).toBe("template");
+          if (choice.kind === "template") expect(choice.template).toBe(d.template);
+          return;
+        }
 
         if (d.kind === "refuse") {
           expect(choice.kind).toBe("no-engine");
@@ -37,6 +43,7 @@ describe("the catalogue routes the way it says it does", () => {
         expect(choice.kind).toBe("engine");
         if (choice.kind !== "engine") return;
         expect(choice.engine).toBe(d.engine);
+        // `d` is an engine or an adaptation by here; both carry an engine.
 
         if (d.kind === "adapt") {
           expect(choice.adapted?.requested).toBe(genre.label);
@@ -62,7 +69,7 @@ describe("nothing in the imagined space becomes a silent guess", () => {
     const guessed: string[] = [];
     for (const genre of CATALOGUE) {
       for (const example of genre.examples) {
-        const choice = chooseEngine(example);
+        const choice = chooseGame(example);
         if (choice.kind === "engine" && !choice.confident) guessed.push(example);
       }
     }

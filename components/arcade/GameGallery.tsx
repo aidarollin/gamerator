@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import type { GalleryEntry } from "@/lib/arcade/gallery";
+import type { GalleryEntry } from "@/lib/gallery";
 import { EnginePreview } from "./EnginePreview";
+import { TemplatePreview } from "./TemplatePreview";
 import s from "./gallery.module.css";
 
 /**
@@ -33,18 +34,23 @@ export function GameGallery({ games }: { games: GalleryEntry[] }) {
         <h2 className={s.title}>The {games.length} games it can make</h2>
         <p className={s.lede}>
           Each one is really running. Tap a card to start from it &mdash; then
-          change the words to make it yours.
+          change the words to make it yours. The last five are Pandai design
+          system templates, built from the same components as the rest of the app.
         </p>
       </div>
       <div className={s.grid}>
         {games.map((g) => (
           <Link
-            key={g.engine}
+            key={g.id}
             href={`/create?prompt=${encodeURIComponent(g.prompt)}`}
             className={s.card}
           >
             <span className={s.screen}>
-              <EnginePreview spec={g.spec} />
+              {g.kind === "arcade" ? (
+                <EnginePreview spec={g.spec} />
+              ) : (
+                <TemplatePreview spec={g.spec} />
+              )}
             </span>
             <span className={s.name}>{g.name}</span>
             <span className={s.verbs}>{g.verbs}</span>

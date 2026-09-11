@@ -2149,3 +2149,70 @@ above, and still cannot spend (no Worker secret).
 
 **Next real work, when asked:** export for the learning templates (the biggest
 gap), then human playtests.
+
+---
+
+## 2026-09-11 — Later: the deck rebuilt, and Block in the duel
+
+Zul: *"make the slide more simple clean, elegant and interactive. make sure the
+box for the demo hug the content (dont let it be scrollable). finally, add the
+Block button, commit and push."*
+
+**`/deck` rebuilt: thirteen slides, most with something to click.** A sentence
+becomes a game; the data beside the game it plays; the five steps; the ten
+arcade games; the router's real answers to five prompts; the validator
+rejecting an impossible and a too-easy game in its own words; one flyer
+re-skinned by subject. Every one is computed by `lib/deck.ts` from the real
+router, the free tuner and the validator, and `lib/deck.test.ts` fails the day a
+slide stops showing what it claims. The tuner is reached through a new
+`tuneArcade` in `generate.ts`, which has no path to a model - going through
+`generateArcade` would have spent money on every render under `dev:live`.
+`/create` is no longer embedded at all.
+
+The slide is a fixed 1120x630 canvas scaled to the screen, so the 28px DS title
+grows with the room instead of being overridden; below 900px wide it flows as a
+page. ← → move, 1–9 choose.
+
+**Demo frames hug their content.** `LiveGame` reads the embedded page's new
+`[data-fit]` box (same origin) and follows it with a ResizeObserver. Probed on
+every slide, desktop and phone: frame 316x476, content 476, nothing scrollable.
+
+**`/embed` padding, 8px -> 24px.** The 8px edge cut the stage's drop shadow into
+a hard line that read as a box round every embedded game - in a Pandai page as
+much as on a slide. The 360x560 export snippet still fits: a 312px stage, the
+content ending at 527px, no scroll. My first fix set the padding on the embedded
+page FROM the deck, which raced React's hydration and raised a mismatch; the
+padding belongs in `/embed` itself.
+
+**Block in the duel.** ↓ at a keyboard; a Block button on the pad (Left, Right,
+Block, Strike). One press guards for `DUEL.playerGuard` (0.35s), and the next
+cannot go up until `DUEL.blockCooldown` (0.28s) after it drops. The simulation
+and the renderer each held their own copy of the opponent's block numbers (0.06,
+0.28); both now read the same constants. A new test pins the promise the check
+rests on: a person pressing Block at the reaction time the simulation credits
+(0.22s) still has the guard up when any strike `playableDuel` allows lands. A
+blocked strike knocks, sparks and costs nothing. This closes the "found, not
+fixed" item above.
+
+Probed against the bundled duel, after walking into range:
+
+| Block pressed | Hits taken |
+| --- | --- |
+| never | 0.41s, 1.52s, then out |
+| every 150ms | 0.45s, 2.70s, then out |
+| every 300ms | 0.44s, 2.69s, then out |
+| every 600ms | 0.46s, 4.87s, then out |
+| every 1000ms | 0.47s, 1.54s, then out |
+
+Blocking buys time; mashing is not a perfect defence, and cannot win anyway,
+because only strikes score.
+
+**My own probe lied first.** Mashing ↓ reported three lives left after eight
+seconds - because ↓ on the game-over screen starts a new game, so it had mashed
+straight through its own deaths. The timeline probe stops at game over.
+
+**Committed and pushed** to `main`, at Zul's request. **Not deployed** - the
+live site is still `716a575`.
+
+**Waiting on Zul:** deploy; a real-phone swipe check; the OpenRouter credit
+limit; the teaching team's answers.

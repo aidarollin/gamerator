@@ -43,10 +43,18 @@ export default async function EmbedPage({
         minHeight: "100dvh",
         display: "grid",
         placeItems: "center",
-        padding: "var(--spacing-component-xs)",
+        // Room for the stage's drop shadow. At 8px the frame edge cut the
+        // shadow into a hard line - a box drawn round every embedded game, on
+        // a Pandai page as much as on the deck. The 360x560 export snippet
+        // still fits: a 312px stage is 468 tall, plus the credit line.
+        padding: "var(--spacing-component-xl)",
         background: "var(--surface-general-page)",
       }}
     >
+      {/* `data-fit` is the content's own box. The wrapper above is always the
+          full height of whatever frame it is in, so it cannot say how tall the
+          game is; this can, and `/deck` sizes its demo frames from it. */}
+      <div data-fit style={{ width: "100%", display: "grid", justifyItems: "center" }}>
       {spec ? (
         <ArcadeGame spec={spec} />
       ) : (
@@ -62,6 +70,7 @@ export default async function EmbedPage({
           {problem}
         </p>
       )}
+      </div>
     </div>
   );
 }

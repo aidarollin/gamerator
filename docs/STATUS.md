@@ -2216,3 +2216,24 @@ live site is still `716a575`.
 
 **Waiting on Zul:** deploy; a real-phone swipe check; the OpenRouter credit
 limit; the teaching team's answers.
+
+---
+
+## 2026-09-11 — Deployed
+
+Zul: *"commit push and deploy"*. Nothing new to commit - `main` was clean and
+pushed at `e4e2dad`. Stopped the dev server, `npm run build`, `npx wrangler
+deploy`: version `331754fc-255b-4b8e-8804-c93d5de4988b`, live at
+<https://gamerator.aidaasofiah.workers.dev>. The live site now has everything
+from 2026-09-10 and 2026-09-11: the learning templates on `/create`, the Pandai
+skin, link/picture/notes input, Poppins and the type roles, full screen and the
+thumb pad, Block in the duel, and the rebuilt deck.
+
+Checked against the live URL: every route 200; the deck probe walked all 13
+slides with no console errors, every demo frame 316x476 with 476 of content, on
+desktop and on a phone; the duel's pad is Left, Right, Block, Strike.
+
+Still free mode - no Worker secret, so the live site cannot spend.
+
+**Waiting on Zul:** a real-phone swipe check (the live URL works for it now, no
+LAN needed); the OpenRouter credit limit; the teaching team's answers.

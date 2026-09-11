@@ -894,7 +894,10 @@ export const HINTS: Record<ArcadeSpec["engine"], { touch: string; keys: string }
   snake: { touch: "Steer with the arrow pad", keys: "Arrow keys to steer" },
   "endless-runner": { touch: "Tap anywhere to jump", keys: "Space or ↑ to jump" },
   platformer: { touch: "Hold ◀ ▶ to run, tap Jump", keys: "← → to run, Space or ↑ to jump" },
-  duel: { touch: "Hold ◀ ▶ to step, tap Strike", keys: "← → to step, Space or ↑ to strike" },
+  duel: {
+    touch: "Hold ◀ ▶ to step, Strike to hit, Block to guard",
+    keys: "← → to step, Space or ↑ to strike, ↓ to block",
+  },
   shooter: { touch: "Drag to steer - you fire on your own", keys: "← → to steer - you fire on your own" },
   "maze-chase": { touch: "Steer with the arrow pad", keys: "Arrow keys to steer" },
   "falling-blocks": { touch: "◀ ▶ to move, then Turn or Drop", keys: "← → move, ↑ turn, ↓ drop" },
@@ -916,7 +919,14 @@ export const HINTS: Record<ArcadeSpec["engine"], { touch: string; keys: string }
  */
 export const CONTROLS: Partial<Record<ArcadeSpec["engine"], ControlLayout>> = {
   platformer: { pad: "sides", actions: [{ c: "a", label: "Jump" }] },
-  duel: { pad: "sides", actions: [{ c: "a", label: "Strike" }] },
+  duel: {
+    pad: "sides",
+    // Block on ↓: a guard is a crouch, and it keeps Space and ↑ for the strike.
+    actions: [
+      { c: "down", label: "Block" },
+      { c: "a", label: "Strike" },
+    ],
+  },
   snake: { pad: "dpad", actions: [] },
   "maze-chase": { pad: "dpad", actions: [] },
   "falling-blocks": {

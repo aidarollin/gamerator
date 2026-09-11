@@ -64,6 +64,28 @@ export const DUEL = {
    * opponent and lost.
    */
   playerReaction: 0.22,
+  /** A guard outlasts the strike it meets by this much. */
+  blockLinger: 0.06,
+  /**
+   * After a guard goes up, how long before another can - counted from the
+   * raise. This is what makes a fast opponent beatable: draw the block, then
+   * hit the gap behind it. It applies to both fighters, and to a person.
+   */
+  blockCooldown: 0.28,
+  /**
+   * How long ONE PRESS of Block holds a person's guard up.
+   *
+   * The simulated player raises its guard the moment it sees a windup and drops
+   * it the moment the strike lands, because it knows when that is. A person
+   * does not, so a press holds for longer: long enough that pressing Block
+   * `playerReaction` after a windup begins still covers the landing of every
+   * windup `playableDuel` allows, and - with the cooldown - short enough that
+   * mashing it leaves gaps. `duel.test.ts` pins that relationship.
+   *
+   * Until 2026-09-11 there was no Block button at all, so this check was
+   * certifying a defence no human could perform.
+   */
+  playerGuard: 0.35,
   dt: 1 / 120,
 } as const;
 
@@ -242,8 +264,8 @@ export function duelPlayability(r: DuelRules): DuelVerdict {
        */
       if (iCanSee && me.blocking <= 0 && me.blockCooldown <= 0) {
         // Defend first. A player who only ever attacks is not competent.
-        me.blocking = foe.windup + 0.06;
-        me.blockCooldown = me.blocking + 0.28;
+        me.blocking = foe.windup + DUEL.blockLinger;
+        me.blockCooldown = me.blocking + DUEL.blockCooldown;
       } else if (gap() <= r.reach) {
         me.windup = r.strikeWindup;
       } else {
@@ -276,8 +298,8 @@ export function duelPlayability(r: DuelRules): DuelVerdict {
 
     if (!busy(foe)) {
       if (canSee && foe.blocking <= 0 && foe.blockCooldown <= 0) {
-        foe.blocking = me.windup + 0.06;
-        foe.blockCooldown = foe.blocking + 0.28;
+        foe.blocking = me.windup + DUEL.blockLinger;
+        foe.blockCooldown = foe.blocking + DUEL.blockCooldown;
       } else if (
         gap() <= r.reach &&
         r.opponentAggression > 0.15 &&

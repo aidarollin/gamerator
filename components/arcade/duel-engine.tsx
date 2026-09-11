@@ -118,6 +118,17 @@ export const duelFactory: EngineFactory = (h, spec) => {
     f.windup = r.strikeWindup;
   };
 
+  /**
+   * Block: the player's guard, the same `blocking` the opponent has always had.
+   * Not mid-strike, and not again until the last guard has cooled - the rules
+   * the simulated player in `duelPlayability` already obeyed.
+   */
+  const guard = () => {
+    if (busy(me) || me.blockCooldown > 0 || h.phase() !== "playing") return;
+    me.blocking = DUEL.playerGuard;
+    me.blockCooldown = DUEL.playerGuard + DUEL.blockCooldown;
+  };
+
   return {
     reset() {
       me = side(W / 2 - DUEL.startGap / 2, 1);
@@ -139,6 +150,10 @@ export const duelFactory: EngineFactory = (h, spec) => {
         // while holding a direction does not stop you.
         if (down) hold = d;
         else if (hold === d) hold = 0;
+        return;
+      }
+      if (down && c === "down") {
+        guard();
         return;
       }
       if (down && (c === "a" || c === "up") && !busy(me) && h.phase() === "playing") {
@@ -217,6 +232,13 @@ export const duelFactory: EngineFactory = (h, spec) => {
           spawnBurst(parts, me.x, FLOOR - 70, 10);
           h.loseLife();
           return;
+        } else if (gap() <= r.reach) {
+          // Blocked - the player's guard met it. The same dull knock as a
+          // strike of theirs being blocked, and a spark at the guard, so the
+          // block that saved a life is something you can see and hear.
+          h.shake(0.2);
+          h.sfx("hit");
+          spawnBurst(parts, me.x + 26 * me.facing, FLOOR - 70, 5);
         }
       }
 
@@ -239,8 +261,8 @@ export const duelFactory: EngineFactory = (h, spec) => {
 
       if (!busy(foe)) {
         if (canSee && foe.blocking <= 0 && foe.blockCooldown <= 0) {
-          foe.blocking = me.windup + 0.06;
-          foe.blockCooldown = foe.blocking + 0.28;
+          foe.blocking = me.windup + DUEL.blockLinger;
+          foe.blockCooldown = foe.blocking + DUEL.blockCooldown;
         } else if (
           gap() <= r.reach &&
           r.opponentAggression > 0.15 &&

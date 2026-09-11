@@ -83,7 +83,8 @@ the shooter and match-3 (swipe a piece onto a neighbour) listen to it.
 | brick-breaker, shooter | drag along the game |
 | match-3 | tap two pieces, or swipe one |
 | snake, maze-chase | arrow pad |
-| platformer, duel | left / right, plus Jump or Strike |
+| platformer | left / right, plus Jump |
+| duel | left / right, plus Block and Strike (↓ blocks on a keyboard) |
 | falling-blocks | left / right (repeat while held), plus Turn and Drop |
 
 Layouts live in `CONTROLS` in `components/arcade/engines.tsx`; the pad is drawn

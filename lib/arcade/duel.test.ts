@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DUEL, DuelRules, duelPlayability } from "./duel";
+import { DUEL, DuelRules, duelPlayability, playableDuel } from "./duel";
 import { makeRng } from "@/lib/game/random";
 import valid from "./fixtures/duel.valid.json";
 
@@ -107,6 +107,28 @@ describe("duel playability", () => {
     expect(good).toBeGreaterThan(10);
     // And rejection is not one condition wearing three hats.
     expect(reasons.size).toBeGreaterThanOrEqual(2);
+  });
+
+  /**
+   * The Block button's promise. The simulation credits the player with a block
+   * on sight, `DUEL.playerReaction` after a windup begins. A person pressing
+   * Block at that same moment must still have the guard up when the strike
+   * lands - for every windup the clamp allows - or the check is certifying a
+   * defence nobody holding the phone can perform. Which, until the button
+   * existed, it was.
+   */
+  it("gives a person's Block time to meet any strike playableDuel allows", () => {
+    for (const asked of [0.08, 0.25, 0.3, 0.34, 0.6]) {
+      const { strikeWindup } = playableDuel({ ...base, strikeWindup: asked });
+      // The windup is slow enough to be seen at all...
+      expect(DUEL.playerReaction).toBeLessThan(strikeWindup);
+      // ...and a guard raised on sight is still up when it lands.
+      expect(DUEL.playerReaction + DUEL.playerGuard).toBeGreaterThan(
+        strikeWindup + DUEL.blockLinger,
+      );
+    }
+    // A guard that never cooled would make mashing Block a perfect defence.
+    expect(DUEL.blockCooldown).toBeGreaterThan(0);
   });
 
   it("is deterministic - the same rules give the same verdict", () => {

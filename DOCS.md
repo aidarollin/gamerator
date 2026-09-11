@@ -190,5 +190,3 @@ scale, full screen and touch controls on phones, deployed on Cloudflare.
 - No quality scoring ("is this game *fun*?") — only "is it playable?".
 - Swiping on the game has not been checked on a real phone (the test browser
   cannot scroll by touch at all).
-- In the fighting game the player cannot block, but the playability check
-  assumes they can.

@@ -18,7 +18,7 @@
   gap: var(--spacing-component-xs);
 }
 
-.title { font-size: 15px; font-weight: 600; color: var(--text-default-heading); }
+.title { font-size: var(--type-t4); line-height: var(--type-t4-lh); font-weight: 600; color: var(--text-default-heading); }
 
 .tabs { display: flex; gap: var(--spacing-component-3xs); }
 
@@ -27,7 +27,8 @@
   padding: 0 var(--spacing-component-sm);
   border-radius: var(--radius-full);
   border: var(--border-width-xs) solid var(--border-primary-default);
-  font-size: 12px;
+  font-size: var(--type-b5);
+  line-height: var(--type-b5-lh);
   font-weight: 600;
   cursor: pointer;
 }
@@ -35,7 +36,7 @@
 .tab { background: var(--surface-general-default); color: var(--text-primary-default); }
 .tabOn { background: var(--surface-primary-default); color: var(--text-on-color-heading); border-color: var(--border-primary-focus); }
 
-.hint { font-size: 12px; line-height: 1.5; color: var(--text-default-body); margin: 0; }
+.hint { font-size: var(--type-c1); line-height: var(--type-c1-lh); font-weight: 400; color: var(--text-default-body); margin: 0; }
 
 .code {
   margin: 0;
@@ -44,8 +45,9 @@
   background: var(--surface-general-default);
   border: var(--border-width-xs) solid var(--border-general-default);
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 11px;
-  line-height: 1.6;
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
   color: var(--text-default-heading);
   overflow-x: auto;
   max-height: 260px;
@@ -62,7 +64,8 @@
   border: var(--border-width-xs) solid var(--border-primary-default);
   background: var(--surface-general-default);
   color: var(--text-primary-default);
-  font-size: 13px;
+  font-size: var(--type-b1);
+  line-height: var(--type-b1-lh);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -72,4 +75,4 @@
 
 .btn:hover { background: var(--surface-secondary-default); border-color: var(--border-secondary-focus); color: var(--text-secondary-focus); }
 
-.foot { font-size: 11px; line-height: 1.5; color: var(--text-default-caption); margin: 0; }
+.foot { font-size: var(--type-c1); line-height: var(--type-c1-lh); font-weight: 400; color: var(--text-default-caption); margin: 0; }

@@ -17,7 +17,8 @@
     "check:tokens": "node scripts/check-tokens.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "fixtures": "node scripts/generate-fixture-index.mjs"
+    "fixtures": "node scripts/generate-fixture-index.mjs",
+    "tokens:app": "node scripts/sync-app-ds.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

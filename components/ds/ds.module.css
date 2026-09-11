@@ -66,7 +66,7 @@
   padding: var(--spacing-component-xs) var(--spacing-component-sm);
   border-radius: var(--radius-full);
   border: var(--border-width-xs) solid transparent;
-  font-size: 14px;
+  font-size: var(--type-b1);
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -81,8 +81,8 @@
 /* Size=M and Size=S are separate variants in the set; only the L geometry was
  * read, so these two scale padding and keep every colour identical rather than
  * inventing values. Re-read the nodes before treating them as DS-exact. */
-.buttonM { min-height: 32px; font-size: 14px; }
-.buttonS { min-height: 24px; padding: var(--spacing-component-3xs) var(--spacing-component-xs); font-size: 12px; }
+.buttonM { min-height: 32px; font-size: var(--type-b1); font-weight: 600; }
+.buttonS { min-height: 24px; padding: var(--spacing-component-3xs) var(--spacing-component-xs); font-size: var(--type-b5); font-weight: 600; }
 
 /* Variants=Primary, State=Default */
 .btnPrimary {
@@ -149,7 +149,8 @@
   border: var(--border-width-xs) solid var(--border-primary-default);
   background: var(--surface-general-default-secondary);
   color: var(--text-default-body);
-  font-size: 12px;
+  font-size: var(--type-c1);
+  font-weight: 400;
   line-height: 1;
   white-space: nowrap;
 }
@@ -206,7 +207,7 @@
   border: var(--border-width-xs) solid var(--border-informative-default);
   background: var(--surface-informative-default-subtle);
   color: var(--text-informative-default);
-  font-size: 14px;
+  font-size: var(--type-b1);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -240,7 +241,7 @@
   border-radius: var(--radius-full);
   background: var(--status-bg);
   color: var(--status-on);
-  font-size: 12px;
+  font-size: var(--type-b5);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;

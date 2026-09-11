@@ -63,6 +63,33 @@ follow. This renderer animates static sprites procedurally, and a lunge, a
 recoil and a run cycle are all the same class of transform. Both engines exist
 now, and neither needed a single new asset.
 
+### And five Pandai DS templates
+
+Since 2026-09-10 `/create` also makes the five learning templates - quiz race,
+matching pairs, sorting, ordering, fill in the blank - built from DS components
+rather than a canvas. `lib/games.ts` is the one door: it routes a request to an
+arcade engine or a template. See [GAMESPEC.md](GAMESPEC.md) for their schema.
+
+### On a phone
+
+Added 2026-09-11. An engine's input is **press / move / release** on the game
+itself, plus an optional **`control(c, down)`** for the thumb pad and the arrow
+keys. `move` is separate so a drag is not a stream of taps; only brick-breaker,
+the shooter and match-3 (swipe a piece onto a neighbour) listen to it.
+
+| Engine | On a touch screen |
+| --- | --- |
+| flyer, runner | tap anywhere |
+| brick-breaker, shooter | drag along the game |
+| match-3 | tap two pieces, or swipe one |
+| snake, maze-chase | arrow pad |
+| platformer, duel | left / right, plus Jump or Strike |
+| falling-blocks | left / right (repeat while held), plus Turn and Drop |
+
+Layouts live in `CONTROLS` in `components/arcade/engines.tsx`; the pad is drawn
+by `GameFrame` only where the main pointer is a finger. Tapping Play on a phone
+takes the whole screen (a fixed, page-locking layer on iPhone Safari).
+
 ### Three answers, not two
 
 Every prompt gets exactly one of these, and which one is decided in code by
@@ -196,6 +223,9 @@ already fun without it, never the reason the game exists.
 2. `brick-breaker` and `snake` — no art at all, cheapest to add.
 3. `endless-runner` — same engine family as the flyer.
 4. `platformer` — last, and only once the sprite question has an answer.
+
+**As built:** all four above on 2026-09-06, the `duel` on 2026-09-07, and
+`shooter`, `maze-chase`, `falling-blocks` and `match-3` on 2026-09-08.
 
 Each engine ships with fixtures — valid, edge, invalid, **and unplayable** —
 before its renderer, for the same reason as before: an engine that has only ever

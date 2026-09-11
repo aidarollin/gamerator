@@ -88,6 +88,12 @@ export const mazeFactory: EngineFactory = (h, spec) => {
       rng = makeRng(r.mazeSeed * 104729 + 17);
       place();
     },
+    control(c, down) {
+      if (!down || c === "a") return;
+      // Remembered and taken at the next junction that allows it, exactly like
+      // a tapped direction.
+      want = { left: { x: -1, y: 0 }, right: { x: 1, y: 0 }, up: { x: 0, y: -1 }, down: { x: 0, y: 1 } }[c];
+    },
     input(kind, where) {
       if (kind !== "press" || !where) return;
       // The snake's steering, which works with one thumb and needs no swipe

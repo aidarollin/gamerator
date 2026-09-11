@@ -51,7 +51,8 @@ export function ExportPanel({ spec }: { spec: ArcadeSpec }) {
   width="360" height="560"
   style="border:0;border-radius:24px;max-width:100%"
   loading="lazy"
-  allow="autoplay"
+  allow="autoplay; fullscreen"
+  allowfullscreen
 ></iframe>`;
 
   const blade = `{{-- resources/views/games/${slug(spec.meta.title)}.blade.php --}}
@@ -62,6 +63,8 @@ export function ExportPanel({ spec }: { spec: ArcadeSpec }) {
     width="360" height="560"
     style="border:0;border-radius:24px;max-width:100%"
     loading="lazy"
+    allow="autoplay; fullscreen"
+    allowfullscreen
     x-on:load="loaded = true"
   ></iframe>
 </div>

@@ -10,15 +10,17 @@
 
 .title {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--type-t3);
+  line-height: var(--type-t3-lh);
   font-weight: 700;
   color: var(--text-default-heading);
 }
 
 .lede {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   color: var(--text-default-body);
 }
 
@@ -74,15 +76,16 @@
 }
 
 .name {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-b1);
+  line-height: var(--type-b1-lh);
+  font-weight: 600;
   color: var(--text-default-heading);
-  line-height: 1.3;
-}
+  }
 
 .verbs {
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
   color: var(--text-default-caption);
 }
 

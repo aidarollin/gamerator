@@ -17,17 +17,23 @@ generated game to be **simulated for playability before anyone sees it**.
 | Page | What |
 | --- | --- |
 | [/create](https://gamerator.aidaasofiah.workers.dev/create) | Describe a game, play it, export it |
-| [/play/arcade](https://gamerator.aidaasofiah.workers.dev/play/arcade) | All 21 fixtures across five engines |
+| [/play/arcade](https://gamerator.aidaasofiah.workers.dev/play/arcade) | Every saved test game, across all ten arcade engines |
 | [/ds](https://gamerator.aidaasofiah.workers.dev/ds) | Every DS primitive in all 19 subject palettes |
 | [/embed](https://gamerator.aidaasofiah.workers.dev/embed) | The embeddable surface Pandai drops into Blade |
 
 ## Status
 
-Five engines built: `endless-flyer`, `endless-runner`, `brick-breaker`, `snake`,
-`platformer`. 366 Pandai DS 1.5 tokens vendored. Flyer physics ramp across a
-run. **The model is deliberately off** — `/create` runs a free deterministic
-tuner; see [CLAUDE.md](CLAUDE.md). Read [docs/STATUS.md](docs/STATUS.md) first in
-every session.
+**Start with [DOCS.md](DOCS.md)** - the short, plain description of the system
+and the frameworks it uses.
+
+15 games: ten arcade engines (flyer, runner, platformer, brick breaker, snake,
+fighting, shooter, maze chase, falling blocks, match three) and five Pandai DS
+learning templates. Input can be a sentence, notes, a link or a picture. Games play full screen
+on a phone with an on-screen controller where they need one, in Pandai's
+Poppins type scale. The
+model is **on locally**, behind a spending wall; the **deployed site stays in
+free mode** and cannot spend money. Read [docs/STATUS.md](docs/STATUS.md) first
+in every session.
 
 ## The docs pack
 
@@ -36,6 +42,8 @@ anything structural, and keep it true afterwards.
 
 | Doc | Read it when |
 | --- | --- |
+| [DOCS.md](DOCS.md) | **Start here** — what the system is, how it works, the frameworks |
+| [PRESENTATION.md](docs/PRESENTATION.md) | The talk: slide-by-slide script for `/deck` |
 | [STATUS.md](docs/STATUS.md) | **Start of every session** — dated log and live blockers |
 | [ENGINES.md](docs/ENGINES.md) | The arcade catalog and the ArcadeSpec |
 | [SCOPE.md](docs/SCOPE.md) | Before adding anything — names what is deliberately not built |

@@ -22,7 +22,12 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const css = readFileSync(join(root, "app/ds/tokens.css"), "utf8");
+// Both generated layers define tokens: Figma's, and the product's on top of it
+// (typography, motion, alias names - see scripts/sync-app-ds.mjs).
+const css =
+  readFileSync(join(root, "app/ds/tokens.css"), "utf8") +
+  "\n" +
+  readFileSync(join(root, "app/ds/pandai-app.css"), "utf8");
 const generated = readFileSync(join(root, "lib/ds/tokens.generated.ts"), "utf8");
 
 /** Every custom property the generated stylesheet actually defines. */
@@ -47,6 +52,10 @@ const LOCAL = new Set([
   "--font-mono",
   "--font-geist-sans",
   "--font-geist-mono",
+  "--font-poppins",
+  // Room reserved under a full-screen game for the thumb pad. Set by
+  // arcade.module.css on `.frameFull.hasPad`, read by `.frameFull .stage`.
+  "--pad-space",
 ]);
 
 const list = (name) => {

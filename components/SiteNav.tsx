@@ -54,7 +54,8 @@ export function SiteNav() {
           href="/"
           style={{
             fontWeight: 700,
-            fontSize: 15,
+            fontSize: "var(--type-t3)",
+            lineHeight: "var(--type-t3-lh)",
             textDecoration: "none",
             color: "var(--text-default-heading)",
           }}
@@ -70,7 +71,8 @@ export function SiteNav() {
               href={l.href}
               aria-current={on ? "page" : undefined}
               style={{
-                fontSize: 13,
+                fontSize: "var(--type-b1)",
+                lineHeight: "var(--type-b1-lh)",
                 fontWeight: on ? 600 : 500,
                 textDecoration: "none",
                 color: on

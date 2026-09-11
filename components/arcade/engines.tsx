@@ -28,7 +28,7 @@ import { makeRng } from "@/lib/game/random";
 import { CHARACTERS } from "./characters";
 import { spawnBurst, stepParticles, type Particle } from "./paint";
 import { makeRng as rngFor } from "@/lib/game/random";
-import type { Engine, EngineFactory, EngineHost } from "./GameFrame";
+import type { ControlLayout, Engine, EngineFactory, EngineHost } from "./GameFrame";
 
 /**
  * The ten engines. Each is only its own logic - the canvas, palette, loop,
@@ -361,12 +361,13 @@ export const brickFactory: EngineFactory = (h, spec) => {
   return {
     reset() { layout(); px = W / 2; targetX = W / 2; serve(); parts = []; drops = []; },
     input(kind, where) {
-      if (kind !== "press") return;
+      if (kind === "release") return;
       // A press with no pointer position is the keyboard. It must still launch,
       // or the game is unplayable without a mouse - which is how it shipped,
-      // and only a screenshot showing a stuck score of 0 revealed it.
+      // and only a screenshot showing a stuck score of 0 revealed it. A DRAG
+      // steers but never launches.
       if (where) targetX = where.x;
-      launched = true;
+      if (kind === "press") launched = true;
     },
     step(dt) {
       t += dt;
@@ -493,6 +494,12 @@ export const snakeFactory: EngineFactory = (h, spec) => {
       snake = [{ x: 3, y: 3 }, { x: 2, y: 3 }];
       dir = { x: 1, y: 0 }; next = { x: 1, y: 0 };
       eaten = 0; acc = 0; bonus = null; rng = makeRng(1337); placeFood();
+    },
+    control(c, down) {
+      if (!down || c === "a") return;
+      const want = { left: { x: -1, y: 0 }, right: { x: 1, y: 0 }, up: { x: 0, y: -1 }, down: { x: 0, y: 1 } }[c];
+      // Reversing into your own neck is instant death and always a misinput.
+      if (want.x !== -dir.x || want.y !== -dir.y) next = want;
     },
     input(kind, where) {
       if (kind !== "press" || !where) return;
@@ -716,8 +723,27 @@ export const platformerFactory: EngineFactory = (h, spec) => {
 
   return {
     reset() { build(); dead = false; parts = []; },
+    control(c, down) {
+      if (c === "left" || c === "right") {
+        const d = c === "left" ? -1 : 1;
+        // Only the button that set the direction may clear it, so letting go
+        // of Jump - or of the other arrow - never stops you walking.
+        if (down) hold = d;
+        else if (hold === d) hold = 0;
+        return;
+      }
+      if (down && (c === "a" || c === "up") && onGround && !dead) {
+        vy = r.jumpVelocity; onGround = false; h.sfx("flap");
+      }
+    },
     input(kind, where) {
       if (kind === "release") { hold = 0; return; }
+      // A drag re-aims the walk and never jumps: sliding a thumb up the screen
+      // should not launch the character.
+      if (kind === "move") {
+        if (where && where.y >= H * 0.34) hold = where.x < W / 2 ? -1 : 1;
+        return;
+      }
       // Keyboard press with no position = jump, the primary action.
       if (!where) {
         if (onGround) { vy = r.jumpVelocity; onGround = false; h.sfx("flap"); }
@@ -854,17 +880,54 @@ export const FACTORIES: Record<ArcadeSpec["engine"], EngineFactory> = {
   "match-3": match3Factory,
 };
 
-export const HINTS: Record<ArcadeSpec["engine"], string> = {
-  "endless-flyer": "Tap, click or press space to fly",
-  "brick-breaker": "Drag or move to steer the paddle",
-  snake: "Tap the side you want to turn towards",
-  "endless-runner": "Tap to jump",
-  platformer: "Tap left or right to move, tap the top to jump",
-  duel: "Tap the top to strike, left or right to step",
-  shooter: "Drag to steer - you fire on your own",
-  "maze-chase": "Tap the side you want to turn towards",
-  "falling-blocks": "Tap the top to turn, the sides to move, the bottom to drop",
-  "match-3": "Tap a piece, then tap a neighbour to swap",
+/**
+ * What to tell the player, and it depends on what they are holding.
+ *
+ * One string used to serve both, and it described TAP ZONES - "tap the top to
+ * jump" - which mean nothing to someone holding a phone and are wrong for
+ * someone at a keyboard. The frame shows `touch` where the main pointer is a
+ * finger and `keys` everywhere else.
+ */
+export const HINTS: Record<ArcadeSpec["engine"], { touch: string; keys: string }> = {
+  "endless-flyer": { touch: "Tap anywhere to fly", keys: "Space or ↑ to fly" },
+  "brick-breaker": { touch: "Drag to steer the paddle", keys: "← → to steer, Space to launch" },
+  snake: { touch: "Steer with the arrow pad", keys: "Arrow keys to steer" },
+  "endless-runner": { touch: "Tap anywhere to jump", keys: "Space or ↑ to jump" },
+  platformer: { touch: "Hold ◀ ▶ to run, tap Jump", keys: "← → to run, Space or ↑ to jump" },
+  duel: { touch: "Hold ◀ ▶ to step, tap Strike", keys: "← → to step, Space or ↑ to strike" },
+  shooter: { touch: "Drag to steer - you fire on your own", keys: "← → to steer - you fire on your own" },
+  "maze-chase": { touch: "Steer with the arrow pad", keys: "Arrow keys to steer" },
+  "falling-blocks": { touch: "◀ ▶ to move, then Turn or Drop", keys: "← → move, ↑ turn, ↓ drop" },
+  "match-3": { touch: "Tap a piece and a neighbour, or swipe it", keys: "Click a piece, then a neighbour" },
+};
+
+/**
+ * THE ON-SCREEN CONTROLLER, per engine - and only where one earns its place.
+ *
+ * The flyer, the runner and match-3 are played by tapping the game itself, and
+ * brick-breaker and the shooter by dragging along it; a pad under those would
+ * only be something to miss. These five need DIRECTIONS, and their tap zones
+ * were invisible: nothing on a phone says "the top third of the screen jumps",
+ * and the platformer could not walk and jump at once, because lifting the jump
+ * finger also lifted the walk.
+ *
+ * Each button is its own pointer, so a thumb on ◀ and a thumb on Jump are two
+ * separate holds. The arrow keys drive the same `control()` at a keyboard.
+ */
+export const CONTROLS: Partial<Record<ArcadeSpec["engine"], ControlLayout>> = {
+  platformer: { pad: "sides", actions: [{ c: "a", label: "Jump" }] },
+  duel: { pad: "sides", actions: [{ c: "a", label: "Strike" }] },
+  snake: { pad: "dpad", actions: [] },
+  "maze-chase": { pad: "dpad", actions: [] },
+  "falling-blocks": {
+    pad: "sides",
+    // Held ◀ ▶ slide the piece along, like any falling-block game.
+    repeat: true,
+    actions: [
+      { c: "up", label: "Turn" },
+      { c: "down", label: "Drop" },
+    ],
+  },
 };
 
 export type { Engine };

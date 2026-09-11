@@ -2,7 +2,7 @@
 
 import type { ArcadeSpec } from "@/lib/arcade/schema";
 import { GameFrame } from "./GameFrame";
-import { FACTORIES, HINTS } from "./engines";
+import { CONTROLS, FACTORIES, HINTS } from "./engines";
 
 /**
  * The one entry point into the arcade renderer.
@@ -17,6 +17,7 @@ export function ArcadeGame({ spec }: { spec: ArcadeSpec }) {
       key={`${spec.engine}-${spec.meta.title}`}
       spec={spec}
       hint={HINTS[spec.engine]}
+      controls={CONTROLS[spec.engine]}
       factory={FACTORIES[spec.engine]}
     />
   );

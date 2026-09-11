@@ -26,6 +26,14 @@ game code" is not a later phase.
 
 ## Architecture
 
+> **As built, 2026-09-11.** The diagram below is the ORIGINAL plan. What exists:
+> Next.js **16** on a Cloudflare Worker; no D1, KV, R2 or Access yet; generation
+> through `lib/arcade/live-generate.ts` (guard, in-memory cache, model, validate,
+> one repair) against Claude via **OpenRouter**, with the free keyword tuner as
+> the default; tokens from Figma plus the Pandai product's layer
+> (`app/ds/pandai-app.css`, Poppins). `docs/STATUS.md` is the dated record.
+
+
 ```
                         Cloudflare Access (Zero Trust)
                         identity gate on every route
@@ -127,8 +135,21 @@ Two more, both hit and fixed during Phase 1 on this repo:
     pins 0.25.x while vite 8 needs ^0.27 || ^0.28. The top-level pin is
     **0.28**, which satisfies vite, and the build is verified working on it.
     Do not remove it because "nothing imports it".
+11. **A CSS file imported before it exists poisons the dev cache.** `next dev`
+    in Next 16 keeps its own Turbopack cache in `.next/dev/cache/turbopack`,
+    separate from the build's `.next/cache/turbopack`. An `@import` added a
+    moment before its file was generated made every page 500 with
+    `Can't resolve`, and survived re-saving, a restart, and clearing the BUILD
+    cache. Stop the dev server, delete `.next/dev/cache/turbopack`, restart.
 
 ## The AI layer
+
+> **As built:** generation uses **strict tool use**, not `output_config` -
+> `output_config.format` is not enforced through OpenRouter. The model is handed
+> ONE engine's schema, never the union, and never the fields derived in code
+> (`contentTwist`, `theme.opponent`, `theme.skin`, `scoring.timeLimit`, the
+> board seeds). See `lib/arcade/live.ts`. The code below is the original plan.
+
 
 ### Request shape
 
@@ -287,6 +308,13 @@ every later failure must be emitted as an error stream event instead. Getting
 this wrong produces a 200 that the client reads as success.
 
 ## Security
+
+> **As built, 2026-09-11:** there is no Access gate and no per-identity limit
+> yet. `lib/arcade/guard.ts` counts calls and tokens per Worker isolate (120 a
+> day, 12 per client per hour) - a speed bump, not a ceiling. The deployed site
+> has no API key, so it cannot spend. A pasted link is fetched server-side with
+> private and link-local addresses refused (`lib/inputs/link.ts`).
+
 
 - **Model output is data.** No `eval`, no `new Function`, no
   `dangerouslySetInnerHTML`. Every string from a spec renders as a text node.

@@ -77,6 +77,28 @@ person who never opens them is the same as no screenshots at all.
 - Is anything invisible — a collectible behind an obstacle, text on a
   same-colour background?
 
+## Phones and touch
+
+Added 2026-09-11, after three probes in one session measured the wrong thing.
+
+- Emulate a phone with `browser.newContext({ viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 3, isMobile: true, hasTouch: true })`, and tap with
+  `locator.tap()`. `(pointer: coarse)` then matches, so the thumb pad shows.
+- For multi-touch use CDP `Input.dispatchTouchEvent`. **`touchEnd` releases the
+  points you LIST**, not the ones you leave out - lift a second finger with
+  `touchEnd` naming that finger only.
+- **Headless Chromium here cannot scroll a page by simulated touch at all.**
+  Raw touch events, `Input.synthesizeScrollGesture` and even a mouse wheel under
+  mobile emulation all moved plain page text 0px. So "0px when swiping the
+  game" proves nothing; check the computed `touch-action` instead (`pan-y`
+  between runs, `none` mid-run), and check real scrolling on a real phone.
+- Always run a **control** next to a check - a swipe that should scroll, a
+  hint that should show - and make sure it lands where you think:
+  `document.elementFromPoint` tells you whether a point is on the game or the page.
+- Hints live in nested spans; the outer label's text contains BOTH the touch
+  and the keyboard hint. Read leaf spans whose computed `display` is not `none`.
+- Pad buttons carry `data-held="true"` while pressed, which is readable.
+
 ## Notes
 
 - `deviceScaleFactor: 2` gives a retina image; text and edges are legible.

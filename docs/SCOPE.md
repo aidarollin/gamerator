@@ -329,3 +329,19 @@ before shipping — see STATUS.
 **Still not built:** an export path for learning specs. `ExportPanel` and
 `/embed` are arcade-only, so a generated quiz can be played and not yet handed
 to an engineer. That is the next real gap.
+
+### 2026-09-11 — The design system has two sources
+
+**Agreed by Zul:** "fetch latest pandai design system 1.5 from
+pandai.question.uiux repo, and apply to this website."
+
+Figma stays the source for colour, spacing and radius. The Pandai product repo
+becomes the source for typography (Poppins, the 19 roles, their responsive
+steps) and motion, and where the product has changed a Figma value, the
+product's value wins - it is what students actually see. The rule that nothing
+reads another repo at runtime still holds: `npm run tokens:app` vendors the
+values into `app/ds/pandai-app.css`. One product value is refused:
+`--radius-xl`, whose name collides with a different DS token.
+
+Also added the same day, as features rather than scope changes: full screen on
+phones, and a thumb pad for the five engines that need directions.

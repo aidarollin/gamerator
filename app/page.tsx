@@ -23,8 +23,8 @@ export const metadata = {
 
 const heading = { color: "var(--text-default-heading)" };
 const body = {
-  fontSize: 14,
-  lineHeight: 1.65,
+  fontSize: "var(--type-b3)",
+  lineHeight: "var(--type-b3-lh)",
   color: "var(--text-default-body)",
 };
 
@@ -64,10 +64,10 @@ export default function Home() {
       }}
     >
       <header style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
-        <h1 style={{ ...heading, fontSize: 28, fontWeight: 700, letterSpacing: "-0.01em" }}>
+        <h1 style={{ ...heading, fontSize: "var(--type-h1)", lineHeight: "var(--type-h1-lh)", fontWeight: 700 }}>
           gamerator
         </h1>
-        <p style={{ ...body, fontSize: 15 }}>
+        <p style={body}>
           Describe an arcade game and get a playable one, wearing the real Pandai
           mascots and the real design system - with an export a Pandai engineer
           can drop straight into the site.
@@ -79,7 +79,7 @@ export default function Home() {
           <Link key={d.href} href={d.href} style={{ textDecoration: "none" }}>
             <Card>
               <div style={{ display: "grid", gap: "var(--spacing-component-3xs)" }}>
-                <span style={{ ...heading, fontSize: 17, fontWeight: 600 }}>
+                <span style={{ ...heading, fontSize: "var(--type-t2)", lineHeight: "var(--type-t2-lh)", fontWeight: 600 }}>
                   {d.title}
                 </span>
                 <span style={body}>{d.blurb}</span>
@@ -100,7 +100,7 @@ export default function Home() {
       </nav>
 
       <section style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
-        <h2 style={{ ...heading, fontSize: 15, fontWeight: 600 }}>
+        <h2 style={{ ...heading, fontSize: "var(--type-t4)", lineHeight: "var(--type-t4-lh)", fontWeight: 600 }}>
           How it works
         </h2>
         <p style={body}>
@@ -122,7 +122,8 @@ export default function Home() {
       <footer
         style={{
           ...body,
-          fontSize: 12,
+          fontSize: "var(--type-c1)",
+          lineHeight: "var(--type-c1-lh)",
           paddingTop: "var(--spacing-component-sm)",
           borderTop: "1px solid var(--border-general-default)",
         }}

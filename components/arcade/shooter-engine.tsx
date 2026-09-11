@@ -90,12 +90,13 @@ export const shooterFactory: EngineFactory = (h, spec) => {
       wave = 1;
     },
     input(kind, where) {
-      if (kind !== "press") return;
+      // A drag steers exactly like a press: the ship follows the finger.
+      if (kind === "release") return;
       // With a pointer the ship follows the finger. Without one it is the
       // keyboard, which must still fire - the brick breaker shipped unplayable
       // by keyboard for exactly this reason and only a screenshot found it.
       if (where) targetX = where.x;
-      else cool = 0;
+      else if (kind === "press") cool = 0;
     },
     step(dt) {
       t += dt;

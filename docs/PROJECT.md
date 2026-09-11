@@ -76,6 +76,14 @@ property that makes the system safe to point at children's learning material.
 
 ## Requirements
 
+> **Status, 2026-09-11.** These were written for the learning-game product and
+> are kept as written. Against the arcade product that exists: FR4, FR5 and the
+> non-functional safety rules (NFR2-NFR5, NFR9) hold; generation does not
+> stream (FR3); editing, a library, Figma push, auth and a persisted audit log
+> (FR6, FR7, FR9, FR10, FR11) are **not built**; export exists for arcade games
+> only (FR8). `docs/STATUS.md` has the detail.
+
+
 ### Functional
 
 | # | Requirement |

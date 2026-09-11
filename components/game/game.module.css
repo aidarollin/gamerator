@@ -26,26 +26,30 @@
 }
 
 .title {
-  font-size: 18px;
+  font-size: var(--type-t2);
+  line-height: var(--type-t2-lh);
   font-weight: 600;
   color: var(--text-default-heading);
 }
 
 .objective {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   color: var(--text-default-body);
 }
 
 .prompt {
-  font-size: 16px;
+  font-size: var(--type-t4);
+  line-height: var(--type-t4-lh);
   font-weight: 600;
-  line-height: 1.5;
   color: var(--text-default-heading);
 }
 
 .hint {
-  font-size: 13px;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   color: var(--text-default-caption);
 }
 
@@ -63,8 +67,9 @@
   border: var(--border-width-xs) solid var(--border-general-default);
   background: var(--surface-general-default);
   color: var(--text-default-heading);
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   cursor: pointer;
 }
 
@@ -103,7 +108,8 @@
 
 .marker {
   margin-left: auto;
-  font-size: 12px;
+  font-size: var(--type-b5);
+  line-height: var(--type-b5-lh);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -129,8 +135,9 @@
   border: var(--border-width-xs) solid var(--border-general-default);
   background: var(--surface-general-default);
   color: var(--text-default-heading);
-  font-size: 13px;
-  line-height: 1.3;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   cursor: pointer;
 }
 
@@ -173,7 +180,8 @@
 }
 
 .bucketLabel {
-  font-size: 13px;
+  font-size: var(--type-b1);
+  line-height: var(--type-b1-lh);
   font-weight: 600;
   color: var(--text-default-heading);
 }
@@ -186,13 +194,15 @@
 
 .rowText {
   flex: 1;
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   color: var(--text-default-heading);
 }
 
 .sentence {
-  font-size: 16px;
+  font-size: var(--type-t5);
+  font-weight: 500;
   line-height: 1.9;
   color: var(--text-default-heading);
 }
@@ -217,7 +227,8 @@
 }
 
 .summaryHead {
-  font-size: 18px;
+  font-size: var(--type-t2);
+  line-height: var(--type-t2-lh);
   font-weight: 600;
   color: var(--text-default-heading);
 }

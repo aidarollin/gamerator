@@ -1,5 +1,10 @@
 # AUTHORING GUIDELINES
 
+> **2026-09-11:** written for the learning product's form. `/create` now takes
+> one sentence plus optional notes, a link and a picture, and routes it through
+> `lib/arcade/catalogue.ts` - see [DOCS.md](../DOCS.md). Kept as the rulebook for
+> the five learning templates.
+
 The rules shown to the person describing a game. This doc is the source; the
 guidelines panel in the UI renders from it, so the two cannot drift.
 

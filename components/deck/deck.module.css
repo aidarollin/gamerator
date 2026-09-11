@@ -1,94 +1,204 @@
-/* The internal deck.
+/* The project deck.
  *
  * Every colour is a DS token - `npm run check:ds` applies here exactly as it
- * does to the product, and a presentation about design-system fidelity that
- * hard-coded a hex would be a poor advertisement for itself.
+ * does to the product, and a talk about design-system fidelity that hard-coded
+ * a hex would be a poor advertisement for itself.
+ *
+ * The SHELL is white and the SLIDE is the page colour - the reverse of the rest
+ * of the site, on purpose. Every live demo is an iframe of /embed, whose ground
+ * is the page colour, so on a page-coloured slide a game sits straight on the
+ * slide with no box drawn round it.
  */
 
 .shell {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: var(--surface-general-page);
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--surface-general-default);
   color: var(--text-default-body);
+}
+
+.shellFlow {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
+/* ------------------------------------------------------------- top chrome */
+
+.progress {
+  flex: none;
+  height: 3px;
+  background: var(--border-general-default);
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--surface-primary-default);
+  transition: width var(--motion-slow) var(--ease-out);
 }
 
 .bar {
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--spacing-component-sm);
-  padding: var(--spacing-component-xs) var(--spacing-component-md);
-  border-bottom: 1px solid var(--border-general-default);
-  background: var(--surface-general-default);
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  padding: var(--spacing-component-xs) var(--spacing-component-xl);
 }
 
 .brand {
+  font-size: var(--type-b1);
+  line-height: var(--type-b1-lh);
   font-weight: 700;
-  font-size: 14px;
   color: var(--text-default-heading);
 }
 
-.unlisted {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  color: var(--text-alert-default);
-  background: var(--surface-alert-default-subtle);
+.unlisted,
+.count {
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
 }
+
+.count { font-variant-numeric: tabular-nums; }
 
 .spacer { flex: 1; }
 
-.count {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-default-body);
-}
-
-.nav {
-  display: flex;
-  gap: 6px;
-}
-
 .btn {
-  min-width: 34px;
-  height: 30px;
-  padding: 0 10px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-general-default);
   border-radius: var(--radius-full);
-  border: 1px solid var(--border-primary-default);
   background: var(--surface-general-default);
-  color: var(--text-primary-default);
-  font-size: 13px;
+  color: var(--text-default-heading);
+  font-size: var(--type-b1);
+  line-height: var(--type-b1-lh);
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
 }
 
-.btn:disabled { opacity: 0.4; cursor: default; }
-.btn:hover:not(:disabled) { background: var(--surface-primary-default-subtle); }
+.btn:hover:not(:disabled) {
+  border-color: var(--border-primary-default);
+  background: var(--surface-primary-default-subtle);
+}
 
-/* ------------------------------------------------------------------ slide */
+.btn:disabled { opacity: 0.35; cursor: default; }
 
-.stage {
+.btn:focus-visible,
+.chip:focus-visible,
+.dot:focus-visible {
+  outline: var(--border-width-s) solid var(--border-primary-focus);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------- the scaled slide */
+
+.viewport {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: var(--spacing-component-lg) var(--spacing-component-md)
-    var(--spacing-component-2xl);
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-component-2xs) var(--spacing-component-xl);
+  /* Sideways swipes come to the deck; up and down still scroll a phone. */
+  touch-action: pan-y;
 }
 
-.slide {
+.viewportFlow {
+  place-items: start center;
+  padding: var(--spacing-component-sm);
+}
+
+.scaler { position: relative; }
+
+.viewportFlow .scaler {
   width: 100%;
-  max-width: 880px;
+  display: grid;
+  justify-items: center;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  padding: 48px 64px;
+  border-radius: var(--radius-3xl);
+  background: var(--surface-general-page);
+  box-shadow:
+    0 0 0 1px var(--border-general-default),
+    0 28px 60px -32px color-mix(in srgb, var(--text-default-heading) 30%, transparent);
+}
+
+.canvasFlow {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  padding: var(--spacing-component-xl) var(--spacing-component-lg);
+}
+
+.split {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 56px;
+  align-items: center;
+}
+
+.single {
+  height: 100%;
+  display: grid;
+  align-content: center;
+}
+
+.canvasFlow .split {
+  height: auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--spacing-component-xl);
+}
+
+.canvasFlow .single { height: auto; }
+
+.enter { animation: rise var(--motion-deck) var(--ease-out) both; }
+.fade { animation: fade var(--motion-slow) var(--ease-out) both; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter,
+  .fade { animation: none; }
+  .progress > span,
+  .dot { transition: none; }
+}
+
+/* -------------------------------------------------------------- the words */
+
+.copy {
   display: grid;
   gap: var(--spacing-component-md);
-  align-content: start;
+  align-content: center;
+  min-width: 0;
 }
 
 .kicker {
-  font-size: 12px;
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -96,163 +206,419 @@
 }
 
 .title {
-  font-size: 30px;
-  line-height: 1.15;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--text-default-heading);
   margin: 0;
+  font-size: var(--type-h1);
+  line-height: var(--type-h1-lh);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-default-heading);
+  text-wrap: balance;
 }
 
 .lead {
-  font-size: 16px;
-  line-height: 1.6;
   margin: 0;
-  max-width: 62ch;
+  max-width: 46ch;
+  font-size: var(--type-t1);
+  line-height: var(--type-t1-lh);
+  font-weight: 400;
+  color: var(--text-default-body);
+  text-wrap: pretty;
 }
 
 .points {
   display: grid;
-  gap: var(--spacing-component-xs);
+  gap: var(--spacing-component-sm);
   margin: 0;
   padding: 0;
   list-style: none;
-  max-width: 66ch;
+  max-width: 52ch;
 }
 
 .point {
   display: grid;
-  grid-template-columns: 18px 1fr;
-  gap: 10px;
-  font-size: 14.5px;
-  line-height: 1.6;
+  grid-template-columns: 6px 1fr;
+  gap: var(--spacing-component-sm);
+  font-size: var(--type-t3);
+  line-height: var(--type-t3-lh);
+  font-weight: 400;
 }
 
-.dot { color: var(--text-primary-default); font-weight: 700; }
-
-.point strong { color: var(--text-default-heading); }
-
-.note {
-  font-size: 13px;
-  line-height: 1.6;
-  padding: var(--spacing-component-sm);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-general-default);
-  background: var(--surface-general-default);
-  max-width: 66ch;
-}
-
-.warn {
-  border-color: var(--text-alert-default);
-  background: var(--surface-alert-default-subtle);
-}
-
-/* Two columns once there is room; a demo beside its explanation. */
-.split {
-  display: grid;
-  gap: var(--spacing-component-md);
-  align-items: start;
-}
-
-@media (min-width: 880px) {
-  .split { grid-template-columns: 1fr auto; }
-}
-
-/* ------------------------------------------------------------------- demo */
-
-.demo {
-  display: grid;
-  gap: 6px;
-  justify-items: center;
-}
-
-.frame {
-  border: 1px solid var(--border-general-default);
-  border-radius: var(--radius-2xl);
-  overflow: hidden;
-  background: var(--surface-general-default);
-  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--text-default-heading) 30%, transparent);
-}
-
-.frame iframe {
-  display: block;
-  border: 0;
-}
-
-.caption {
-  font-size: 12px;
-  color: var(--text-default-body);
-  text-align: center;
-  max-width: 34ch;
-}
-
-.live {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-primary-default);
-}
-
-.pip {
-  width: 7px;
-  height: 7px;
+.point::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-top: 9px;
   border-radius: var(--radius-full);
   background: var(--surface-primary-default);
 }
 
-/* ------------------------------------------------------------------ table */
-
-.table {
-  width: 100%;
-  max-width: 66ch;
-  border-collapse: collapse;
-  font-size: 13.5px;
-}
-
-.table th,
-.table td {
-  text-align: left;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--border-general-default);
-  vertical-align: top;
-}
-
-.table th {
+.point strong {
+  font-weight: 600;
   color: var(--text-default-heading);
+}
+
+.note {
+  margin: 0;
+  max-width: 56ch;
+  padding-left: var(--spacing-component-sm);
+  border-left: 3px solid var(--border-primary-default-subtle);
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
+}
+
+.note strong {
+  font-weight: 600;
+  color: var(--text-default-heading);
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.cards {
+  display: grid;
+  gap: var(--spacing-component-sm);
+  margin-top: var(--spacing-component-xs);
+}
+
+.cols2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cols3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cols4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.canvasFlow .cards { grid-template-columns: minmax(0, 1fr); }
+
+.card {
+  display: grid;
+  gap: var(--spacing-component-2xs);
+  align-content: start;
+  padding: var(--spacing-component-md) var(--spacing-component-lg);
+  border: 1px solid var(--border-general-default);
+  border-radius: var(--radius-xl);
+  background: var(--surface-general-default);
+}
+
+.cardK {
+  font-size: var(--type-t3);
+  line-height: var(--type-t3-lh);
+  font-weight: 600;
+  color: var(--text-default-heading);
+}
+
+.cardV {
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
+  color: var(--text-default-body);
+}
+
+/* ---------------------------------------------------------------- choices */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+}
+
+/* Steps run DOWN the page. Five of them across never fit the column, and the
+   wrap left an arrow dangling at the end of the first line. */
+.stack,
+.flow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-component-xs);
+}
+
+.flow { gap: 2px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+  padding: 7px 14px;
+  border: 1px solid var(--border-general-default);
+  border-radius: var(--radius-pill);
+  background: var(--surface-general-default);
+  color: var(--text-default-heading);
+  font-family: inherit;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+}
+
+.chip:hover { border-color: var(--border-primary-default); }
+
+.chipOn,
+.chipOn:hover {
+  background: var(--surface-primary-default);
+  border-color: var(--surface-primary-default);
+  color: var(--text-on-color-heading);
+}
+
+.chipNum {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--surface-primary-default-subtle);
+  color: var(--text-primary-default);
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
   font-weight: 700;
 }
 
-.mono {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 12.5px;
+.chipOn .chipNum { background: var(--surface-general-default); }
+
+.arrow {
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
+}
+
+/* ------------------------------------------------------------------ panels */
+
+.panelCol {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+}
+
+.figure {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--spacing-component-xs);
+}
+
+.game {
+  display: block;
+  max-width: 100%;
+  border: 0;
+  transition: opacity var(--motion-slow) var(--ease-out);
+}
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+  max-width: 320px;
+  text-align: center;
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
+}
+
+.tag {
+  padding: 1px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
+  font-weight: 600;
+}
+
+.box {
+  width: 380px;
+  max-width: 100%;
+  display: grid;
+  gap: var(--spacing-component-sm);
+  padding: var(--spacing-component-xl);
+  border: 1px solid var(--border-general-default);
+  border-radius: var(--radius-2xl);
+  background: var(--surface-general-default);
+}
+
+.asked {
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
+}
+
+.label {
+  justify-self: start;
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary-default);
+}
+
+.head {
+  margin: 0;
+  font-size: var(--type-h2);
+  line-height: var(--type-h2-lh);
+  font-weight: 700;
+  color: var(--text-default-heading);
+}
+
+.body {
+  margin: 0;
+  font-size: var(--type-t3);
+  line-height: var(--type-t3-lh);
+  font-weight: 400;
+  color: var(--text-default-body);
+}
+
+.reasons {
+  display: grid;
+  gap: var(--spacing-component-xs);
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
+  color: var(--text-default-heading);
+}
+
+.fine {
+  margin: 0;
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
+}
+
+/* The four answers, each in its own DS family. */
+.tEngine { background: var(--surface-success-default-subtle); border-color: var(--border-success-default-subtle); }
+.tEngine .label,
+.tag.tEngine { color: var(--text-success-default); }
+
+.tAdapt { background: var(--surface-informative-default-subtle); border-color: var(--border-informative-default-subtle); }
+.tAdapt .label,
+.tag.tAdapt { color: var(--text-informative-default); }
+
+.tTemplate { background: var(--surface-secondary-default-subtle); border-color: var(--border-secondary-default-subtle); }
+.tTemplate .label,
+.tag.tTemplate { color: var(--text-secondary-default); }
+
+.tRefuse { background: var(--surface-alert-default-subtle); border-color: var(--border-alert-default-subtle); }
+.tRefuse .label,
+.tag.tRefuse { color: var(--text-alert-default); }
+
+.code {
+  width: 400px;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--spacing-component-lg) var(--spacing-component-xl);
+  overflow-x: auto;
+  border: 1px solid var(--border-general-default);
+  border-radius: var(--radius-2xl);
+  background: var(--surface-general-default);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
+  font-weight: 400;
+  color: var(--text-default-heading);
+}
+
+.codeLine {
+  display: block;
+  white-space: pre;
+}
+
+.codeKey { color: var(--text-primary-default); }
+.codeVal { color: var(--text-default-heading); }
+
+.stepTop {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-component-sm);
+}
+
+.stepNum {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--surface-primary-default);
+  color: var(--text-on-color-heading);
+  font-size: var(--type-h4);
+  line-height: var(--type-h4-lh);
+  font-weight: 700;
+}
+
+.who {
+  padding: 2px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-primary-default-subtle);
+  color: var(--text-primary-default);
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
+  font-weight: 600;
+}
+
+/* The one step the AI does, set apart. */
+.whoAi {
+  background: var(--surface-secondary-default-subtle);
+  color: var(--text-secondary-default);
 }
 
 /* ------------------------------------------------------------------- rail */
 
 .rail {
+  flex: none;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  padding: var(--spacing-component-xs) var(--spacing-component-xl) var(--spacing-component-sm);
+}
+
+.shellFlow .rail {
   position: sticky;
   bottom: 0;
-  display: flex;
-  gap: 5px;
-  justify-content: center;
-  padding: var(--spacing-component-xs);
   border-top: 1px solid var(--border-general-default);
   background: var(--surface-general-default);
-  flex-wrap: wrap;
 }
 
-.tick {
-  width: 22px;
-  height: 6px;
-  border-radius: var(--radius-full);
+/* 8px to look at, 20px to hit. */
+.dot {
+  box-sizing: content-box;
+  width: 8px;
+  height: 8px;
+  padding: 6px 3px;
   border: 0;
-  padding: 0;
-  cursor: pointer;
+  border-radius: var(--radius-full);
   background: var(--border-general-default);
+  background-clip: content-box;
+  cursor: pointer;
+  transition:
+    width var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out);
 }
 
-.tickOn { background: var(--surface-primary-default); }
+.dot:hover { background-color: var(--border-primary-default); }
+
+.dotOn,
+.dotOn:hover {
+  width: 24px;
+  background-color: var(--surface-primary-default);
+}
+
+.keys {
+  position: absolute;
+  right: var(--spacing-component-xl);
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
+  color: var(--text-default-caption);
+}
+
+@media (pointer: coarse), (max-width: 899px) {
+  .keys { display: none; }
+}

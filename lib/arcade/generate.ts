@@ -1,5 +1,5 @@
 import { ArcadeSpec, type Engine } from "./schema";
-import { chooseEngine, renderArcadeBrief, type ArcadeBrief } from "./brief";
+import { chooseEngine, renderArcadeBrief, type ArcadeBrief, type EngineChoice } from "./brief";
 import { generateArcadeLive } from "./live-generate";
 import { providerMode } from "@/lib/config";
 import { hashString } from "@/lib/game/random";
@@ -510,6 +510,34 @@ export async function generateArcade(
     }
   }
 
+  return tuned(brief, routable, choice);
+}
+
+/**
+ * THE FREE TUNER ON ITS OWN - words to physics in code, with no path to a model.
+ *
+ * `generateArcade` falls through to it whenever the provider is not live. The
+ * deck calls it directly: a slide that went through `generateArcade` would,
+ * under `npm run dev:live`, make a paid call every time somebody opened it.
+ */
+export function tuneArcade(brief: ArcadeBrief, routable = brief.prompt): ArcadeOutcome {
+  const choice = chooseEngine(routable);
+  if (choice.kind === "no-engine") {
+    return {
+      status: "no-engine",
+      requested: choice.requested,
+      nearest: choice.nearest,
+      why: choice.why,
+    };
+  }
+  return tuned(brief, routable, choice);
+}
+
+function tuned(
+  brief: ArcadeBrief,
+  routable: string,
+  choice: Extract<EngineChoice, { kind: "engine" }>,
+): ArcadeOutcome {
   // The tone, the palette, the character, the clock - all of it read from
   // everything the author said rather than from the headline alone.
   const p = routable.toLowerCase();

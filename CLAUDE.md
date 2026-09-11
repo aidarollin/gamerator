@@ -43,7 +43,8 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `components/arcade/EnginePreview.tsx` | An arcade card playing itself. Real engine, attract mode |
 | `components/arcade/TemplatePreview.tsx` | A learning-template card: the real renderer, scaled |
 | `components/arcade/palette-for.ts` | Scene-then-DS colour, shared by the game and its preview |
-| `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
+| `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free. `tuneArcade` cannot reach a model |
+| `lib/deck.ts` | Every demo in `/deck`, **computed** by the real router, tuner and validator |
 | `lib/arcade/live.ts` | The model provider. Strict tool use |
 | `lib/arcade/live-generate.ts` | guard → cache → model → validate → repair → validate |
 | `lib/arcade/guard.ts` | **The spending wall.** Nothing paid runs without it |

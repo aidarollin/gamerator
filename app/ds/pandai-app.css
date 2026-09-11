@@ -1,0 +1,143 @@
+/* GENERATED - do not hand-edit. Regenerate: npm run tokens:app
+ *
+ * Source: the Pandai product, pandai.question.uiux @ c0c8954 (2026-09-09)
+ *   resources/css/pandai/tokens.css, base.css, responsive.css
+ *
+ * Loaded AFTER app/ds/tokens.css (the Figma layer). Adds Pandai's typography,
+ * motion and alias names; where the product and Figma disagree about the same
+ * token, the product's value is below and wins. See scripts/sync-app-ds.mjs.
+ *
+ * Not imported, on purpose:
+ *   --radius-xl - name collides with DS Radius/xl (16px); the product uses it for an 8px nav button
+ *   --font-family - Poppins is loaded by next/font in app/layout.tsx
+ *   product-only colours (Juara Digital, check-in, raw primitives) - not DS tokens
+ */
+
+:root {
+  /* Typography - DS 1.5 role scale (desktop; steps below) */
+  --type-h1: 28px;
+  --type-h1-lh: 42px;
+  --type-h2: 24px;
+  --type-h2-lh: 36px;
+  --type-h3: 24px;
+  --type-h3-lh: 36px;
+  --type-h4: 20px;
+  --type-h4-lh: 32px;
+  --type-t1: 18px;
+  --type-t1-lh: 28px;
+  --type-t2: 18px;
+  --type-t2-lh: 28px;
+  --type-t3: 16px;
+  --type-t3-lh: 24px;
+  --type-t4: 16px;
+  --type-t4-lh: 24px;
+  --type-t5: 16px;
+  --type-t5-lh: 24px;
+  --type-b1: 14px;
+  --type-b1-lh: 20px;
+  --type-b2: 14px;
+  --type-b2-lh: 20px;
+  --type-b3: 14px;
+  --type-b3-lh: 20px;
+  --type-b4: 12px;
+  --type-b4-lh: 18px;
+  --type-b5: 12px;
+  --type-b5-lh: 18px;
+  --type-b6: 12px;
+  --type-b6-lh: 18px;
+  --type-b7: 10px;
+  --type-b7-lh: 12px;
+  --type-b8: 10px;
+  --type-b8-lh: 12px;
+  --type-c1: 12px;
+  --type-c1-lh: 18px;
+  --type-c2: 10px;
+  --type-c2-lh: 12px;
+
+  /* Motion */
+  --motion-fast: 0.12s;
+  --motion-base: 0.2s;
+  --motion-slow: 0.3s;
+  --motion-deck: 0.36s;
+  --ease-out: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-deck: cubic-bezier(0.5, 1.6, 0.6, 1);
+  --lift-card: -3px;
+  --lift-pill: -2px;
+  --spin-arrow: -15deg;
+
+  /* DS alias names the product writes */
+  --corner-radius-corner-pill: 999px;
+  --corner-radius-corner-rounded: 60px;
+  --corner-radius-corner-4xl: 24px;
+  --corner-radius-corner-5xl: 54px;
+  --corner-radius-corner-2xl: 18px;
+  --corner-radius-corner-xl: 16px;
+  --corner-radius-corner-lg: 12px;
+  --corner-radius-corner-md: 8px;
+  --spacing-space-3xs: 2px;
+  --spacing-space-xxs: 4px;
+  --spacing-space-xs: 8px;
+  --spacing-space-s: 12px;
+  --spacing-space-m: 16px;
+  --spacing-space-l: 20px;
+  --spacing-space-xl: 24px;
+  --spacing-space-2xl: 28px;
+  --spacing-space-3xl: 60px;
+
+  /* Where the product differs from the Figma layer - the product wins */
+  --surface-secondary-default-subtle-hover: #d1f7d1;
+  --border-secondary-default-subtle-hover: #d1f7d1;
+}
+
+/* desktop and below */
+@media (width < 1320px) {
+  :root {
+    --type-h1: 24px;
+    --type-h1-lh: 36px;
+    --type-h3: 20px;
+    --type-h3-lh: 32px;
+  }
+}
+
+/* tablet and below */
+@media (width < 764px) {
+  :root {
+    --type-h1: 20px;
+    --type-h1-lh: 32px;
+    --type-h2: 20px;
+    --type-h2-lh: 32px;
+    --type-h4: 18px;
+    --type-h4-lh: 28px;
+    --type-t1: 16px;
+    --type-t1-lh: 24px;
+    --type-t2: 16px;
+    --type-t2-lh: 24px;
+    --type-t4: 14px;
+    --type-t4-lh: 20px;
+    --type-t5: 14px;
+    --type-t5-lh: 20px;
+  }
+}
+
+/* Type roles. A role is size AND weight - there are no weight tokens, so the
+   class is the authoritative role -> weight map. */
+.type-h1 { font-size: var(--type-h1); line-height: var(--type-h1-lh); font-weight: 700; }
+.type-h2 { font-size: var(--type-h2); line-height: var(--type-h2-lh); font-weight: 700; }
+.type-h3 { font-size: var(--type-h3); line-height: var(--type-h3-lh); font-weight: 500; }
+.type-h4 { font-size: var(--type-h4); line-height: var(--type-h4-lh); font-weight: 500; }
+.type-t1 { font-size: var(--type-t1); line-height: var(--type-t1-lh); font-weight: 700; }
+.type-t2 { font-size: var(--type-t2); line-height: var(--type-t2-lh); font-weight: 600; }
+.type-t3 { font-size: var(--type-t3); line-height: var(--type-t3-lh); font-weight: 700; }
+.type-t4 { font-size: var(--type-t4); line-height: var(--type-t4-lh); font-weight: 600; }
+.type-t5 { font-size: var(--type-t5); line-height: var(--type-t5-lh); font-weight: 500; }
+.type-b1 { font-size: var(--type-b1); line-height: var(--type-b1-lh); font-weight: 600; }
+.type-b2 { font-size: var(--type-b2); line-height: var(--type-b2-lh); font-weight: 500; }
+.type-b3 { font-size: var(--type-b3); line-height: var(--type-b3-lh); font-weight: 400; }
+.type-b4 { font-size: var(--type-b4); line-height: var(--type-b4-lh); font-weight: 700; }
+.type-b5 { font-size: var(--type-b5); line-height: var(--type-b5-lh); font-weight: 600; }
+.type-b6 { font-size: var(--type-b6); line-height: var(--type-b6-lh); font-weight: 500; }
+.type-b7 { font-size: var(--type-b7); line-height: var(--type-b7-lh); font-weight: 600; }
+.type-b8 { font-size: var(--type-b8); line-height: var(--type-b8-lh); font-weight: 500; }
+.type-c1 { font-size: var(--type-c1); line-height: var(--type-c1-lh); font-weight: 400; }
+.type-c2 { font-size: var(--type-c2); line-height: var(--type-c2-lh); font-weight: 400; }

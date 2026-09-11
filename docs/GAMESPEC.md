@@ -1,5 +1,11 @@
 # GAMESPEC — the schema and the template catalog
 
+> **2026-09-10:** these five templates are live again - askable from `/create`
+> through `lib/games.ts`, and previewed in its gallery. The README lists this
+> doc as legacy because the arcade engines are the product; the schema here is
+> still current. Free mode serves a canned fixture per template; only the model
+> writes content from the prompt.
+
 The `GameSpec` is the contract between the model and the renderer. It is the
 single most important file in the project: the model's output format, the
 server's validation gate, and the renderer's prop types are all one Zod schema.

@@ -287,6 +287,22 @@ confirm the suite notices.
 
 ---
 
+## Where the build actually is (2026-09-11)
+
+| Phase | State |
+| --- | --- |
+| 0-3 Groundwork, skeleton, DS in code, schema and renderer | Done 2026-09-06 |
+| 4 Generation | Done: free tuner by default, model on locally since 2026-09-07 |
+| 5 Authoring UI | Done in arcade form: `/create`, the 15-game gallery, link / picture / notes |
+| 6 Persistence | Not built |
+| 7 Access, audit, spending wall | Spending wall built (`guard.ts`); Access and audit not built |
+| 8 Export and the rest of the catalog | Export built for arcade games; 10 engines + 5 templates |
+| 9 Evals and guardrails | Not built - nothing measures whether a game is good |
+| 10 Figma review loop, handoff | Not built |
+
+The phases below were written before the 2026-09-06 re-scope to arcade games,
+and are kept as the plan they were.
+
 ## Working rules
 
 Carried from askpbot because they are what keeps a docs pack honest:

@@ -130,6 +130,27 @@ as round as intended.
 5. **Re-run the sync when the DS changes, and commit the diff on its own.** A
    token change mixed into a feature commit is a token change nobody reviewed.
 
+## As built, and the second source (2026-09-11)
+
+The fetch is `scripts/figma-token-resolver.js`, run through Figma MCP's
+`use_figma`; generation is `scripts/generate-tokens.mjs` (`npm run tokens`). The
+`sync-tokens.mjs` in the diagram above was the plan's name. The procedure and
+its digest check are in [scripts/sync-tokens.md](../scripts/sync-tokens.md).
+
+Re-verified 2026-09-10: Primitives 545, Product 94, and three new collections
+(`Subjects (A-E)`, `Subjects (G-S)`, `Platform (Mobile)`) - and none of the 366
+tokens this build reads changed.
+
+**The second source is the Pandai product repo.** `pandai.question.uiux` holds
+what the Figma extract skips: **Poppins**, the 19 type roles (size, line-height
+AND weight) with their tablet and mobile steps, motion tokens, and the alias
+names the product team writes. `npm run tokens:app` reads it - read-only - and
+writes `app/ds/pandai-app.css`, loaded after the Figma layer. Where the product
+and Figma disagree, **the product wins** and the script says so on every run;
+`--radius-xl` is refused because the product uses that name for an 8px nav
+button while the DS's is the 16px card radius. This does not change the rule
+above: nothing reads the product repo at runtime - its values are vendored.
+
 ## Direction two: code to Figma (v1.1)
 
 Once games are being generated, designers need to see them without playing every

@@ -40,6 +40,10 @@ const SCAN_EXT = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".css"];
 const ALLOW = new Set([
   join("lib", "ds", "tokens.raw.json"),
   join("app", "ds", "tokens.css"),
+  // The product's layer, generated from pandai.question.uiux. It holds a colour
+  // value only where the product has deliberately moved off Figma.
+  join("app", "ds", "pandai-app.css"),
+  join("scripts", "sync-app-ds.mjs"),
   join("lib", "ds", "tokens.generated.ts"),
   join("scripts", "check-ds.mjs"),
   join("scripts", "generate-tokens.mjs"),

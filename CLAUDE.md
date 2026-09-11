@@ -39,8 +39,9 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `lib/arcade/blocks.ts` | Tetris: the seven pieces and the placement-time check |
 | `lib/arcade/match3.ts` | Match-3: board, matches, collapse, "is there a move" |
 | `components/arcade/*-engine.tsx` | One renderer per newer engine, out of `engines.tsx` |
-| `lib/arcade/gallery.ts` | The ten cards on `/create`, **derived** from the catalogue |
-| `components/arcade/EnginePreview.tsx` | A card playing itself. Real engine, attract mode |
+| `lib/gallery.ts` | The fifteen cards on `/create`, **derived** from the catalogue |
+| `components/arcade/EnginePreview.tsx` | An arcade card playing itself. Real engine, attract mode |
+| `components/arcade/TemplatePreview.tsx` | A learning-template card: the real renderer, scaled |
 | `components/arcade/palette-for.ts` | Scene-then-DS colour, shared by the game and its preview |
 | `lib/arcade/generate.ts` | The **stub tuner**: words → physics, in code, free |
 | `lib/arcade/live.ts` | The model provider. Strict tool use |
@@ -52,7 +53,9 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `components/arcade/art.ts` | Authored SVGs, tinted from the palette at draw time |
 | `components/arcade/sound.ts` | Synthesised audio. **No files** - Web Audio at runtime |
 | `lib/arcade/palettes.ts` | The **arcade scenes**. The one file allowed hand-picked colour |
-| `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens. **Generated** |
+| `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens from Figma. **Generated** |
+| `app/ds/pandai-app.css` | The Pandai **product's** layer: Poppins type scale, motion, aliases. **Generated** |
+| `scripts/sync-app-ds.mjs` | Reads `../pandai.question.uiux` (read-only) and writes the file above |
 | `lib/spec/`, `components/game/` | The **legacy learning templates**. Still work, not the product |
 
 ## The model is ON, behind a wall
@@ -185,6 +188,20 @@ hold colour, by Zul's decision on 2026-09-06, and `scripts/check-ds.mjs` names
 it explicitly. Everything else - all chrome, every component - is still held to
 tokens. `check:tokens` catches dangling `var(--…)`.
 
+**The DS has TWO sources, and they do different jobs.** Figma gives colour,
+spacing and radius (`npm run tokens`). The Pandai product repo gives Poppins,
+the nineteen type roles, the tablet/mobile steps and motion (`npm run
+tokens:app`), and where the product has changed a Figma value on purpose, the
+product wins - every such difference is printed on every sync. One product
+alias is refused: its `--radius-xl` is an 8px nav button, the DS's is 16px, and
+every card here uses the DS one.
+
+**Type is a ROLE, not a size.** A role is size AND line-height AND weight -
+`font-size: var(--type-b3); line-height: var(--type-b3-lh); font-weight: 400`,
+or the `.type-b3` class. Citing one role's size with another's weight renders
+fine today and breaks the day either is retuned. Raw `font-size` in pixels is
+only for things that are not text: a heart glyph, the 56px score numeral.
+
 **A NEW INPUT HAS TO REACH THE ROUTER, not just the model.** Notes and a
 reference link were sent to the model while `chooseGame` still read only the one
 short line, so pasting a design document and typing "make this" was a coin flip.
@@ -231,8 +248,34 @@ expand backticks; a heredoc without quoting turned `\b` into literal backspace
 characters and silently broke a routing regex. **Use `<<'EOF'` for any content
 with backticks or backslashes**, or the Write tool.
 
+**Input is press / move / release, plus `control()`.** A drag used to arrive as
+a stream of presses, so a wobbly tap flapped the bird three times. `move` is its
+own kind now, and only brick-breaker, the shooter and match-3's swipe listen to
+it. Engines that need directions implement `control(c, down)`, driven by the
+thumb pad AND the arrow keys - arrows are no longer faked as taps at the screen
+edge, which snake read relative to its head. Each pad button owns its pointer,
+so walk-and-jump works; a release must only clear what THAT button set.
+
+**A phone game must not share its finger with the page.** The stage is
+`touch-action: pan-y` between runs, so a phone can still scroll past a game that
+is nearly screen-wide, and `none` during a run. Tapping Play on a coarse pointer
+takes the screen: the Fullscreen API where it exists, and on iPhone Safari -
+which gives that API only to `<video>` - a fixed layer over a page locked by
+`html[data-game-fullscreen]`. Headless Chromium here cannot scroll a page by
+simulated touch AT ALL - a control swipe on plain text moved 0px - so check
+scroll behaviour by the computed `touch-action`, or on a real phone.
+
+**A new CSS file imported before it exists poisons the DEV cache.** Adding
+`@import "./ds/pandai-app.css"` a moment before the sync first wrote the file
+made every page 500 with `Can't resolve`, and it survived re-saving, a restart,
+and clearing `.next/cache/turbopack` - because `next dev` in Next 16 keeps its
+own on-disk cache in **`.next/dev/cache/turbopack`**, separate from the build's.
+Tailwind run standalone resolved the file fine, which is what proved the CSS was
+not the problem. Stop the dev server, delete `.next/dev/cache/turbopack`, start
+it again. Better: generate a file before anything imports it.
+
 **Build gotchas** — full list in
-[docs/TECHNICAL-PLAN.md](docs/TECHNICAL-PLAN.md), numbered 1–10. The ones that
+[docs/TECHNICAL-PLAN.md](docs/TECHNICAL-PLAN.md), numbered 1–11. The ones that
 cost the most: `npm run build` must stay `opennextjs-cloudflare build`;
 `open-next.config.ts` needs `buildCommand: "npm run build:next"`;
 `next.config.ts` cannot be top-level-await; **a Worker has no filesystem**, so
@@ -250,7 +293,8 @@ npm run dev:live  # the model ON. Real money. See lib/arcade/guard.ts
 npm run check     # typecheck + lint + check:ds + check:tokens + tests
 npm run build     # opennextjs-cloudflare build (stop the dev server first)
 npx wrangler deploy
-npm run tokens    # regenerate the DS token layer
+npm run tokens    # regenerate the DS token layer (from Figma)
+npm run tokens:app  # re-import the product's layer from ../pandai.question.uiux
 npm run fixtures  # regenerate the bundled fixture index
 ```
 

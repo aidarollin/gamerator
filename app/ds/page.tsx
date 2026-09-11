@@ -35,7 +35,8 @@ function Section({
       <div>
         <h2
           style={{
-            fontSize: 16,
+            fontSize: "var(--type-t4)",
+            lineHeight: "var(--type-t4-lh)",
             fontWeight: 600,
             color: "var(--text-default-heading)",
           }}
@@ -45,8 +46,8 @@ function Section({
         {note && (
           <p
             style={{
-              fontSize: 13,
-              lineHeight: 1.5,
+              fontSize: "var(--type-b3)",
+              lineHeight: "var(--type-b3-lh)",
               color: "var(--text-default-body)",
               maxWidth: "60ch",
             }}
@@ -86,7 +87,8 @@ const Grid = ({ children }: { children: React.ReactNode }) => (
 );
 
 const caption = {
-  fontSize: 12,
+  fontSize: "var(--type-c1)",
+  lineHeight: "var(--type-c1-lh)",
   color: "var(--text-default-caption)",
   fontFamily: "var(--font-mono), ui-monospace, monospace",
 } as const;
@@ -105,8 +107,9 @@ export default function DsPage() {
       <header style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
         <h1
           style={{
-            fontSize: 22,
-            fontWeight: 600,
+            fontSize: "var(--type-h2)",
+            lineHeight: "var(--type-h2-lh)",
+            fontWeight: 700,
             color: "var(--text-default-heading)",
           }}
         >
@@ -114,8 +117,8 @@ export default function DsPage() {
         </h1>
         <p
           style={{
-            fontSize: 14,
-            lineHeight: 1.6,
+            fontSize: "var(--type-b3)",
+            lineHeight: "var(--type-b3-lh)",
             color: "var(--text-default-body)",
             maxWidth: "70ch",
           }}
@@ -205,7 +208,7 @@ export default function DsPage() {
             <strong style={{ color: "var(--text-default-heading)" }}>
               Default card
             </strong>
-            <span style={{ fontSize: 13, color: "var(--text-default-body)" }}>
+            <span style={{ fontSize: "var(--type-b3)", lineHeight: "var(--type-b3-lh)", color: "var(--text-default-body)" }}>
               The DS Primary Card exactly, with nothing tinted.
             </span>
           </Card>
@@ -213,7 +216,7 @@ export default function DsPage() {
             <strong style={{ color: "var(--text-default-heading)" }}>
               Accented card &mdash; physics
             </strong>
-            <span style={{ fontSize: 13, color: "var(--text-default-body)" }}>
+            <span style={{ fontSize: "var(--type-b3)", lineHeight: "var(--type-b3-lh)", color: "var(--text-default-body)" }}>
               Same geometry, two colours swapped for the subject ramp.
             </span>
           </Card>

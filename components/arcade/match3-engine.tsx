@@ -110,10 +110,16 @@ export const match3Factory: EngineFactory = (h, spec) => {
       parts = [];
     },
     input(kind, where) {
-      if (kind !== "press" || !where || settle > 0 || board.length === 0) return;
+      if (kind === "release" || !where || settle > 0 || board.length === 0) return;
       const x = Math.floor((where.x - ox) / cell);
       const y = Math.floor((where.y - oy) / cell);
       if (x < 0 || y < 0 || x >= r.cols || y >= r.rows) return;
+      // A SWIPE: dragging a picked piece onto a neighbour swaps it, the way
+      // every phone match-3 is played. Anywhere else a drag means nothing - it
+      // must not keep re-picking pieces under a moving finger.
+      if (kind === "move") {
+        if (!picked || Math.abs(picked.x - x) + Math.abs(picked.y - y) !== 1) return;
+      }
 
       if (!picked) {
         picked = { x, y };

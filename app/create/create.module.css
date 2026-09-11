@@ -6,12 +6,21 @@
   gap: var(--spacing-component-md);
 }
 
+/*
+ * A grid item's minimum width defaults to its CONTENT's, so one line that cannot
+ * wrap widens the whole column past the screen. On a 390px phone the longest
+ * example chip did exactly that: `main` came out 427px wide and every card was
+ * cut off on the right. Poppins is wider than the Geist it replaced, which is
+ * what tipped it over - found by a probe checking for sideways scroll.
+ */
+.page > * { min-width: 0; }
+
 .head { display: grid; gap: var(--spacing-component-2xs); }
-.h1 { font-size: 26px; font-weight: 700; color: var(--text-default-heading); margin: 0; }
-.lede { font-size: 14px; line-height: 1.6; color: var(--text-default-body); margin: 0; max-width: 62ch; }
+.h1 { font-size: var(--type-h2); line-height: var(--type-h2-lh); font-weight: 700; color: var(--text-default-heading); margin: 0; }
+.lede { font-size: var(--type-b3); line-height: var(--type-b3-lh); font-weight: 400; color: var(--text-default-body); margin: 0; max-width: 62ch; }
 
 .form { display: grid; gap: var(--spacing-component-xs); }
-.label { font-size: 13px; font-weight: 600; color: var(--text-default-heading); }
+.label { font-size: var(--type-b1); line-height: var(--type-b1-lh); font-weight: 600; color: var(--text-default-heading); }
 
 .textarea {
   width: 100%;
@@ -20,8 +29,9 @@
   border: var(--border-width-xs) solid var(--border-general-default);
   background: var(--surface-general-default);
   color: var(--text-default-heading);
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   font-family: inherit;
   resize: vertical;
 }
@@ -34,7 +44,7 @@
 
 .row { display: flex; flex-wrap: wrap; gap: var(--spacing-component-xs); }
 .field { display: grid; gap: 4px; flex: 1 1 150px; }
-.fieldLabel { font-size: 12px; color: var(--text-default-caption); }
+.fieldLabel { font-size: var(--type-c1); line-height: var(--type-c1-lh); font-weight: 400; color: var(--text-default-caption); }
 
 .select {
   min-height: 40px;
@@ -43,7 +53,9 @@
   border: var(--border-width-xs) solid var(--border-general-default);
   background: var(--surface-general-default);
   color: var(--text-default-heading);
-  font-size: 14px;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   font-family: inherit;
 }
 
@@ -55,7 +67,8 @@
   border-radius: var(--radius-full);
   background: var(--surface-primary-default);
   color: var(--text-on-color-heading);
-  font-size: 16px;
+  font-size: var(--type-t3);
+  line-height: var(--type-t3-lh);
   font-weight: 700;
   cursor: pointer;
 }
@@ -63,17 +76,21 @@
 .submit:hover { background: var(--surface-primary-default-hover); }
 .submit:active { background: var(--surface-primary-focus); }
 
-.note { font-size: 12px; line-height: 1.5; color: var(--text-default-caption); margin: 0; }
+.note { font-size: var(--type-c1); line-height: var(--type-c1-lh); font-weight: 400; color: var(--text-default-caption); margin: 0; }
 
 .examples { display: flex; flex-wrap: wrap; gap: var(--spacing-component-2xs); margin-top: var(--spacing-component-sm); }
-.exampleLink { text-decoration: none; }
+.exampleLink { text-decoration: none; max-width: 100%; }
+/* The DS Chip is `nowrap` because it is made for short labels. These are whole
+   example sentences, so here they may wrap - truncating them with an ellipsis
+   would hide the very example they exist to show. */
+.exampleLink > * { white-space: normal; line-height: var(--type-c1-lh); }
 
 .result { display: grid; gap: var(--spacing-component-sm); justify-items: center; }
 .tags { display: flex; flex-wrap: wrap; gap: var(--spacing-component-2xs); justify-content: center; }
 
-.warn { color: var(--text-warning-default); font-size: 15px; }
-.body { font-size: 13px; line-height: 1.6; color: var(--text-default-body); }
-.issues { font-size: 13px; line-height: 1.6; color: var(--text-default-body); padding-left: var(--spacing-component-md); }
+.warn { color: var(--text-warning-default); font-size: var(--type-t3); line-height: var(--type-t3-lh); font-weight: 700; }
+.body { font-size: var(--type-b3); line-height: var(--type-b3-lh); font-weight: 400; color: var(--text-default-body); }
+.issues { font-size: var(--type-b3); line-height: var(--type-b3-lh); font-weight: 400; color: var(--text-default-body); padding-left: var(--spacing-component-md); }
 
 .guess {
   max-width: 46ch;
@@ -83,8 +100,9 @@
   background: var(--surface-informative-default-subtle);
   border: var(--border-width-xs) solid var(--border-informative-default-hover);
   color: var(--text-default-body);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
   text-align: center;
 }
 
@@ -104,7 +122,8 @@
 
 .summary {
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--type-b1);
+  line-height: var(--type-b1-lh);
   font-weight: 600;
   color: var(--text-primary-default);
   list-style: none;
@@ -137,7 +156,9 @@
   border: var(--border-width-xs) solid var(--border-general-default);
   background: var(--surface-general-default);
   color: var(--text-default-heading);
-  font-size: 14px;
+  font-size: var(--type-b3);
+  line-height: var(--type-b3-lh);
+  font-weight: 400;
   font-family: inherit;
 }
 
@@ -154,7 +175,8 @@
 
 .hint {
   margin: 0 0 var(--spacing-component-2xs);
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: var(--type-c1);
+  line-height: var(--type-c1-lh);
+  font-weight: 400;
   color: var(--text-default-caption);
 }

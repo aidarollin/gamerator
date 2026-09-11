@@ -96,3 +96,39 @@ Recorded in `lib/ds/tokens.raw.json` → `$meta.notVendoredYet`:
 
 Add a group when a component needs it, not before. Vendoring a token nothing
 reads means carrying a value that can drift with nothing to catch it.
+
+## The second source: the Pandai product's layer
+
+Figma is not the only place Pandai's design system lives. The **product repo**,
+`pandai.question.uiux`, carries the parts the Figma extract above skips - and
+they are the parts a person notices first:
+
+| What | From |
+| --- | --- |
+| Colour, spacing, radius, border width | **Figma** (this procedure, `npm run tokens`) |
+| **Poppins**, the 19 type roles (size + line-height + weight), tablet and mobile steps | **Product repo** |
+| Motion (durations, easings, hover lift) | **Product repo** |
+| DS alias names the product team writes (`--spacing-space-*`, `--corner-radius-corner-*`) | **Product repo** |
+
+```bash
+npm run tokens:app                     # reads ../pandai.question.uiux
+node scripts/sync-app-ds.mjs <path>    # or point it somewhere else
+```
+
+It is **read-only** on the product repo and writes one file,
+`app/ds/pandai-app.css`, which loads after the Figma layer. The generated header
+records the product commit it came from.
+
+**Where the two disagree, the product wins** - it is what students actually see,
+and a value it changed is a decision somebody made. Every disagreement is printed
+on every run. As of product `c0c8954` (2026-09-09) there are two:
+`--surface-secondary-default-subtle-hover` and
+`--border-secondary-default-subtle-hover` are Lime.200 `#d1f7d1` in the product
+("aligned to fe/zulfadhli") against `#baf3b9` in Figma.
+
+**One product value is refused:** `--radius-xl`. The product uses that name for
+an 8px nav button; the DS's `Radius/xl` is 16px, and every card on this site is
+drawn with it. It is listed in `SKIP` in the script, with the reason.
+
+Poppins itself is loaded by `next/font` in `app/layout.tsx` - self-hosted at
+build time, in the same four weights the product loads (400, 500, 600, 700).

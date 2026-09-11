@@ -16,6 +16,8 @@ Three forms ship, cheapest integration first. All three come from the same spec.
   width="360" height="560"
   style="border:0;border-radius:24px;max-width:100%"
   loading="lazy"
+  allow="autoplay; fullscreen"
+  allowfullscreen
 ></iframe>
 ```
 
@@ -26,6 +28,10 @@ schema migration.
 
 The embed route validates the spec exactly as every other surface does, so an
 embed cannot render a game the rest of the system would refuse.
+
+**Full screen on phones** (2026-09-11) needs `allow="fullscreen"` on the
+iframe, which the exported snippets now carry. Without it the game still works:
+it covers its own iframe instead of the screen.
 
 **Good:** one line, no build, no dependency, no coordination. Styling and
 mascots travel with the game.
@@ -77,6 +83,11 @@ only thing a future native renderer would need. **Store this**, and treat the
 encoded URL as a derived value rather than the record.
 
 ## What to build next, and why it is not built yet
+
+**First, the gap that exists today:** the five learning templates cannot be
+exported. `ExportPanel` and `/embed` are arcade-only, so a generated quiz can be
+played on `/create` and not yet handed to an engineer.
+
 
 **A web component is the right long-term answer**, and it is deliberately not in
 this release:

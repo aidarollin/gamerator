@@ -10,7 +10,7 @@ export const metadata = {
     "Play any hand-written fixture spec. No AI in the loop - this is the renderer under test.",
 };
 
-const text = { fontSize: 13, lineHeight: 1.6, color: "var(--text-default-body)" };
+const text = { fontSize: "var(--type-b3)", lineHeight: "var(--type-b3-lh)", color: "var(--text-default-body)" };
 
 export default async function PreviewPage({
   searchParams,
@@ -33,8 +33,9 @@ export default async function PreviewPage({
       <header style={{ display: "grid", gap: "var(--spacing-component-xs)" }}>
         <h1
           style={{
-            fontSize: 20,
-            fontWeight: 600,
+            fontSize: "var(--type-h2)",
+            lineHeight: "var(--type-h2-lh)",
+            fontWeight: 700,
             color: "var(--text-default-heading)",
           }}
         >

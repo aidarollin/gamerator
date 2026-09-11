@@ -101,6 +101,28 @@ export const blocksFactory: EngineFactory = (h, spec) => {
     spawn();
   };
 
+  /** One column, if there is room. */
+  const shift = (d: number) => {
+    if (fits(cx + d, cy, shape())) cx += d;
+  };
+
+  /** Turn, with a wall kick: in place, then nudged one or two either way. */
+  const rotate = () => {
+    const next = (turn + 1) % piece.cells.length;
+    for (const nudge of [0, -1, 1, -2, 2])
+      if (fits(cx + nudge, cy, piece.cells[next])) {
+        cx += nudge;
+        turn = next;
+        return;
+      }
+  };
+
+  /** All the way down, now. */
+  const drop = () => {
+    while (fits(cx, cy + 1, shape())) cy++;
+    lock();
+  };
+
   return {
     reset() {
       well = Array.from({ length: r.rows }, () => Array(r.cols).fill(-1));
@@ -110,34 +132,21 @@ export const blocksFactory: EngineFactory = (h, spec) => {
       rng = makeRng(0xb10c ^ (spec.meta.title.length * 40503));
       spawn();
     },
+    control(c, down) {
+      if (!down) return;
+      if (c === "left") shift(-1);
+      else if (c === "right") shift(1);
+      else if (c === "up" || c === "a") rotate();
+      else if (c === "down") drop();
+    },
     input(kind_, where) {
       if (kind_ !== "press") return;
-      // The platformer's control idiom: the screen is the pad. Left third moves
-      // left, right third right, the top rotates and the bottom drops. A
-      // keyboard press with no coordinates rotates, so the game is playable
-      // without a pointer at all.
-      if (!where) {
-        if (fits(cx, cy, piece.cells[(turn + 1) % piece.cells.length])) turn++;
-        return;
-      }
-      if (where.y > oy + r.rows * cell * 0.72) {
-        while (fits(cx, cy + 1, shape())) cy++;
-        lock();
-        return;
-      }
-      if (where.y < oy + r.rows * cell * 0.28) {
-        const next = (turn + 1) % piece.cells.length;
-        // A wall kick: try the rotation in place, then nudged one either way.
-        for (const nudge of [0, -1, 1, -2, 2])
-          if (fits(cx + nudge, cy, piece.cells[next])) {
-            cx += nudge;
-            turn = next;
-            return;
-          }
-        return;
-      }
-      const dir = where.x < ox + (r.cols * cell) / 2 ? -1 : 1;
-      if (fits(cx + dir, cy, shape())) cx += dir;
+      // The screen is the pad too: left and right halves move, the top turns
+      // and the bottom drops. A key press with no coordinates turns.
+      if (!where) return rotate();
+      if (where.y > oy + r.rows * cell * 0.72) return drop();
+      if (where.y < oy + r.rows * cell * 0.28) return rotate();
+      shift(where.x < ox + (r.cols * cell) / 2 ? -1 : 1);
     },
     step(dt) {
       t += dt;

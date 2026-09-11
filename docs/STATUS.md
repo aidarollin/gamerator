@@ -662,7 +662,7 @@ at `/play/arcade?game=model-generated`.
    bash expanded every backtick as command substitution and blanked out half the
    technical terms. Use a quoted heredoc for prose containing backticks. This is
    the third time shell quoting has corrupted content in this project — the
-   earlier one silently turned `` into literal backspace characters in a
+   earlier one silently turned `\b` into literal backspace characters in a
    regex, which would have stopped "snake" ever matching the snake engine.
 
 **Not done**
@@ -1933,3 +1933,219 @@ from a unit test.
 **Learning specs have no export.** `ExportPanel` and `/embed` are arcade-only,
 so a generated quiz can be played and not yet handed to an engineer. That is the
 next real thing.
+
+---
+
+## 2026-09-11 — Docs, a simpler deck, and a script
+
+Zul: *"ready docs.md of this system. give the description of this system, and
+the framework use. make a presentation slide for this system (following the
+things ive learned in fde ai program). give the presentation script or points.
+make it clear and simple."*
+
+- **[DOCS.md](../DOCS.md)** at the repo root: what the system is, who it is for,
+  the 15 games, how it works in five steps, the one rule, the stack and the six
+  patterns it is built on, inputs, safety, how to run it, and what is not done.
+  Written plain on purpose - the rest of `docs/` is the long version.
+- **`/deck` rewritten**: twelve slides, one idea each, five live demos. The old
+  deck was accurate on 2026-09-07 and wrong by today (six engines, "the model is
+  off", 154 tests), and too dense to present from.
+- **[docs/PRESENTATION.md](PRESENTATION.md)**: the script, slide for slide, about
+  ten minutes, plus likely questions with answers.
+- **README.md** still said five engines and "the model is deliberately off".
+  Fixed, and it now points at DOCS.md first.
+
+**On "following the FDE programme":** the programme repo still has week-00 and
+nothing else - weeks 1 to 12 are 111-byte placeholders. So the programme slide
+maps what week 0 actually taught (reject bad input with a clear message, secrets
+in environment variables, submit by pushing a link, read code by trying to break
+it) onto this system, and keeps the two open questions for the teaching team.
+Nothing was invented to fill the gap; if later weeks' topics exist outside the
+repo, that slide is the one to extend.
+
+### What checking the deck found
+
+- **An embedded game stole the host page's keyboard.** The Play button had
+  `autoFocus`, and inside an iframe that pulls focus out of the page around it.
+  On the deck, slide 1's demo took focus on load, so the presenter's arrow keys
+  went into the game and the deck would not advance - discovered by a probe
+  that pressed → and read the slide label, not by looking. Any Pandai page
+  embedding a game had the same problem. It now focuses Play only when the game
+  is the whole page (checked in an effect, since `window` does not exist on the
+  server); embedded, it takes focus when tapped. Verified both ways.
+- **Slide 7's demo showed the wrong thing.** Its caption promised a rejected
+  game, and the frame showed `/play/arcade`'s wall of fixture chips with the
+  rejection below the fold. It uses `/embed` now, which shows only the reason.
+
+`npm run check` green, 374 tests. All 12 slides render with no overflow and no
+console errors.
+
+---
+
+## 2026-09-11 (later) — Pandai's typography, from the product repo
+
+Zul: *"fetch latest pandai design system 1.5 from pandai.question.uiux repo, and
+apply to this website."*
+
+### What the product repo had that this site did not
+
+Compared token by token against the product's `resources/css/pandai/tokens.css`
+(commit `c0c8954`, 2026-09-09): **the colours were already here** - 200 shared
+names, and of the four that differed, one was the same colour written two ways.
+The real gap was everything the Figma extract skips:
+
+- **Poppins.** This site was still on Geist, the Next.js default.
+- **The type scale** - 19 roles, each a size, a line-height AND a weight, plus
+  the steps below 1320px and 764px.
+- **Motion** tokens, and the DS alias names the product team writes.
+
+### How it is applied
+
+`scripts/sync-app-ds.mjs` (`npm run tokens:app`) reads the product repo -
+read-only, confirmed untouched afterwards - and writes `app/ds/pandai-app.css`,
+loaded after the Figma layer. Where the two disagree, **the product wins and the
+script says so on every run**: two Lime values (`#d1f7d1` against Figma's
+`#baf3b9`, "aligned to fe/zulfadhli"). **One product value is refused:** its
+`--radius-xl` is an 8px nav button and the DS's is 16px; importing it would have
+halved every card's corners.
+
+Poppins is loaded by `next/font` in the same four weights the product uses,
+self-hosted at build time. **61 CSS-module rules and 19 inline styles** moved
+from raw pixel sizes to DS roles; three raw sizes remain on purpose (a heart
+glyph, the 56px score numeral, the mute icon - sizes, not text).
+
+### What went wrong on the way, all caught before this entry
+
+1. **The breakpoints came out wrong.** The first parser took "the first `:root`
+   after the @media" rather than the one inside it, so phones got the tablet
+   sizes and the real mobile step was never read - and it wrote the steps in
+   the order found, which would have let the tablet step beat the phone step.
+   Found by reading the generated file. Brace-matched and sorted now.
+2. **Every page returned 500** while `npm run check` was green. The `@import`
+   went into `globals.css` before the sync first created the file, and
+   Turbopack cached "not found" on disk. Re-saving did not clear it, a restart
+   did not, and deleting `.next/cache/turbopack` did not - `next dev` keeps its
+   own cache in `.next/dev/cache/turbopack`. Tailwind run standalone resolved
+   the file fine, which is what proved the CSS was right. Recorded in CLAUDE.md.
+3. **`/create` scrolled sideways on a phone.** Poppins is wider than Geist, and
+   the longest example chip - a DS Chip, which never wraps - pushed the page's
+   grid column to 427px on a 390px screen. Grid items may now shrink, and those
+   chips may wrap. Found by a probe that checks every page for sideways scroll.
+
+**Verified:** Poppins loads in all four weights on every page; headings measure
+24/36 on a 1280px screen (the product's below-1320 step) and 20/32 on a phone;
+no sideways scroll on six pages at 360px or 390px; no console errors;
+`npm run check` green, 374 tests, `check:tokens` 431 tokens.
+
+---
+
+## 2026-09-11 (later still) — Full screen, and a controller for touch
+
+Zul: *"allow fullscreen mode for the game generated so that when user open in
+mobile, it will not scroll the page, then also the game also needs to consider
+if the player are using touch device to play the game (make it suitable for
+touch device or add controller button)."*
+
+### What was actually wrong on a phone
+
+Reading the input path found four separate faults, all invisible at a desk:
+
+1. **A swipe on the game scrolled the page.** The stage was `touch-action:
+   manipulation`, which only turns off double-tap zoom - the browser took the
+   finger, cancelled the pointer, and the game stopped hearing it.
+2. **A drag arrived as a stream of presses,** so a finger that wobbled during
+   one tap flapped the bird several times.
+3. **Walking and jumping at once was impossible** in the platformer and the
+   duel: `release` carried no pointer, so lifting the jump finger also stopped
+   the walk.
+4. **The tap zones were invisible.** Nothing on a phone says "the top third of
+   the screen jumps".
+
+### What changed
+
+- **Full screen.** A button beside mute, and tapping Play on a coarse pointer
+  takes the screen automatically. The Fullscreen API where it exists; on iPhone
+  Safari - which gives that API only to `<video>` - a fixed layer over a page
+  locked by `html[data-game-fullscreen]`. The stage grows to the largest 2:3
+  that fits and leaves room for the controller.
+- **The engine input contract** is now press / MOVE / release, plus an optional
+  `control(c, down)`. Only brick-breaker, the shooter and match-3 (new: swipe a
+  piece onto a neighbour) listen to `move`.
+- **A thumb pad** under the game on touch screens, for the five engines that
+  need directions: an arrow pad for snake and maze chase, left/right plus Jump
+  or Strike for the platformer and the duel, left/right (auto-repeating) plus
+  Turn and Drop for falling blocks. Each button owns its pointer.
+- **The arrow keys** drive the same `control()`. They used to be faked as taps
+  at the edge of the screen, which snake read relative to its own head - so near
+  a corner, "left" could turn it up.
+- **The canvas draws at the screen's real resolution** - 1098x1647 for a
+  366px-wide game at 3x - where it was a fixed 360x540 that full screen would
+  have stretched soft.
+- Hints are per device: a phone reads "Hold ◀ ▶ to run, tap Jump", a desktop
+  "← → to run, Space or ↑ to jump".
+- Exported embeds now carry `allow="autoplay; fullscreen"`, so a game inside a
+  Pandai page can go full screen too.
+
+### Verified - and what could not be
+
+On an emulated phone (touch, 3x): Play enters full screen covering 390x844; the
+pad renders; holding right walks, and lifting ONLY a second finger on Jump
+leaves right held and the walk going; the snake d-pad steers; dragging along
+brick-breaker moves the paddle end to end; with the Fullscreen API removed the
+layer covers the screen, locks the page, and unlocks it on exit. On a desktop:
+no pad, no automatic full screen, and the arrow keys walk and jump together.
+`touch-action` measures `pan-y` between runs and `none` mid-run and in full
+screen. `npm run check` green, 374 tests.
+
+**Not verified: that a real finger swipe on the game leaves the page still.**
+Headless Chromium here cannot scroll a page by simulated touch at all - a
+control swipe on plain page text moved 0px, as did a mouse wheel under mobile
+emulation - so "0px on the game" proves nothing. The computed `touch-action`
+is the rule the browser uses to decide, and it is right; a real phone is the
+remaining check.
+
+**Three of my own probes measured the wrong thing first,** and are recorded
+because the pattern keeps recurring: a sanity swipe that landed on the pad; a
+hint check that read the outer label, whose text contains BOTH hints; and a
+multi-touch test that lifted the walking finger instead of the jumping one,
+because Chrome's `touchEnd` releases the points you list.
+
+### Found, not fixed
+
+**In the duel, the player cannot block.** `duelPlayability` simulates a
+player who blocks each incoming strike (`lib/arcade/duel.ts`), but the renderer
+gives a human no way to - only the opponent ever sets `blocking`. The check is
+certifying a stronger player than anyone can be. A Block button would close it,
+but it changes the game's balance, so it is Zul's call rather than a side
+effect of adding touch controls.
+
+---
+
+## 2026-09-11 — End of session: the state of play
+
+Written so the next session can start from here.
+
+**Uncommitted - everything from 2026-09-11.** The docs pass (DOCS.md, the
+simpler `/deck`, docs/PRESENTATION.md), the product DS layer
+(`scripts/sync-app-ds.mjs`, `app/ds/pandai-app.css`, Poppins, 80 font sizes on
+type roles), full screen and the thumb pad, and this docs sync. `npm run check`
+was green at the last code change (374 tests, 431 tokens). Nothing has been
+committed because Zul has not asked this session.
+
+**Pushed:** `0696861` on `main`, in sync with origin. **Deployed:** `716a575` -
+the live site predates the templates, the skin, the new inputs and everything
+above, and still cannot spend (no Worker secret).
+
+**Waiting on Zul:**
+
+1. Commit and deploy the work above.
+2. A Block button in the duel - the playability check assumes the player can
+   block; the renderer does not let them.
+3. A real-phone check that swiping on the game does not scroll the page. The
+   dev server prints a LAN address (`http://192.168.100.17:3000` this session)
+   that a phone on the same Wi-Fi can open.
+4. Standing: an OpenRouter credit limit before the live site uses the model;
+   the teaching team's answers on TypeScript and repo structure.
+
+**Next real work, when asked:** export for the learning templates (the biggest
+gap), then human playtests.

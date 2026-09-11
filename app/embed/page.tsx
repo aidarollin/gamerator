@@ -52,7 +52,8 @@ export default async function EmbedPage({
       ) : (
         <p
           style={{
-            fontSize: 13,
+            fontSize: "var(--type-b3)",
+            lineHeight: "var(--type-b3-lh)",
             color: "var(--text-warning-default)",
             textAlign: "center",
             maxWidth: "40ch",

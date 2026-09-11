@@ -132,9 +132,29 @@ export const duelFactory: EngineFactory = (h, spec) => {
       watchingOpen = false;
     },
 
+    control(c, down) {
+      if (c === "left" || c === "right") {
+        const d = c === "left" ? -1 : 1;
+        // Only the arrow that set the step may end it, so tapping Strike
+        // while holding a direction does not stop you.
+        if (down) hold = d;
+        else if (hold === d) hold = 0;
+        return;
+      }
+      if (down && (c === "a" || c === "up") && !busy(me) && h.phase() === "playing") {
+        strike(me);
+        h.sfx("flap");
+      }
+    },
+
     input(kind, where) {
       if (kind === "release") {
         hold = 0;
+        return;
+      }
+      // A drag re-aims the step and never strikes.
+      if (kind === "move") {
+        if (where && where.y >= H * 0.34) hold = where.x < W / 2 ? -1 : 1;
         return;
       }
       // A press with no pointer position is the keyboard, and the keyboard

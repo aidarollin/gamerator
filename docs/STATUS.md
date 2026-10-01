@@ -2427,3 +2427,18 @@ and 390: card and row counts above, no horizontal overflow; screenshots of
 Icon Grayscale, Subjects Chemistry and Status against Figma.
 
 **Not committed, not deployed.**
+
+---
+
+## 2026-10-02 — Committed and pushed
+
+Zul: *"commit and push"*. Two commits on `main`, pushed: `1e45268` vendors the
+colour cards' data (primitives and Dark values) on its own, as sync-tokens.md
+asks of a token change; `e017a6b` is the DS showcase and every colour page. The
+"not committed" lines above are superseded by this one.
+
+**Not deployed** - the live site is still `331754fc` from 2026-09-11.
+
+**Still open:** the Semantic layer has 28 tokens added in Figma since the last
+sync (2026-09-10) that this site does not have yet - a token sync, its own
+commit.

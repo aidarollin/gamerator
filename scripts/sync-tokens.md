@@ -86,11 +86,48 @@ rule. Student is a **Product** mode; Semantic has no Student mode at all.
 A token change mixed into a feature commit is a token change nobody reviewed.
 Re-run the sync when the DS moves, and commit the diff by itself.
 
+## The colour cards: primitives and Dark, display only
+
+`/ds/foundations/primitives`, `/surface` and `/text` draw the DS's own colour
+documentation cards (the "🎨 Colors" page). They need two things the Semantic
+extract above does not carry, so `tokens.raw.json` has two more keys:
+
+| Key | What | Count |
+| --- | --- | --- |
+| `primitive` | Every Primitive shown on the 43 primitive cards | 424 |
+| `colorDark` | Semantic=Dark (Product=Student) for every token on the eight semantic card sets | 336 |
+
+Both are **display only**. `npm run tokens` turns them into `PRIMITIVES`,
+`PRIMITIVE_HSLA` and `DARK_VALUES` in `tokens.generated.ts` - no CSS variable,
+so no component can paint with a primitive or a dark value. `tokens.css` is
+byte-identical with or without them.
+
+The fetch is [`figma-colour-cards-resolver.js`](figma-colour-cards-resolver.js)
+via `use_figma`, read-only. Its full answer is over the 20KB `use_figma` limit,
+so run it once per `PART` (`cards`, `primitive`, `light`, `dark`), and set
+`CARD_SETS` to read a few semantic sets at a time. Each part returns an FNV-1a
+digest; `lib/ds/colour-cards.test.ts` recomputes it over the generated maps and
+compares it with `$meta.primitive.digest` and each of `$meta.colorDark.parts`,
+all computed inside Figma. 2026-10-02: primitives `c182789` (424); dark
+`a9e8220b` (Surface + Text, 103) and `a977ff77` (Icon, Border, Subjects,
+Medals, Status, Accents, 248).
+
+The `light` part is a check, not data: Light values already live in `color`.
+Diff it against `color` before trusting the cards - on 2026-10-02 all 336
+matched.
+
+The eight semantic sets are one route, `/ds/foundations/[set]`, driven by
+`SEMANTIC_SETS`. Adding a set is adding its frame to the resolver and an entry
+to that list.
+
+The card list itself - which card shows which tokens, in Figma's order - is
+`lib/ds/colour-cards.ts`. Names only, no values.
+
 ## What this build does not vendor
 
 Recorded in `lib/ds/tokens.raw.json` → `$meta.notVendoredYet`:
 
-- **Dark mode** of every Semantic token
+- **Dark mode** of every Semantic token, beyond the 336 display-only values above
 - **Teacher and Parent** modes of every Product token
 - `Semantic/JDP` (20), `Responsives/*` (70), `Typography/*` (57)
 

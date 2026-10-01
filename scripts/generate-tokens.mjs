@@ -11,7 +11,8 @@
  *
  * Writes:
  *   app/ds/tokens.css            CSS custom properties
- *   lib/ds/tokens.generated.ts   typed constants + subject/accent maps
+ *   lib/ds/tokens.generated.ts   typed constants + subject/accent maps, plus the
+ *                                display-only PRIMITIVES and DARK_VALUES
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -34,6 +35,32 @@ function cssVar(path) {
       .replace(/[/\s]+/g, "-")
       .replace(/-+/g, "-")
   );
+}
+
+/**
+ * `#00cc85` -> `hsla(159, 100, 40, 100%)`, the exact text the DS colour cards
+ * print: whole-number hue, saturation and lightness with no units, alpha as a
+ * percentage. Done here, in the generated layer, because the result is colour
+ * text and check:ds rightly keeps colour text out of components.
+ */
+function figmaHsla(hex) {
+  const h = hex.replace("#", "");
+  const ch = (i) => parseInt(h.slice(i, i + 2), 16) / 255;
+  const r = ch(0), g = ch(2), b = ch(4);
+  const a = h.length === 8 ? ch(6) : 1;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let hue = 0, sat = 0;
+  if (d !== 0) {
+    sat = d / (1 - Math.abs(2 * l - 1));
+    if (max === r) hue = 60 * (((g - b) / d) % 6);
+    else if (max === g) hue = 60 * ((b - r) / d + 2);
+    else hue = 60 * ((r - g) / d + 4);
+    if (hue < 0) hue += 360;
+  }
+  const n = Math.round;
+  return `hsla(${n(hue)}, ${n(sat * 100)}, ${n(l * 100)}, ${n(a * 100)}%)`;
 }
 
 // A collision would make one token silently overwrite another in the
@@ -227,6 +254,37 @@ ${dimEntries
   .map(([p, v]) => `  "${p.split("/")[1]}": ${v},`)
   .join("\n")}
 } as const;
+
+/**
+ * Primitive colours - DISPLAY ONLY, for the colour cards at /ds/foundations.
+ *
+ * Deliberately not CSS variables: a component reaching for OG-Green/500 instead
+ * of Surface/primary/default is how a semantic system quietly stops being one.
+ * Keyed by the Figma variable name. ${raw.$meta.primitive?.scope ?? ""}
+ */
+export const PRIMITIVES: Record<string, string> = {
+${Object.entries(raw.primitive ?? {})
+  .map(([k, v]) => `  "${k}": "${v}",`)
+  .join("\n")}
+};
+
+/** The same primitives as the cards print them: \`hsla(159, 100, 40, 100%)\`. */
+export const PRIMITIVE_HSLA: Record<string, string> = {
+${Object.entries(raw.primitive ?? {})
+  .map(([k, v]) => `  "${k}": "${figmaHsla(v)}",`)
+  .join("\n")}
+};
+
+/**
+ * Semantic=Dark values, keyed by token path - DISPLAY ONLY. This build has no
+ * dark theme (see app/globals.css); these exist so the Surface and Text cards
+ * can show both columns the DS documents.
+ */
+export const DARK_VALUES: Record<string, string> = {
+${Object.entries(raw.colorDark ?? {})
+  .map(([k, v]) => `  "${k}": "${v}",`)
+  .join("\n")}
+};
 `;
 
 mkdirSync(join(root, "app/ds"), { recursive: true });
@@ -238,5 +296,7 @@ console.log(
     `subjects: ${subjectKeys.length}\n` +
     `accent families: ${surfaceFamilies.length} (${surfaceFamilies.join(", ")})\n` +
     `status: ${statusKeys.length} (${statusKeys.join(", ")})\n` +
+    `primitives (display only): ${Object.keys(raw.primitive ?? {}).length}\n` +
+    `dark values (display only): ${Object.keys(raw.colorDark ?? {}).length}\n` +
     `wrote app/ds/tokens.css and lib/ds/tokens.generated.ts`,
 );

@@ -1,0 +1,439 @@
+/* The /ds showcase's own chrome - the frame round the components, not the
+ * components. Tokens only, like everything else outside palettes.ts. */
+
+/* ------------------------------------------------------------- Shell */
+
+.shell {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: var(--spacing-layout-md);
+  padding: var(--spacing-layout-sm) var(--spacing-component-md) var(--spacing-layout-lg);
+}
+
+.side {
+  position: sticky;
+  top: var(--spacing-component-md);
+  align-self: start;
+  max-height: calc(100vh - 2 * var(--spacing-component-md));
+  overflow-y: auto;
+}
+
+.main {
+  min-width: 0;
+  display: grid;
+  gap: var(--spacing-layout-md);
+  align-content: start;
+}
+
+/* On a phone the sidebar folds into a disclosure above the page. */
+.mobileNav { display: none; }
+
+@media (width < 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: var(--spacing-component-md); }
+  .side { display: none; }
+  .mobileNav {
+    display: block;
+    border: var(--border-width-xs) solid var(--border-default);
+    border-radius: var(--radius-xl);
+    background: var(--surface-secondary-default-subtle);
+    padding: var(--spacing-component-xs) var(--spacing-component-sm);
+  }
+  .mobileNav > summary {
+    cursor: pointer;
+    color: var(--text-default-heading);
+    padding: var(--spacing-component-2xs) 0;
+  }
+}
+
+/* --------------------------------------------------------------- Nav */
+
+.nav { display: grid; gap: var(--spacing-component-md); }
+.navGroup { display: grid; gap: var(--spacing-component-3xs); }
+
+.navHeading {
+  color: var(--text-default-caption);
+  padding: 0 var(--spacing-component-xs);
+  margin-bottom: var(--spacing-component-3xs);
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  border-radius: var(--radius-md);
+  color: var(--text-default-body);
+  text-decoration: none;
+}
+
+.navLink:hover { background: var(--surface-menu-item-hover); color: var(--text-default-heading); }
+
+.navLink[aria-current="page"] {
+  background: var(--surface-primary-default-subtle);
+  color: var(--text-primary-default);
+}
+
+.navPlanned { color: var(--text-default-caption); }
+
+/* Status is also in the link's accessible name - the dot is never alone. */
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-disabled-on-color);
+}
+.dot[data-status="built"] { background: var(--surface-success-default); }
+.dot[data-status="partial"] { background: var(--surface-alert-default); }
+
+/* ---------------------------------------------------------- Status tag */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-2xs);
+  min-height: 24px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-disabled-primary);
+  background: var(--surface-disabled-primary);
+  color: var(--text-default-body);
+  white-space: nowrap;
+}
+.status[data-status="built"] {
+  border-color: var(--border-success-default);
+  background: var(--surface-success-default-subtle);
+  color: var(--text-success-default);
+}
+/* Alert (orange), not warning: the DS's warning family is its red, and a
+ * half-built component is not an error. */
+.status[data-status="partial"] {
+  border-color: var(--border-alert-default);
+  background: var(--surface-alert-default-subtle);
+  color: var(--text-alert-default);
+}
+
+/* ------------------------------------------------------- Page headers */
+
+.pageHead { display: grid; gap: var(--spacing-component-xs); }
+.eyebrow { color: var(--text-primary-default); }
+.title { color: var(--text-default-heading); }
+.lede { color: var(--text-default-body); max-width: 68ch; }
+.caption { color: var(--text-default-caption); }
+.mono { font-family: var(--font-mono), ui-monospace, monospace; }
+
+.section { display: grid; gap: var(--spacing-component-sm); }
+.sectionHead { display: grid; gap: var(--spacing-component-3xs); }
+.sectionTitle { color: var(--text-default-heading); }
+
+/* --------------------------------------------------------- Overview */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--spacing-component-md);
+}
+.stat { display: grid; gap: var(--spacing-component-3xs); }
+.statNumber {
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--text-default-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--spacing-component-md);
+}
+
+/* A card whose title link stretches over the whole card, so the preview
+ * inside it can hold real buttons without nesting them in an <a>. */
+.tile {
+  position: relative;
+  display: grid;
+  grid-template-rows: 132px auto;
+  border: var(--border-width-xs) solid var(--border-default);
+  border-radius: var(--radius-3xl);
+  background: var(--surface-general-default);
+  overflow: hidden;
+  transition: transform var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out);
+}
+.tile:hover { transform: translateY(var(--lift-card)); border-color: var(--border-primary-default); }
+.tile:focus-within { border-color: var(--border-primary-focus); }
+
+.tilePreview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-component-xs);
+  padding: var(--spacing-component-md);
+  background: var(--surface-secondary-default-subtle);
+  border-bottom: var(--border-width-xs) solid var(--border-default);
+  overflow: hidden;
+}
+.tilePreview > * { max-width: 100%; }
+.tilePreviewStack { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+
+.tilePlanned {
+  background: var(--surface-general-page);
+  color: var(--text-default-caption);
+  border-bottom-style: dashed;
+  text-align: center;
+}
+
+.tileBody { display: grid; gap: var(--spacing-component-2xs); padding: var(--spacing-component-md); }
+.tileTop { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-component-xs); }
+
+.tileLink { color: var(--text-default-heading); text-decoration: none; }
+.tileLink::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.tileLink:focus-visible { outline: none; }
+
+/* ------------------------------------------------------ Component page */
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--spacing-component-2xs) var(--spacing-component-md);
+  margin: 0;
+}
+.facts dt { color: var(--text-default-caption); }
+.facts dd { margin: 0; color: var(--text-default-body); overflow-wrap: anywhere; }
+
+.callout {
+  display: grid;
+  gap: var(--spacing-component-2xs);
+  padding: var(--spacing-component-md);
+  border-radius: var(--radius-xl);
+  border: var(--border-width-xs) solid var(--border-informative-default);
+  background: var(--surface-informative-default-subtle);
+  color: var(--text-default-body);
+}
+.calloutTitle { color: var(--text-informative-default); }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-component-xs);
+}
+
+.select {
+  min-height: 32px;
+  padding: 0 var(--spacing-component-sm);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-primary-default);
+  background: var(--surface-general-default-secondary);
+  color: var(--text-default-heading);
+  font: inherit;
+}
+.select:focus-visible { outline: var(--border-width-s) solid var(--border-primary-focus); outline-offset: var(--border-width-s); }
+
+.story {
+  margin: 0;
+  border: var(--border-width-xs) solid var(--border-default);
+  border-radius: var(--radius-3xl);
+  overflow: hidden;
+  background: var(--surface-general-default);
+}
+.storyHead {
+  display: grid;
+  gap: var(--spacing-component-3xs);
+  padding: var(--spacing-component-sm) var(--spacing-component-md);
+  border-bottom: var(--border-width-xs) solid var(--border-default);
+}
+.storyCanvas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-component-sm);
+  padding: var(--spacing-layout-sm) var(--spacing-component-md);
+  background: var(--surface-general-page);
+}
+.storyCanvasStack { flex-direction: column; align-items: stretch; max-width: 480px; }
+
+.code {
+  margin: 0;
+  padding: var(--spacing-component-md);
+  border-radius: var(--radius-xl);
+  border: var(--border-width-xs) solid var(--border-default);
+  background: var(--surface-secondary-default-subtle);
+  color: var(--text-default-heading);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--type-b4);
+  line-height: var(--type-b4-lh);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.list { margin: 0; padding-left: var(--spacing-component-md); list-style: disc; display: grid; gap: var(--spacing-component-3xs); color: var(--text-default-body); }
+
+.tableWrap { overflow-x: auto; border: var(--border-width-xs) solid var(--border-default); border-radius: var(--radius-xl); }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--spacing-component-xs) var(--spacing-component-sm);
+  border-bottom: var(--border-width-xs) solid var(--border-default);
+}
+.table tr:last-child td { border-bottom: none; }
+.table th { color: var(--text-default-caption); background: var(--surface-secondary-default-subtle); }
+.table td { color: var(--text-default-body); }
+.table code { font-family: var(--font-mono), ui-monospace, monospace; color: var(--text-default-heading); }
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-component-md);
+  padding-top: var(--spacing-component-md);
+  border-top: var(--border-width-xs) solid var(--border-default);
+}
+.pagerLink { display: grid; gap: var(--spacing-component-3xs); color: var(--text-default-heading); text-decoration: none; }
+.pagerLink:hover { color: var(--text-primary-default); }
+.pagerNext { text-align: right; margin-left: auto; }
+
+/* --------------------------------------------------------- Foundations */
+
+.rampRow {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--spacing-component-sm);
+  align-items: center;
+}
+@media (width < 640px) { .rampRow { grid-template-columns: minmax(0, 1fr); gap: var(--spacing-component-2xs); } }
+
+.swatches { display: flex; flex-wrap: wrap; gap: var(--spacing-component-xs); }
+.swatch { display: grid; gap: var(--spacing-component-3xs); width: 76px; }
+.chipColour {
+  height: 40px;
+  border-radius: var(--radius-lg);
+  /* Neutral, not --border-default: that one is green and would tint every
+   * colour sitting inside it. */
+  border: var(--border-width-xs) solid var(--border-general-default);
+}
+.swatchName { color: var(--text-default-caption); overflow-wrap: anywhere; }
+
+.typeRow {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: var(--spacing-component-md);
+  align-items: baseline;
+  padding: var(--spacing-component-xs) 0;
+  border-bottom: var(--border-width-xs) solid var(--border-general-default);
+  color: var(--text-default-heading);
+}
+
+.scaleRow { display: flex; align-items: center; gap: var(--spacing-component-xs); }
+.scaleBar { height: 8px; border-radius: var(--radius-pill); background: var(--surface-primary-default); }
+
+.radiusBox {
+  width: 56px;
+  height: 56px;
+  background: var(--surface-secondary-default-subtle);
+  border: var(--border-width-s) solid var(--border-primary-default);
+}
+
+.motionTrack {
+  position: relative;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-disabled-primary);
+}
+.motionBall {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-primary-default);
+}
+.motionTrack:hover .motionBall { left: calc(100% - 20px); }
+
+/* ------------------------------------------------------- Colour cards
+ * The DS 1.5 colour documentation cards (Figma "🎨 Colors" page). From
+ * get_design_context: stroke Border/general/default, padding and gap
+ * Spacing/component/2xl (28), round swatches, title Header/H2, mode pills
+ * Title/T2 on Radius/pill with 2 / 12 padding. Figma's doc canvas is 1320 wide
+ * at 24px body text; the rows here use the next role down so a card fits this
+ * column. */
+
+.colourCard {
+  display: grid;
+  gap: var(--spacing-component-md);
+  padding: var(--spacing-component-2xl);
+  border: var(--border-width-xs) solid var(--border-general-default);
+  border-radius: var(--radius-3xl);
+  background: var(--surface-general-default);
+  scroll-margin-top: var(--spacing-component-md);
+}
+@media (width < 640px) { .colourCard { padding: var(--spacing-component-md); } }
+
+.colourTitle { color: var(--text-default-heading); }
+.semTitle { color: var(--text-default-body); }
+.colourRows { display: grid; gap: var(--spacing-component-sm); margin: 0; padding: 0; list-style: none; }
+
+/* A neutral ring the Figma swatch does not have: there, a white value on a
+ * white card is an empty space (Text/primary/on-color, dark). */
+.dotSwatch {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 var(--border-width-xs) var(--border-general-default);
+}
+
+.primRow {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: var(--spacing-component-md);
+  align-items: center;
+}
+.primName { color: var(--text-default-body); }
+.primCode { color: var(--text-default-body); text-align: right; font-variant-numeric: tabular-nums; }
+@media (width < 640px) {
+  .primRow { grid-template-columns: 40px minmax(0, 1fr); row-gap: 0; }
+  .primCode { grid-column: 2; text-align: left; }
+}
+
+.semRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 150px;
+  gap: var(--spacing-component-md);
+  align-items: center;
+}
+.semName { display: grid; gap: var(--spacing-component-3xs); color: var(--text-default-body); overflow-wrap: anywhere; }
+.semCell { display: flex; align-items: center; gap: var(--spacing-component-sm); }
+.semHex { color: var(--text-default-body); font-variant-numeric: tabular-nums; }
+
+.modeCols { display: contents; }
+.modePill {
+  justify-self: start;
+  padding: var(--spacing-component-3xs) var(--spacing-component-sm);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+@media (width < 640px) {
+  .semRow { grid-template-columns: 1fr 1fr; row-gap: var(--spacing-component-xs); }
+  .semName, .semTitle { grid-column: 1 / -1; }
+  .modePill { font-size: var(--type-b1); line-height: var(--type-b1-lh); }
+}
+
+.override { display: flex; align-items: center; gap: var(--spacing-component-2xs); color: var(--text-alert-default); }
+.overrideDot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 var(--border-width-xs) var(--border-general-default);
+}
+
+.cardIndex { display: flex; flex-wrap: wrap; gap: var(--spacing-component-xs); }
+.cardIndex a { text-decoration: none; }
+.cardStackGap { display: grid; gap: var(--spacing-component-md); }

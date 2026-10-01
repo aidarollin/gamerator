@@ -1,0 +1,41 @@
+/* Pandai DS 1.5 - every value is a token from app/ds/tokens.css. If a value
+ * here disagrees with the DS node named below, the DS wins: re-read the node,
+ * do not adjust the number. */
+
+/* ---------------------------------------------------------------- Chip
+ * Figma: "Tag - 1.5", Size=S
+ *   height 24 . padding 4 / 8 . gap Spacing/component/3xs (2)
+ *   radius Radius/full . stroke Border Width/xs
+ *   Default  fill Surface/general/default-secondary  stroke Border/primary/default
+ *   Hover    fill Surface/secondary/default          stroke Border/secondary/focus
+ *   Pressed  fill Surface/primary/focus              stroke Border/primary/default-hover
+ *   Active   fill Surface/primary/default            stroke Border/primary/focus
+ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-3xs);
+  min-height: 24px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-primary-default);
+  background: var(--surface-general-default-secondary);
+  color: var(--text-default-body);
+  font-size: var(--type-c1);
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.chipActive {
+  background: var(--surface-primary-default);
+  border-color: var(--border-primary-focus);
+  color: var(--text-on-color-heading);
+}
+
+/* Accent-themed chip - ours, DS geometry kept exactly. */
+.chipAccent {
+  background: var(--ramp-subtle);
+  border-color: var(--ramp-default);
+  color: var(--text-default-heading);
+}

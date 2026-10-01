@@ -1,0 +1,45 @@
+/* Pandai DS 1.5 - every value is a token from app/ds/tokens.css. If a value
+ * here disagrees with the DS node named below, the DS wins: re-read the node,
+ * do not adjust the number. */
+
+/* ---------------------------------------------------------------- Card
+ * Figma: "Primary Card - 1.5", Type=Primary Card
+ *   radius Radius/3xl (24) . padding Spacing/component/md (16, all four sides)
+ *   gap Spacing/component/sm (12) . stroke Border Width/xs (1)
+ *   fill Surface/secondary/default-subtle . stroke Border/default
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-sm);
+  padding: var(--spacing-component-md);
+  border-radius: var(--radius-3xl);
+  border: var(--border-width-xs) solid var(--border-default);
+  background: var(--surface-secondary-default-subtle);
+}
+
+/* The accented card is OURS, not a DS node: games need to wear their subject's
+ * identity. It keeps the DS card's geometry exactly and swaps only the two
+ * colours, so it cannot drift in shape.
+ */
+.cardAccent {
+  border-color: var(--ramp-default);
+  background: var(--ramp-subtle);
+}
+
+/* Figma: "Quiz Card - 1.5", Type=Subjects - radius Radius/2xl (18),
+ * fill Surface/general/default-tertiary, stroke bound to the subject. */
+.cardSubject {
+  border-radius: var(--radius-2xl);
+  background: var(--surface-general-default-tertiary);
+  border-color: var(--ramp-default);
+  gap: var(--spacing-component-xs);
+}
+
+/* Cards sit 16 apart - the same number as their padding. One rule covers both
+ * questions a layout asks. See docs/DESIGN-SYSTEM-SYNC.md. */
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-component-md);
+}

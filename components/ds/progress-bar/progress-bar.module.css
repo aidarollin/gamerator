@@ -1,0 +1,26 @@
+/* Pandai DS 1.5 - every value is a token from app/ds/tokens.css. If a value
+ * here disagrees with the DS node named below, the DS wins: re-read the node,
+ * do not adjust the number. */
+
+/* ---------------------------------------------------------- ProgressBar
+ * Figma: "Progress Bar - 1.5"
+ *   Size S / M / L -> height 4 / 8 / 16 . radius Radius/pill (999)
+ *   track fill Surface/disabled/primary
+ */
+.progress {
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--surface-disabled-primary);
+  overflow: hidden;
+}
+
+.progressS { height: 4px; }
+.progressM { height: 8px; }
+.progressL { height: 16px; }
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--ramp-default);
+  transition: width 200ms ease-out;
+}

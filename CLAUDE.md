@@ -9,7 +9,7 @@ Read [docs/STATUS.md](docs/STATUS.md) at the start of every session — it is th
 dated log and carries the live blockers.
 
 Live: <https://gamerator.aidaasofiah.workers.dev> ·
-`/create` (describe a game) · `/play/arcade` (fixtures) · `/ds` (design system)
+`/create` (describe a game) · `/play/arcade` (fixtures) · `/ds` (the DS 1.5 showcase)
 
 ## The rule the whole system rests on
 
@@ -54,7 +54,11 @@ JavaScript from a model call, stop: [docs/SCOPE.md](docs/SCOPE.md) excludes it.
 | `components/arcade/art.ts` | Authored SVGs, tinted from the palette at draw time |
 | `components/arcade/sound.ts` | Synthesised audio. **No files** - Web Audio at runtime |
 | `lib/arcade/palettes.ts` | The **arcade scenes**. The one file allowed hand-picked colour |
-| `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens from Figma. **Generated** |
+| `lib/ds/inventory.ts` | **Every DS 1.5 component**, built or not, and its state. Drives `/ds` |
+| `components/ds/<slug>/` | One DS component per folder: the component, its CSS, its `.docs.tsx` |
+| `components/ds-showcase/` | The `/ds` showcase chrome. How to add a component: [docs/DESIGN-SYSTEM-COMPONENTS.md](docs/DESIGN-SYSTEM-COMPONENTS.md) |
+| `lib/ds/colour-cards.ts` | The DS's colour cards: 43 primitive, and 8 semantic sets (69 cards) at `/ds/foundations/[set]`. Names only |
+| `lib/ds/tokens.generated.ts` | 366 Pandai DS 1.5 tokens from Figma, plus display-only `PRIMITIVES` and `DARK_VALUES`. **Generated** |
 | `app/ds/pandai-app.css` | The Pandai **product's** layer: Poppins type scale, motion, aliases. **Generated** |
 | `scripts/sync-app-ds.mjs` | Reads `../pandai.question.uiux` (read-only) and writes the file above |
 | `lib/spec/`, `components/game/` | The **legacy learning templates**. Still work, not the product |

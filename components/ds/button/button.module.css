@@ -1,0 +1,81 @@
+/* Pandai DS 1.5 - every value is a token from app/ds/tokens.css. If a value
+ * here disagrees with the DS node named below, the DS wins: re-read the node,
+ * do not adjust the number. */
+
+/* ---------------------------------------------------------------- Button
+ * Figma: "Button - 1.5", Type=Student, Size=L (198 variants in the set)
+ *   height 40 . padding 8 / 12 (Spacing/component/xs / sm)
+ *   radius Radius/full (60) . stroke Border Width/xs . font-size 14
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-component-xs);
+  min-height: 40px;
+  padding: var(--spacing-component-xs) var(--spacing-component-sm);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid transparent;
+  font-size: var(--type-b1);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  background: none;
+}
+
+.button:focus-visible {
+  outline: var(--border-width-s) solid var(--border-primary-focus);
+  outline-offset: var(--border-width-s);
+}
+
+/* Size=M and Size=S are separate variants in the set; only the L geometry was
+ * read, so these two scale padding and keep every colour identical rather than
+ * inventing values. Re-read the nodes before treating them as DS-exact. */
+.buttonM { min-height: 32px; font-size: var(--type-b1); font-weight: 600; }
+.buttonS { min-height: 24px; padding: var(--spacing-component-3xs) var(--spacing-component-xs); font-size: var(--type-b5); font-weight: 600; }
+
+/* Variants=Primary, State=Default */
+.btnPrimary {
+  background: var(--surface-primary-default);
+  border-color: var(--border-primary-focus);
+  color: var(--text-on-color-heading);
+}
+
+/* Variants=Secondary, State=Default */
+.btnSecondary {
+  background: var(--surface-general-default-secondary);
+  border-color: var(--border-primary-default);
+  color: var(--text-primary-default);
+}
+
+/* Variants=Tertiary, State=Default - no fill, no stroke in the DS node */
+.btnTertiary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-primary-default);
+}
+
+/* All three variants share ONE hover treatment in the DS. That is not an
+ * oversight in this file - Primary, Secondary and Tertiary all resolve to
+ * Surface/secondary/default + Border/secondary/focus + Text/secondary/focus on
+ * State=Hover. Verified across all three variant nodes. */
+.button:hover:not(:disabled) {
+  background: var(--surface-secondary-default);
+  border-color: var(--border-secondary-focus);
+  color: var(--text-secondary-focus);
+}
+
+/* State=Pressed */
+.button:active:not(:disabled) {
+  background: var(--surface-primary-focus);
+  border-color: var(--border-primary-default);
+  color: var(--text-on-color-heading);
+}
+
+/* State=Disabled */
+.button:disabled {
+  background: var(--surface-disabled-primary);
+  border-color: var(--border-disabled-primary);
+  color: var(--text-disabled-default);
+  cursor: not-allowed;
+}

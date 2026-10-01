@@ -1,5 +1,8 @@
 # DESIGN SYSTEM SYNC — where Figma belongs, and where it does not
 
+This file is about TOKENS. Building the components themselves, and the `/ds`
+showcase, is [DESIGN-SYSTEM-COMPONENTS.md](DESIGN-SYSTEM-COMPONENTS.md).
+
 ## The correction, first
 
 The obvious mental model is "the app calls Figma MCP to build the game with real

@@ -2237,3 +2237,193 @@ Still free mode - no Worker secret, so the live site cannot spend.
 
 **Waiting on Zul:** a real-phone swipe check (the live URL works for it now, no
 LAN needed); the OpenRouter credit limit; the teaching team's answers.
+
+---
+
+## 2026-10-02 — A framework for building the DS component by component
+
+Zul: *"let me implement pandai design system by building component by component
+and put it in this website to use in the game generator, and also to
+display/showcase pandai design system 1.5. ready me the framework for it to be
+displayed."*
+
+**The inventory: every DS 1.5 component, and its state here.**
+`lib/ds/inventory.ts` lists 31 DS component sets plus the two composed for
+games (Timer, Status pill), each `built`, `partial` or `planned`, with where it
+appears in a game and - for anything not built - what is missing. Today: 2
+built (Primary Card, Progress Bar), 3 partial (Button, Tag, Quiz Card), 26 not
+built.
+
+The list came from Figma MCP `search_design_system`, not from memory. Two
+limits worth knowing before the next session tries the same: `get_metadata` on
+the DS file lists only the Cover page, and the search answers ONE query per call
+with at most 20 results (a batch of seven was clamped to one). So the inventory
+is what was found, and says so; Progress Bar Value and Spinner were not
+returned by any search and carry where they are named instead.
+
+**One folder per component.** `components/ds/index.tsx` and `ds.module.css`
+were one file each holding all six; each is now `components/ds/<slug>/` with
+the component, its own stylesheet (the CSS moved over unchanged, Figma node
+comments included) and a `.docs.tsx`. `@/components/ds` exports the same six
+names, so no page changed. Checked by looking: `/play/preview` with quiz-race,
+`/create` and `/` render as before.
+
+**The showcase.** `/ds` is now an overview (coverage, then every component as
+a tile; a built one previews its first story live, `inert` because the tile is
+a link), `/ds/foundations` (all 336 colour tokens by family, the 19 type roles,
+spacing, radius, motion), and `/ds/components/<slug>` for all 33 entries -
+stories with a subject picker, the spec read off the node, usage, props. A
+planned component still gets a page, saying what is missing and how to build
+it. Sidebar on desktop, a disclosure on a phone that closes after you pick.
+
+**`lib/ds/inventory.test.ts`** (12 tests) holds the two lists together: docs
+exist for exactly the built and partial entries, every named export exists,
+every non-built entry says what is missing. Checked that it fires by removing
+the Timer's docs: it failed, naming the mismatch.
+
+**Found by looking, fixed before finishing:** "Partly built" first wore the DS
+warning family, which is its red, and read as an error - it is alert orange
+now, and the "not built yet" note is informative blue. Swatch outlines used the
+green `--border-default`, which tinted every colour beside it. A Tag inside a
+Quiz Card stretched full width, because a card is a flex column.
+
+**Verified:** `npm run check` green (391 tests, check:ds and check:tokens ok).
+Screenshots at 1280 and 390 wide: no horizontal overflow, no console errors;
+picking b-melayu turns the progress fill blue.
+
+**How to add the next component:** docs/DESIGN-SYSTEM-COMPONENTS.md. The most
+game-relevant ones not built: Radio Field (quiz answers), Status Badge (the
+HUD, replacing Status pill), Modal Alerts (game over), Button Icon (pause,
+mute, full screen).
+
+**Not committed, not deployed.**
+
+---
+
+## 2026-10-02 — Later: the colour cards - primitives, Surface, Text
+
+Zul: *"i'll start with the token colors first"* - three lists of Figma links:
+43 Primitive Colors, 43 Semantic Colors (Surface), 10 Semantic Colors (Text).
+
+**The Surface list was a duplicate of the Primitive list** - the same 43 node
+ids. Rather than stop, the read found the real Surface cards on the same page:
+frame `3372:3291`, "Pandai - Foundations: Semantic Colors — Surface", 13 cards.
+Worth confirming that is what was meant.
+
+**Three new pages**, each drawn from the Figma cards and in Figma's order:
+`/ds/foundations/primitives` (43 cards, 424 colours, swatch + hex + hsla),
+`/ds/foundations/surface` (13 cards, 62 tokens) and `/ds/foundations/text` (10
+cards, 41 tokens), the last two with Light and Dark columns. Card geometry and
+type came from `get_design_context`, mapped to DS tokens and roles (H2 titles,
+T2 mode pills, 28 padding).
+
+**How the data got here, and how we know it is exact.** One read-only
+`use_figma` pass per part - the whole answer is over the tool's 20KB limit, and
+the first attempt was truncated mid-way. Every part returned an FNV-1a digest
+computed inside Figma; the same digest over the pasted values matched (`c182789`
+for 424 primitives, `a9e8220b` for 103 dark values), and
+`lib/ds/colour-cards.test.ts` now re-checks it on every run. The reader is
+committed as `scripts/figma-colour-cards-resolver.js`.
+
+**Display only, on purpose.** Primitives and Dark values are generated as TS
+maps (`PRIMITIVES`, `PRIMITIVE_HSLA`, `DARK_VALUES`), not CSS variables: a
+component reaching for OG-Green/500 instead of Surface/primary/default is how a
+semantic system stops being one, and this site still has no dark theme.
+`tokens.css` is byte-identical before and after.
+
+**What the read found:**
+
+- Every printed hex on all 43 primitive cards and all 10 Text cards matches its
+  variable. ONE stale label in Figma: `Surface/general/default-alpha`, Dark,
+  prints `#1A1A1A80`; the variable is `#1b1e2280`. The page shows the variable.
+- The 103 Light values on the Surface and Text cards match this site's layer
+  exactly - no drift.
+- **The DS has moved since the last token sync** (2026-09-10): Semantic 386 ->
+  414 variables, Primitives 545 -> 551, Typography 57 -> 66, Responsives 70 ->
+  82. New Semantic tokens include `Surface/skeleton/*` and
+  `Text/secondary/on-subtle`. NOT synced here - a token sync is its own commit
+  (sync-tokens.md). None of the new tokens is on a card.
+- 67 Primitives have no card: the Yellow-Secondary, Yellow-Tertiary, Sapphire,
+  Garnet, Topaz and Amber ramps, plus seven singles. Recorded in
+  `$meta.primitive.notOnACard`.
+- One token renders differently here than in Figma:
+  `Surface/secondary/default-subtle-hover`, `#D1F7D1` from the product layer
+  against Figma's `#BAF3B9`. The card shows Figma's value and says so, read
+  from the live stylesheet so any future override is caught too.
+
+**Two things that bit:**
+
+- `check:ds` flagged the hsla formatter and its test, correctly - they are
+  colour text. The formatting moved into `generate-tokens.mjs` (the generated
+  layer is allowed colour) and the test checks Figma's printed numbers rather
+  than the printed string. No exception added to the check.
+- The override detector first flagged five white tokens: the CSS build minifies
+  custom properties, so `#ffffff` arrives as `#fff`. Short hex is expanded
+  before comparing; one real override remains.
+
+**Deliberate difference from Figma:** every swatch has a hairline ring. In
+Figma a white swatch on the white card is empty space (Text/primary/on-color,
+Dark).
+
+**Verified:** `npm run check` green (412 tests). Screenshots at 1280 and 390:
+43/424, 13/62 and 10/41 cards and rows, no horizontal overflow, no console
+errors; the OG Green, Text Primary and Surface Secondary cards checked against
+the Figma screenshots.
+
+**Not committed, not deployed.**
+
+---
+
+## 2026-10-02 — Later still: the other six semantic colour sets
+
+Zul: *"next"* - Figma links for Icon (10), Borders (13), Subjects (19), Medals
+(2), Status (1) and Accents (1).
+
+**One route now draws all eight semantic sets.** `/ds/foundations/surface` and
+`/text` were a page file each; with six more coming that became
+`/ds/foundations/[set]`, driven by `SEMANTIC_SETS` in `lib/ds/colour-cards.ts`
+and generated at build time (`dynamicParams = false`, an unknown set is a 404).
+The sidebar and the Foundations links are generated from the same list. Every
+card uses the existing Light/Dark card component - all six sets turned out to
+share the Text card's structure, checked by outlining one card of each before
+building.
+
+| Set | Frame | Cards | Rows |
+| --- | --- | --- | --- |
+| Icon | 3371:2431 | 10 | 44 |
+| Border | 3372:4480 | 13 | 59 |
+| Subjects | 3372:5766 | 19 | 95 |
+| Medals | 3334:2 | 2 | 30 |
+| Status | 3829:2 | 1 | 15 |
+| Accents | 7494:2 | 1 | 20 |
+
+Every card id Zul sent is the card read, in his order. Subject card titles are
+Figma's own, second names included ("Additional Mathematics (Kancil)", "KAFA
+(Olympiad - Earth Science)").
+
+**Exact, and proved so.** 248 new tokens, Dark values merged into `colorDark`
+(336 now - the Medals Surface rows are the Surface page's gold/silver/bronze,
+identical). Light and Dark were each read with a digest computed inside Figma
+(`94104b0e`, `a977ff77`) and matched locally. `$meta.colorDark.parts` now keeps
+one digest per extraction, and the test recomputes each over the tokens on that
+extraction's cards. All 248 Light values were already in this site's layer, with
+no drift. `tokens.css` is still byte-identical.
+
+**Two more stale labels in Figma** (the page shows the variable):
+
+- Medals Surface card: `Surface/gold/default-subtle`, Dark, prints `#967006`;
+  the variable is `#644b04`.
+- `Border/gold/focus`, Light, prints `#C89608`; the variable is `#967006`.
+
+**One more override shown:** `Border/secondary/default-subtle-hover`, the
+product layer's second deliberate change (`#D1F7D1` against Figma's
+`#BAF3B9`) - found by the same live check as the Surface one.
+
+The resolver gained `CARD_SETS` (read a few sets and stay under use_figma's
+20KB) and a `light` part.
+
+**Verified:** `npm run check` green (413 tests). All eight pages probed at 1280
+and 390: card and row counts above, no horizontal overflow; screenshots of
+Icon Grayscale, Subjects Chemistry and Status against Figma.
+
+**Not committed, not deployed.**

@@ -1,0 +1,23 @@
+/* Pandai DS 1.5 - every value is a token from app/ds/tokens.css. If a value
+ * here disagrees with the DS node named below, the DS wins: re-read the node,
+ * do not adjust the number. */
+
+/* ---------------------------------------------------------- Status pills
+ * Figma: Semantic/Status - score, streak, lives, coins, ruby.
+ * The DS already ships game-status colours; renderers use these rather than
+ * reaching for Surface/success because it happens to be green.
+ */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-2xs);
+  min-height: 24px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-xs);
+  border-radius: var(--radius-full);
+  background: var(--status-bg);
+  color: var(--status-on);
+  font-size: var(--type-b5);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}

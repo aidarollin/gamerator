@@ -1,0 +1,39 @@
+/* Pandai DS 1.5 - every value is a token from app/ds/tokens.css. If a value
+ * here disagrees with the DS node named below, the DS wins: re-read the node,
+ * do not adjust the number. */
+
+/* ---------------------------------------------------------------- Timer
+ * NOT a DS component - the DS has no Timer node. Composed from DS parts: the
+ * Tag pill geometry plus Status tokens, which is why every value below is
+ * borrowed rather than measured. If a Timer is ever added to the DS, re-read it
+ * and replace this block.
+ */
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-component-2xs);
+  min-height: 32px;
+  padding: var(--spacing-component-2xs) var(--spacing-component-sm);
+  border-radius: var(--radius-full);
+  border: var(--border-width-xs) solid var(--border-informative-default);
+  background: var(--surface-informative-default-subtle);
+  color: var(--text-informative-default);
+  font-size: var(--type-b1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Under 20% remaining. Uses the warning ramp, and is paired with a text label
+ * in the component so the state is never carried by colour alone (NFR8). */
+.timerUrgent {
+  border-color: var(--border-warning-default);
+  background: var(--surface-warning-default-subtle);
+  color: var(--text-warning-default);
+}
+
+.timerExpired {
+  border-color: var(--border-disabled-primary);
+  background: var(--surface-disabled-primary);
+  color: var(--text-disabled-default);
+}

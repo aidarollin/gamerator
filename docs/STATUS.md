@@ -2442,3 +2442,71 @@ asks of a token change; `e017a6b` is the DS showcase and every colour page. The
 **Still open:** the Semantic layer has 28 tokens added in Figma since the last
 sync (2026-09-10) that this site does not have yet - a token sync, its own
 commit.
+
+---
+
+## 2026-10-02 — History rewritten: the Claude co-author line removed
+
+Zul: *"remove co authored by claude"* - then chose **all 41 commits**, not just
+today's three.
+
+Every commit on `main` carried `Co-Authored-By: Claude ...` (38 "Opus 5 (1M
+context)", 3 "Opus 5.5"). `git filter-branch --msg-filter` removed that line and
+the blank line before it from every message, and `main` was force-pushed with a
+lease on the old tip `44ca211`. Checked before pushing: author, dates, file tree
+and subject identical for all 41 commits; 82 lines removed, none added; final
+tree byte-identical. A local branch `backup/before-trailer-strip` holds the old
+history and can be deleted once nobody needs it.
+
+**Every commit hash changed.** Hashes cited in the entries above are the OLD
+ones. They still resolve on the backup branch until it is deleted; this is the
+map:
+
+| Old | New | Commit |
+| --- | --- | --- |
+| `44ca211` | `65c74ce` | Log the commit |
+| `e017a6b` | `b097b46` | Build the Pandai DS 1.5 showcase, and draw every colour card from Figma |
+| `1e45268` | `4c3af6d` | Vendor the DS colour cards' data: primitives and Dark, display only |
+| `84c6c0b` | `9e00a3c` | Log the deploy |
+| `e4e2dad` | `019e634` | Rebuild the deck: simple, hands-on, and every demo fits its frame |
+| `e9d3c82` | `52c47c7` | Give the duel a Block button |
+| `eb57ab1` | `0821be9` | Adopt the Pandai app's type layer, and make every game work on a phone |
+| `0696861` | `28c7733` | Log the session and record the two rules it produced |
+| `6fbad79` | `9f46c17` | Take a link, a picture and a design doc as input |
+| `2070ed9` | `5634de5` | Make the five Pandai DS templates askable, and show all 15 |
+| `fd80706` | `60294c9` | Add a Pandai skin, with two colour families |
+| `810f7fd` | `7c45495` | Re-sync Pandai DS 1.5: verified, nothing to change |
+| `716a575` | `9c3e6bf` | Repaint previews when their art arrives, and deploy |
+| `8c2c05d` | `85701cc` | Show the ten games, each one really running |
+| `f956172` | `bd9640d` | Imagine every game, and build four more engines |
+| `ca4b3e1` | `533ebcf` | Adapt other genres instead of refusing them |
+| `25f7838` | `c0c594c` | Turn the model on, behind a spending wall |
+| `f79e1fc` | `855d526` | Add an internal walkthrough deck at /deck |
+| `e7b61c9` | `d87ba10` | Stop the game swallowing keys from the prompt box |
+| `390a35f` | `ffcf58b` | Add the duel engine - the fighting game, built from static sprites |
+| `1da11af` | `4d0429e` | Ramp the runner's physics, and add magnet and Power Rush |
+| `6f19624` | `b5fedea` | Add a round timer whose budget is shared across retries |
+| `0e607c3` | `8faa49a` | Build platformer levels that can actually be finished |
+| `5bf7bf6` | `85e0df0` | Give the site a front door |
+| `ddc0859` | `4a42d93` | Collectibles in every engine, and the geometry out of the closure |
+| `24de4bd` | `508040d` | Give the game its own art direction, and a voice |
+| `ae0112b` | `13f1c17` | Save session context to the docs pack |
+| `9764fa6` | `1516e01` | Add authored art, parallax and collectibles - and fix what screenshots exposed |
+| `aebe298` | `e94a733` | Ramp flyer physics over a run, and simulate the hardest point |
+| `a590028` | `a1910c8` | Record Flying Sushi as a reference, and keep the model off |
+| `6dc7cf2` | `2970f5f` | Repair the STATUS entry mangled by shell backtick expansion |
+| `630d546` | `147448b` | Build all five engines, fix the game feel, and wire the model |
+| `907a8ae` | `930fa0a` | Add real Pandai characters, game feel, the prompt page and export |
+| `20db88f` | `ab97f26` | Pivot to arcade games and build the endless-flyer engine |
+| `c39a2f3` | `aa620a5` | Build the generation pipeline, stub-first |
+| `c71e7e2` | `15ab33b` | Fix zodOutputFormat arity |
+| `64adf02` | `fbe7c0a` | Verify the OpenRouter provider and split the structural schema out |
+| `377f086` | `3c96afa` | Add the GameSpec schema, fixtures and the five renderers |
+| `2dc4895` | `61eb5d5` | Build the DS primitives and the /ds reference page |
+| `707e5f4` | `24386d2` | Sync Pandai DS 1.5 tokens from Figma and enforce the no-hex rule |
+| `0deb50e` | `0f59ba8` | Plan the game generator and stand up the Phase 1 skeleton |
+
+Any other clone of this repo must `git fetch && git reset --hard origin/main`
+(after saving local work) - its history no longer matches.
+
+Commits from now on carry no Claude attribution line.
